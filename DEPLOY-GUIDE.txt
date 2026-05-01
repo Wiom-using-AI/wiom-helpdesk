@@ -1,0 +1,209 @@
+════════════════════════════════════════════════════════════════════
+  WIOM IT HELPDESK — DEPLOY GUIDE (Step by Step)
+  Sajan Kumar ke liye — IT Executive, WIOM Internet Services
+════════════════════════════════════════════════════════════════════
+
+TOTAL TIME: ~60-90 minutes (first time)
+COST: ~Rs 0 se Rs 900/month
+REQUIREMENT: Laptop + Internet + Gmail account
+
+════════════════════════════════════════════
+STEP 1 — MongoDB Atlas (FREE Database)
+════════════════════════════════════════════
+
+1. cloud.mongodb.com pe jao
+2. "Try Free" → Google account se sign up karo
+3. "Build a Cluster" → M0 FREE tier select karo
+   Region: Mumbai (ap-south-1)
+4. Cluster naam: wiom-helpdesk
+5. "Create" click karo (2-3 min lagenge)
+6. Baad mein:
+   - Database Access → Add User → username: wiom, password: [strong password]
+   - Network Access → Add IP Address → "Allow from anywhere" (0.0.0.0/0)
+7. Connect → Drivers → Connection string copy karo:
+   mongodb+srv://wiom:PASSWORD@cluster0.xxxxx.mongodb.net/wiom_helpdesk
+
+.env mein MONGODB_URI yahi daalo ✅
+
+════════════════════════════════════════════
+STEP 2 — Anthropic API Key (Claude AI)
+════════════════════════════════════════════
+
+1. console.anthropic.com pe jao
+2. Sign up karo (credit card chahiye — pay per use)
+3. Settings → API Keys → Create Key
+4. Key copy karo: sk-ant-api03-...
+
+.env mein ANTHROPIC_API_KEY yahi daalo ✅
+
+Estimated cost: Rs 200-500/month (300 employees)
+
+════════════════════════════════════════════
+STEP 3 — Gmail App Password (Email)
+════════════════════════════════════════════
+
+1. Gmail mein jao → Google Account → Security
+2. 2-Step Verification ON karo (agar nahi hai)
+3. Security → App Passwords → Generate
+4. App: Mail, Device: Windows Computer
+5. 16-char password milega: xxxx xxxx xxxx xxxx
+
+.env mein:
+SMTP_USER=sajan.kumar@wiom.in
+SMTP_PASS=xxxx xxxx xxxx xxxx  ✅
+
+════════════════════════════════════════════
+STEP 4 — Slack App Create
+════════════════════════════════════════════
+
+1. api.slack.com/apps → "Create New App"
+2. "From scratch" → App Name: "Wiom IT Helpdesk" → WIOM workspace select
+3. LEFT MENU → "Socket Mode" → Enable → Token name: wiom-socket → Generate
+   Copy: xapp-1-... → ye hai SLACK_APP_TOKEN
+
+4. LEFT MENU → "OAuth & Permissions"
+   Scroll to "Scopes" → Bot Token Scopes → Add:
+   - chat:write
+   - commands
+   - users:read
+   - users:read.email
+   - im:history
+   - im:write
+   - channels:history
+
+5. LEFT MENU → "Install App" → Install to Workspace
+   Copy: xoxb-... → ye hai SLACK_BOT_TOKEN
+
+6. LEFT MENU → "Basic Information" → Signing Secret copy karo
+   → ye hai SLACK_SIGNING_SECRET
+
+7. LEFT MENU → "Slash Commands" → Create New Command:
+   Command: /helpdesk
+   Description: WIOM IT Helpdesk — AI Support
+   Usage hint: [problem batao]
+
+8. LEFT MENU → "App Home" → Messages Tab → Enable
+
+.env mein ye sab daalo ✅
+
+SAJAN_SLACK_ID kaise find karein:
+- Slack mein apne naam pe right-click → "View profile"
+- "More" → "Copy member ID"
+- Looks like: U0XXXXXXXXX
+
+════════════════════════════════════════════
+STEP 5 — Railway Deploy (Backend Server)
+════════════════════════════════════════════
+
+Method A: GitHub se (Recommended)
+----------------------------------
+1. github.com → New Repository → "wiom-helpdesk" (Private)
+2. Is folder mein PowerShell kholo:
+   cd "C:\Users\Wiom\Desktop\wiom-helpdesk"
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin https://github.com/YOUR_USERNAME/wiom-helpdesk.git
+   git push -u origin main
+
+3. railway.app → "Start a New Project"
+4. "Deploy from GitHub repo" → wiom-helpdesk select karo
+5. Variables tab → Add all variables from .env file
+
+Method B: Railway CLI
+---------------------
+1. npm install -g @railway/cli
+2. railway login
+3. cd "C:\Users\Wiom\Desktop\wiom-helpdesk"
+4. railway init → Project name: wiom-helpdesk
+5. railway up
+6. railway variables set MONGODB_URI="..." (har variable ke liye)
+
+Deployment ke baad:
+- URL milegi: https://wiom-helpdesk-production.up.railway.app
+- .env mein API_BASE_URL yahi daalo ✅
+
+════════════════════════════════════════════
+STEP 6 — First-time Setup
+════════════════════════════════════════════
+
+1. Admin account banao (browser mein):
+   POST https://YOUR-RAILWAY-URL/api/auth/setup-admin
+   Body: { "password": "Wiom@2024" }
+
+   Ya curl se:
+   curl -X POST https://YOUR-URL/api/auth/setup-admin \
+     -H "Content-Type: application/json" \
+     -d '{"password":"Wiom@2024"}'
+
+2. Admin login karo, JWT token lo:
+   POST /api/auth/admin-login
+   Body: { "username": "sajan", "password": "Wiom@2024" }
+   Response mein token milega → .env mein ADMIN_JWT_TOKEN daalo
+
+3. Setup disable karo (security):
+   .env mein: SETUP_DISABLED=true
+
+════════════════════════════════════════════
+STEP 7 — Import Employees
+════════════════════════════════════════════
+
+HTML file se employee data export karke API mein daalo:
+POST /api/employees/bulk
+Headers: Authorization: Bearer YOUR_ADMIN_TOKEN
+Body: {
+  "employees": [
+    { "empId": "WIM001", "name": "Rahul Sharma", "email": "rahul@wiom.in",
+      "department": "Sales", "floor": "Ground Floor", "laptop": "HP 250 G8" },
+    ...
+  ]
+}
+
+════════════════════════════════════════════
+STEP 8 — Start Slack Bot
+════════════════════════════════════════════
+
+Local chalane ke liye (testing):
+  cd "C:\Users\Wiom\Desktop\wiom-helpdesk"
+  npm install
+  node slack/bot.js
+
+Railway pe bot bhi chalana ho toh:
+  Separate Railway service banao OR
+  server.js mein bot import kar sakte ho
+
+════════════════════════════════════════════
+STEP 9 — Test Everything
+════════════════════════════════════════════
+
+1. Health check: https://YOUR-URL/health → { "status": "ok" }
+2. Slack mein: /helpdesk wifi nahi chal raha
+3. Bot respond karega + ticket create hoga
+4. Sajan ko DM aayega
+5. Email aayegi employee ko + Sajan ko
+
+════════════════════════════════════════════
+TROUBLESHOOTING
+════════════════════════════════════════════
+
+Bot reply nahi kar raha:
+→ Check SLACK_BOT_TOKEN aur SLACK_APP_TOKEN
+→ Socket Mode enabled hai?
+
+MongoDB connection fail:
+→ Network Access mein 0.0.0.0/0 add kiya?
+→ Username/password sahi hai?
+
+Email nahi aa rahi:
+→ Gmail App Password 16 char ka hai?
+→ 2FA enable hai Gmail mein?
+
+Claude AI error:
+→ API key valid hai? Balance hai account mein?
+
+════════════════════════════════════════════
+SUPPORT
+════════════════════════════════════════════
+Files location: C:\Users\Wiom\Desktop\wiom-helpdesk\
+Sajan Kumar: sajan.kumar@wiom.in | 9654244281
+════════════════════════════════════════════
