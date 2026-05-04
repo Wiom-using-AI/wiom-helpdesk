@@ -687,22 +687,40 @@ function viewTicket(id) {
   const slaLeft  = Math.max(0, slaHours - elapsed).toFixed(1);
   const slaColor = slaLeft < 2 ? '#f87171' : slaLeft < 6 ? '#fbbf24' : '#86efac';
 
+  // Lookup employee record for laptop info
+  const empRec = allEmployees.find(e => e.empId === t.empId);
+  const laptopModel = t.laptop  || empRec?.laptop  || '—';
+  const laptopSN    = t.laptopSN|| empRec?.laptopSN|| '—';
+  const empDept     = t.empDept || empRec?.department || '—';
+  const empFloor    = t.empFloor|| empRec?.floor       || '—';
+  const empEmail    = t.empEmail|| empRec?.email        || '—';
+
   document.getElementById('modalBody').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="modal-field"><label>Employee</label><span style="cursor:pointer;color:#6366f1;" onclick="showEmpHistory('${t.empId}','${t.empName||t.empId}')">${t.empName||t.empId} ↗</span></div>
       <div class="modal-field"><label>Emp ID</label><span>${t.empId||'—'}</span></div>
-      <div class="modal-field"><label>Department</label><span>${t.empDept||'—'}</span></div>
-      <div class="modal-field"><label>Email</label><span>${t.empEmail||'—'}</span></div>
-      <div class="modal-field"><label>Category</label><span>${t.category}</span></div>
+      <div class="modal-field"><label>Department</label><span>${empDept}</span></div>
+      <div class="modal-field"><label>Floor</label><span>${empFloor}</span></div>
+      <div class="modal-field"><label>Email</label><span>${empEmail}</span></div>
       <div class="modal-field"><label>Source</label><span>${t.source||'Web'}</span></div>
-      <div class="modal-field"><label>Priority</label><span class="pri ${t.priority}">${t.priority}</span></div>
-      <div class="modal-field"><label>Status</label><span class="status ${(t.status||'').replace(' ','-')}">${t.status}</span></div>
-      <div class="modal-field"><label>SLA</label><span style="color:${slaColor};">${isDone ? '✅ Done' : slaLeft+'h left'}</span></div>
+      <div class="modal-field"><label>💻 Laptop</label><span style="font-size:12px;">${laptopModel}</span></div>
+      <div class="modal-field"><label>🔢 Serial No</label><span style="font-family:monospace;color:#6366f1;font-size:13px;font-weight:600;">${laptopSN}</span></div>
+      <div class="modal-field"><label>Category</label><span>${t.category}</span></div>
       <div class="modal-field"><label>Created</label><span>${new Date(t.createdAt).toLocaleString('en-IN')}</span></div>
+      <div class="modal-field">
+        <label>Priority</label>
+        <select id="prioritySelect" style="padding:4px 8px;background:#0f172a;border:1px solid #334155;border-radius:6px;color:#f1f5f9;font-size:13px;cursor:pointer;" onchange="changePriority('${t.ticketId}',this.value)">
+          <option ${t.priority==='Critical'?'selected':''}>Critical</option>
+          <option ${t.priority==='High'?'selected':''}>High</option>
+          <option ${t.priority==='Medium'?'selected':''}>Medium</option>
+          <option ${t.priority==='Low'?'selected':''}>Low</option>
+        </select>
+      </div>
+      <div class="modal-field"><label>SLA</label><span style="color:${slaColor};font-weight:600;">${isDone ? '✅ Done' : slaLeft+'h left'}</span></div>
     </div>
-    <div class="modal-field" style="margin-top:10px;"><label>Description</label><span style="display:block;margin-top:4px;line-height:1.5;">${t.description||'—'}</span></div>
-    ${(t.aiSteps||[]).length ? `<div class="modal-field"><label>AI Steps Tried</label><span>${t.aiSteps.join(' → ')}</span></div>` : ''}
-    ${t.resolution ? `<div class="modal-field"><label>Resolution</label><span>${t.resolution}</span></div>` : ''}
+    <div class="modal-field" style="margin-top:10px;"><label>Description</label><span style="display:block;margin-top:4px;line-height:1.6;color:#f1f5f9;">${t.description||'—'}</span></div>
+    ${(t.aiSteps||[]).length ? `<div class="modal-field"><label>AI Steps Tried</label><span style="color:#94a3b8;">${t.aiSteps.join(' → ')}</span></div>` : ''}
+    ${t.resolution ? `<div class="modal-field"><label>✅ Resolution</label><span style="color:#86efac;">${t.resolution}</span></div>` : ''}
   `;
 
   // Show comments
@@ -727,6 +745,14 @@ async function markInProgress() {
   await apiPatch(`/api/tickets/${t.ticketId}`, { status: 'In Progress' });
   closeModal();
   await loadAllTickets();
+}
+
+async function changePriority(ticketId, priority) {
+  try {
+    await apiPatch(`/api/tickets/${ticketId}`, { priority });
+    await loadAllTickets();
+    // Don't close modal, just update in background
+  } catch(e) { alert('❌ Priority change failed: ' + e.message); }
 }
 
 async function saveNote() {
@@ -776,11 +802,16 @@ function showEmpHistory(empId, empName) {
 async function resolveTicket() {
   const t = allTickets.find(x => x._id === currentTicketId);
   if (!t) return;
+  const note = document.getElementById('noteInput')?.value?.trim();
+  const resolution = note || 'Resolved by Sajan Kumar';
   try {
-    await apiPatch(`/api/tickets/${t.ticketId}`, { status: 'Resolved', resolvedBy: 'Human', resolution: 'Resolved by Sajan Kumar via Admin Dashboard' });
+    await apiPatch(`/api/tickets/${t.ticketId}`, {
+      status: 'Resolved', resolvedBy: 'Human',
+      resolution,
+      ...(note ? { comment: note } : {})
+    });
     closeModal();
     await loadAllTickets();
-    alert(`✅ ${t.ticketId} resolved!`);
   } catch(e) { alert('❌ Error: ' + e.message); }
 }
 

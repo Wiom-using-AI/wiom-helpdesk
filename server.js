@@ -151,11 +151,42 @@ app.listen(PORT, () => {
       // Sessions store
       const sessions = {};
 
+      const Employee = require('./models/Employee');
+
       const lookupEmployee = async (slackUserId, client) => {
         try {
+          // 1️⃣ Try DB lookup by saved slackUserId (fastest)
+          let dbEmp = await Employee.findOne({ slackUserId });
+          if (dbEmp) {
+            return { empId: dbEmp.empId, empName: dbEmp.name, email: dbEmp.email,
+                     dept: dbEmp.department, floor: dbEmp.floor,
+                     laptop: dbEmp.laptop, laptopSN: dbEmp.laptopSN };
+          }
+
+          // 2️⃣ Get Slack profile (name + email)
           const profile = await client.users.info({ user: slackUserId });
           const email   = profile.user?.profile?.email;
           const name    = profile.user?.profile?.real_name || profile.user?.name;
+
+          // 3️⃣ Try DB lookup by email
+          if (email) {
+            dbEmp = await Employee.findOne({ email: email.toLowerCase() });
+          }
+          // 4️⃣ Try DB lookup by name (partial match)
+          if (!dbEmp && name) {
+            dbEmp = await Employee.findOne({ name: { $regex: name.split(' ')[0], $options: 'i' } });
+          }
+
+          if (dbEmp) {
+            // Save Slack ID for future fast lookups
+            dbEmp.slackUserId = slackUserId;
+            await dbEmp.save();
+            return { empId: dbEmp.empId, empName: dbEmp.name, email: dbEmp.email,
+                     dept: dbEmp.department, floor: dbEmp.floor,
+                     laptop: dbEmp.laptop, laptopSN: dbEmp.laptopSN };
+          }
+
+          // 5️⃣ Fallback — unknown employee
           return { empId: slackUserId, empName: name || 'Employee', email, dept: 'Unknown' };
         } catch {
           return { empId: slackUserId, empName: 'Employee', email: null, dept: 'Unknown' };
@@ -213,7 +244,13 @@ app.listen(PORT, () => {
           let responseText = `*🤖 WIOM IT Helpdesk*\n\n${reply}`;
 
           if (shouldCreateTicket && ticketData) {
-            const ticket = await createTicketSlack({ ...emp, ...ticketData, description: ticketData.description || text, source: 'slack', slackUserId: userId });
+            const ticket = await createTicketSlack({
+              empId: emp.empId, empName: emp.empName, empEmail: emp.email,
+              empDept: emp.dept, empFloor: emp.floor,
+              laptop: emp.laptop, laptopSN: emp.laptopSN,
+              ...ticketData, description: ticketData.description || text,
+              source: 'slack', slackUserId: userId
+            });
             if (ticket) {
               responseText += `\n\n✅ *Ticket ${ticket.ticketId} create ho gaya!*\nSajan Kumar ko alert kar diya gaya. 🙏`;
               await notifySajan(client, ticket, emp);
@@ -245,7 +282,13 @@ app.listen(PORT, () => {
           await say({ text: reply, thread_ts: message.ts });
 
           if (shouldCreateTicket && ticketData) {
-            const ticket = await createTicketSlack({ ...emp, ...ticketData, description: ticketData.description || text, source: 'slack', slackUserId: userId });
+            const ticket = await createTicketSlack({
+              empId: emp.empId, empName: emp.empName, empEmail: emp.email,
+              empDept: emp.dept, empFloor: emp.floor,
+              laptop: emp.laptop, laptopSN: emp.laptopSN,
+              ...ticketData, description: ticketData.description || text,
+              source: 'slack', slackUserId: userId
+            });
             if (ticket) {
               await say({ text: `🎫 *Ticket ${ticket.ticketId}* create ho gaya! Sajan ko alert kar diya. Priority: *${ticket.priority}*`, thread_ts: message.ts });
               await notifySajan(client, ticket, emp);
@@ -256,9 +299,20 @@ app.listen(PORT, () => {
         }
       });
 
-      slackApp.start().then(() => {
+      slackApp.start().then(async () => {
         console.log('🤖 Slack Bot started! Socket Mode active.');
         slackClient = slackApp.client; // make available to escalation cron
+
+        // Auto-link Sajan's Slack ID if configured
+        const sajanSlackId = process.env.SAJAN_SLACK_ID;
+        if (sajanSlackId && sajanSlackId !== 'FILL_KARO') {
+          const Employee = require('./models/Employee');
+          await Employee.findOneAndUpdate(
+            { name: { $regex: 'sajan', $options: 'i' } },
+            { slackUserId: sajanSlackId },
+            { new: true }
+          ).catch(() => {});
+        }
       }).catch(err => {
         console.error('❌ Slack Bot start failed:', err.message);
       });

@@ -128,7 +128,7 @@ router.get('/:id', async (req, res) => {
 // ── PATCH /api/tickets/:id  — Update status / assign / resolve ────────────────
 router.patch('/:id', verifyAdmin, async (req, res) => {
   try {
-    const { status, assignedTo, resolution, resolvedBy, comment } = req.body;
+    const { status, assignedTo, resolution, resolvedBy, comment, priority } = req.body;
     const ticket = await Ticket.findOne({ ticketId: req.params.id });
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
@@ -136,6 +136,7 @@ router.patch('/:id', verifyAdmin, async (req, res) => {
     if (assignedTo) ticket.assignedTo = assignedTo;
     if (resolution) ticket.resolution = resolution;
     if (resolvedBy) ticket.resolvedBy = resolvedBy;
+    if (priority)   ticket.priority   = priority;
 
     if (status === 'Resolved' && !ticket.resolvedAt) {
       ticket.resolvedAt = new Date();
