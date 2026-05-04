@@ -98,7 +98,21 @@ cron.schedule('0 * * * *', async () => {
       try {
         await slackClient.chat.postMessage({
           channel: sajanId,
-          text: `⚠️ *Escalation Alert — ${t.ticketId}*\n*Employee:* ${t.empName} (${t.empDept||'Unknown'})\n*Issue:* ${t.description}\n*Priority:* ${priEmoji[t.priority]||'🟡'} ${t.priority}\n*Open since:* ${hoursOld}h ago\n_Abhi tak resolve nahi hua — please check karo!_`
+          text: `⚠️ Escalation: ${t.ticketId} — ${t.empName} (${hoursOld}h open)`,
+          attachments: [{
+            color: '#ef4444',
+            blocks: [
+              { type:'header', text:{ type:'plain_text', text:`⚠️ Escalation Alert — ${t.ticketId}`, emoji:true }},
+              { type:'section', fields:[
+                { type:'mrkdwn', text:`*👤 Employee*\n${t.empName} (${t.empDept||'Unknown'})` },
+                { type:'mrkdwn', text:`*${priEmoji[t.priority]||'🟡'} Priority*\n${t.priority}` },
+                { type:'mrkdwn', text:`*⏱ Open Since*\n${hoursOld} hours` },
+                { type:'mrkdwn', text:`*📂 Category*\n${t.category||'Other'}` }
+              ]},
+              { type:'section', text:{ type:'mrkdwn', text:`*📝 Issue:*\n${t.description}` }},
+              { type:'context', elements:[{ type:'mrkdwn', text:`_Abhi tak resolve nahi hua — please check karo!_` }]}
+            ]
+          }]
         });
         t.escalationSent = true;
         await t.save();
@@ -198,9 +212,23 @@ app.listen(PORT, () => {
           const sajanId = process.env.SAJAN_SLACK_ID;
           if (!sajanId || sajanId === 'FILL_KARO') return;
           const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+          const priColor = { Critical:'#ef4444', High:'#f59e0b', Medium:'#3b82f6', Low:'#10b981' };
           await client.chat.postMessage({
             channel: sajanId,
-            text: `${priEmoji[ticket.priority]||'🟡'} *Naya Ticket: ${ticket.ticketId}*\n*Employee:* ${emp.empName}\n*Issue:* ${ticket.description}\n*Priority:* ${ticket.priority} | *SLA:* ${ticket.slaHours}h`
+            text: `${priEmoji[ticket.priority]||'🟡'} Naya ticket: ${ticket.ticketId} — ${emp.empName}`,
+            attachments: [{
+              color: priColor[ticket.priority] || '#3b82f6',
+              blocks: [
+                { type:'section', fields:[
+                  { type:'mrkdwn', text:`*🎫 Ticket ID*\n\`${ticket.ticketId}\`` },
+                  { type:'mrkdwn', text:`*👤 Employee*\n${emp.empName}` },
+                  { type:'mrkdwn', text:`*${priEmoji[ticket.priority]||'🟡'} Priority*\n${ticket.priority}` },
+                  { type:'mrkdwn', text:`*⏱ SLA*\n${ticket.slaHours}h` }
+                ]},
+                { type:'section', text:{ type:'mrkdwn', text:`*📝 Issue:*\n${ticket.description}` }},
+                { type:'context', elements:[{ type:'mrkdwn', text:`Category: ${ticket.category} | Source: ${ticket.source||'web'} | ${emp.dept||'Unknown Dept'}` }]}
+              ]
+            }]
           });
         } catch (err) {
           console.error('Sajan DM error:', err.message);
@@ -241,7 +269,10 @@ app.listen(PORT, () => {
           const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack' });
           sessions[userId].messages = [...messages, { role: 'assistant', content: reply }];
 
-          let responseText = `*🤖 WIOM IT Helpdesk*\n\n${reply}`;
+          const blocks = [
+            { type:'section', text:{ type:'mrkdwn', text:`🤖 *WIOM IT Helpdesk*\n\n${reply}` }},
+            { type:'context', elements:[{ type:'mrkdwn', text:`👤 ${emp.empName || emp.empId} | _Type \`/helpdesk\` to continue_` }]}
+          ];
 
           if (shouldCreateTicket && ticketData) {
             const ticket = await createTicketSlack({
@@ -252,12 +283,18 @@ app.listen(PORT, () => {
               source: 'slack', slackUserId: userId
             });
             if (ticket) {
-              responseText += `\n\n✅ *Ticket ${ticket.ticketId} create ho gaya!*\nSajan Kumar ko alert kar diya gaya. 🙏`;
+              const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+              blocks.push({ type:'divider' });
+              blocks.push({ type:'section', fields:[
+                { type:'mrkdwn', text:`*✅ Ticket Created*\n\`${ticket.ticketId}\`` },
+                { type:'mrkdwn', text:`*${priEmoji[ticket.priority]||'🟡'} Priority*\n${ticket.priority}` }
+              ]});
+              blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`Sajan Kumar ko alert kar diya gaya 🙏` }]});
               await notifySajan(client, ticket, emp);
             }
           }
 
-          await respond({ response_type: 'ephemeral', text: responseText });
+          await respond({ response_type: 'ephemeral', text: reply, blocks });
         } catch (err) {
           console.error('Slack error:', err.message);
           await respond({ text: '❌ Error aa gaya. Seedha Sajan se contact karo: 9654244281', response_type: 'ephemeral' });
@@ -279,7 +316,11 @@ app.listen(PORT, () => {
         try {
           const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack' });
           sessions[userId].messages = [...messages, { role: 'assistant', content: reply }];
-          await say({ text: reply, thread_ts: message.ts });
+
+          const blocks = [
+            { type:'section', text:{ type:'mrkdwn', text:`🤖 *WIOM IT Helpdesk*\n\n${reply}` }}
+          ];
+          await say({ text: reply, blocks, thread_ts: message.ts });
 
           if (shouldCreateTicket && ticketData) {
             const ticket = await createTicketSlack({
@@ -290,7 +331,18 @@ app.listen(PORT, () => {
               source: 'slack', slackUserId: userId
             });
             if (ticket) {
-              await say({ text: `🎫 *Ticket ${ticket.ticketId}* create ho gaya! Sajan ko alert kar diya. Priority: *${ticket.priority}*`, thread_ts: message.ts });
+              const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+              await say({
+                text: `🎫 Ticket ${ticket.ticketId} create ho gaya!`,
+                thread_ts: message.ts,
+                blocks: [
+                  { type:'section', fields:[
+                    { type:'mrkdwn', text:`*🎫 Ticket*\n\`${ticket.ticketId}\`` },
+                    { type:'mrkdwn', text:`*${priEmoji[ticket.priority]||'🟡'} Priority*\n${ticket.priority}` }
+                  ]},
+                  { type:'context', elements:[{ type:'mrkdwn', text:`✅ Ticket create ho gaya! Sajan Kumar ko notify kar diya gaya. 🙏` }]}
+                ]
+              });
               await notifySajan(client, ticket, emp);
             }
           }

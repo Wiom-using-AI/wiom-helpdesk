@@ -2,364 +2,442 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>WIOM IT Helpdesk — Employee Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>WIOM IT Helpdesk</title>
+<link rel="icon" href="/wiom-logo.webp" type="image/webp"/>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Segoe UI',Arial,sans-serif; background:#0f172a; color:#e2e8f0; min-height:100vh; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --pink:#E8197D; --pink-dark:#c0146a; --pink-light:#ff4da6;
+  --pink-glow:rgba(232,25,125,0.18); --pink-soft:rgba(232,25,125,0.08);
+  --bg:#0d0608; --surface:#130a0d; --surface2:#1a0d12; --border:rgba(232,25,125,0.12);
+  --border2:rgba(232,25,125,0.25); --text:#f5e8ee; --muted:#8a6b76;
+  --success:#34d399; --danger:#f87171; --warning:#fbbf24;
+  --font:'Inter',sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(rgba(232,25,125,0.07) 1px,transparent 1px);
+  background-size:28px 28px;}
 
-/* ── Login ── */
-#loginPage { display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(135deg,#0f172a,#1e293b); padding:20px; }
-.login-box { background:#1e293b; padding:36px; border-radius:16px; width:100%; max-width:380px; border:1px solid #334155; box-shadow:0 20px 60px rgba(0,0,0,.5); }
-.login-box h1 { font-size:20px; margin-bottom:4px; color:#f1f5f9; }
-.login-box p  { font-size:13px; color:#94a3b8; margin-bottom:24px; }
-.logo { text-align:center; margin-bottom:20px; font-size:44px; }
-input { width:100%; padding:12px 14px; background:#0f172a; border:1px solid #334155; border-radius:8px; color:#f1f5f9; font-size:14px; margin-bottom:12px; outline:none; transition:border .2s; }
-input:focus { border-color:#6366f1; }
-.btn-primary { width:100%; padding:13px; background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; border-radius:8px; color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
-.btn-primary:hover { opacity:.9; }
-.err { color:#f87171; font-size:13px; margin-top:8px; text-align:center; display:none; }
+/* ── LOGIN ── */
+#loginPage{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(232,25,125,0.12),transparent 70%);}
+.login-card{background:rgba(19,10,13,0.95);border:1px solid var(--border2);border-radius:24px;
+  width:100%;max-width:400px;padding:40px 36px;
+  box-shadow:0 0 60px rgba(232,25,125,0.15),0 30px 60px rgba(0,0,0,0.6);
+  backdrop-filter:blur(20px);}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo img{width:56px;height:56px;border-radius:14px;
+  box-shadow:0 0 24px rgba(232,25,125,0.5);}
+.login-logo .brand-name{font-size:22px;font-weight:700;color:#fff;margin-top:12px;letter-spacing:-0.5px;}
+.login-logo .brand-name span{color:var(--pink);}
+.login-logo .brand-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+.login-card h2{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.login-card p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;}
+.inp-wrap{position:relative;margin-bottom:12px;}
+.inp-wrap .inp-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;opacity:.5;}
+input{width:100%;padding:13px 14px 13px 42px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border2);border-radius:12px;color:var(--text);
+  font-size:14px;font-family:var(--font);outline:none;transition:all .2s;}
+input:focus{border-color:var(--pink);background:rgba(232,25,125,0.06);
+  box-shadow:0 0 0 3px rgba(232,25,125,0.1);}
+input::placeholder{color:var(--muted);}
+.btn-login{width:100%;padding:14px;margin-top:4px;
+  background:linear-gradient(135deg,var(--pink),var(--pink-dark));
+  border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:600;
+  font-family:var(--font);cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 20px rgba(232,25,125,0.4);}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(232,25,125,0.5);}
+.btn-login:active{transform:translateY(0);}
+.err{color:var(--danger);font-size:13px;margin-top:10px;text-align:center;display:none;padding:10px;
+  background:rgba(248,113,113,0.1);border-radius:8px;border:1px solid rgba(248,113,113,0.2);}
+.login-footer{text-align:center;margin-top:20px;font-size:11px;color:var(--muted);}
 
-/* ── Main ── */
-#mainPage { display:none; max-width:800px; margin:0 auto; padding:20px; }
-.topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding:14px 20px; background:#1e293b; border-radius:12px; border:1px solid #334155; }
-.topbar-left h2 { font-size:15px; color:#f1f5f9; font-weight:700; }
-.topbar-left p  { font-size:12px; color:#64748b; margin-top:2px; }
-.logout-btn { background:transparent; border:1px solid #334155; color:#94a3b8; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:12px; }
+/* ── MAIN ── */
+#mainPage{display:none;min-height:100vh;max-width:860px;margin:0 auto;padding:16px;}
 
-/* ── Tabs ── */
-.tabs { display:flex; gap:4px; margin-bottom:20px; background:#1e293b; padding:6px; border-radius:12px; border:1px solid #334155; }
-.tab-btn { flex:1; padding:10px; border:none; border-radius:8px; background:transparent; color:#94a3b8; font-size:13px; cursor:pointer; font-weight:500; transition:all .2s; }
-.tab-btn.active { background:#6366f1; color:#fff; }
+/* ── HEADER ── */
+.header{display:flex;justify-content:space-between;align-items:center;
+  padding:14px 20px;margin-bottom:16px;
+  background:rgba(19,10,13,0.9);border:1px solid var(--border2);border-radius:16px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 0 0 1px rgba(232,25,125,0.05),0 4px 20px rgba(0,0,0,0.4);}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-logo img{width:36px;height:36px;border-radius:10px;
+  box-shadow:0 0 14px rgba(232,25,125,0.4);}
+.header-info h2{font-size:14px;font-weight:700;color:#fff;}
+.header-info h2 span{color:var(--pink);}
+.header-info p{font-size:11px;color:var(--muted);margin-top:1px;}
+.online-dot{display:flex;align-items:center;gap:5px;font-size:11px;
+  color:var(--success);background:rgba(52,211,153,0.08);
+  border:1px solid rgba(52,211,153,0.2);padding:4px 10px;border-radius:20px;}
+.online-dot::before{content:'';width:6px;height:6px;background:var(--success);
+  border-radius:50%;box-shadow:0 0 6px var(--success);
+  animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.header-right{display:flex;align-items:center;gap:8px;}
+.emp-pill{background:var(--pink-soft);border:1px solid var(--border2);
+  padding:5px 12px;border-radius:20px;font-size:12px;color:var(--pink);font-weight:500;}
+.logout-btn{background:transparent;border:1px solid rgba(255,255,255,0.1);
+  color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;
+  font-family:var(--font);transition:all .2s;}
+.logout-btn:hover{border-color:var(--danger);color:var(--danger);}
 
-/* ── Chat ── */
-.chat-wrap { background:#1e293b; border:1px solid #334155; border-radius:12px; overflow:hidden; }
-.chat-messages { height:420px; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
-.msg { max-width:85%; padding:12px 16px; border-radius:12px; font-size:14px; line-height:1.5; }
-.msg.bot { background:#0f172a; color:#e2e8f0; border-radius:4px 12px 12px 12px; align-self:flex-start; border:1px solid #334155; }
-.msg.user { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border-radius:12px 4px 12px 12px; align-self:flex-end; }
-.msg.system { background:#1a2744; color:#93c5fd; font-size:12px; text-align:center; align-self:center; padding:6px 14px; border-radius:20px; }
-.msg pre { white-space:pre-wrap; font-family:inherit; }
-.ticket-created { background:#14532d; border:1px solid #166534; border-radius:8px; padding:12px; margin-top:8px; font-size:13px; }
-.chat-input-wrap { display:flex; gap:8px; padding:12px; border-top:1px solid #334155; background:#0f172a; }
-.chat-input { flex:1; padding:11px 14px; background:#1e293b; border:1px solid #334155; border-radius:8px; color:#f1f5f9; font-size:14px; outline:none; }
-.chat-input:focus { border-color:#6366f1; }
-.send-btn { padding:11px 20px; background:#6366f1; border:none; border-radius:8px; color:#fff; font-size:14px; cursor:pointer; font-weight:600; }
-.send-btn:hover { background:#4f46e5; }
-.send-btn:disabled { opacity:.5; cursor:not-allowed; }
-.typing { align-self:flex-start; color:#64748b; font-size:13px; font-style:italic; }
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:16px;
+  background:rgba(19,10,13,0.8);padding:6px;border-radius:14px;
+  border:1px solid var(--border);}
+.tab-btn{flex:1;padding:10px;border:none;border-radius:10px;
+  background:transparent;color:var(--muted);font-size:13px;
+  cursor:pointer;font-weight:500;font-family:var(--font);transition:all .2s;}
+.tab-btn.active{background:linear-gradient(135deg,var(--pink),var(--pink-dark));
+  color:#fff;box-shadow:0 2px 12px rgba(232,25,125,0.35);}
 
-/* ── Quick Issues ── */
-.quick-issues { display:flex; flex-wrap:wrap; gap:8px; padding:12px 16px; border-top:1px solid #334155; }
-.quick-btn { padding:6px 12px; background:#0f172a; border:1px solid #334155; border-radius:20px; color:#94a3b8; font-size:12px; cursor:pointer; transition:all .2s; }
-.quick-btn:hover { border-color:#6366f1; color:#6366f1; }
+/* ── CHAT ── */
+.chat-card{background:rgba(19,10,13,0.9);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,0.4);}
+.chat-messages{height:440px;overflow-y:auto;padding:20px;
+  display:flex;flex-direction:column;gap:14px;}
+.chat-messages::-webkit-scrollbar{width:4px;}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
 
-/* ── Tickets List ── */
-.ticket-card { background:#1e293b; border:1px solid #334155; border-radius:10px; padding:16px; margin-bottom:12px; }
-.ticket-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
-.ticket-id { font-size:13px; font-weight:700; color:#6366f1; }
-.ticket-desc { font-size:13px; color:#cbd5e1; margin:6px 0; line-height:1.4; }
-.ticket-meta { font-size:11px; color:#64748b; }
-.badge-s { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
-.pri-s.Critical { background:#7f1d1d; color:#fca5a5; }
-.pri-s.High     { background:#7c2d12; color:#fdba74; }
-.pri-s.Medium   { background:#713f12; color:#fde047; }
-.pri-s.Low      { background:#14532d; color:#86efac; }
-.st-s.Open        { background:#1e3a5f; color:#93c5fd; }
-.st-s.In-Progress { background:#3b1f6b; color:#c4b5fd; }
-.st-s.Resolved    { background:#14532d; color:#86efac; }
-.st-s.Closed      { background:#1f2937; color:#6b7280; }
+.msg-row{display:flex;gap:10px;align-items:flex-start;}
+.msg-row.user{flex-direction:row-reverse;}
+.bot-avatar{width:32px;height:32px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--pink),var(--pink-dark));
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  box-shadow:0 0 12px rgba(232,25,125,0.4);}
+.bot-avatar img{width:28px;height:28px;border-radius:8px;object-fit:cover;}
+.user-avatar{width:32px;height:32px;border-radius:10px;flex-shrink:0;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;
+  color:var(--text);}
+.msg-bubble{max-width:80%;padding:12px 16px;border-radius:14px;
+  font-size:13.5px;line-height:1.6;}
+.msg-bubble.bot{background:rgba(26,13,18,0.95);border:1px solid var(--border2);
+  border-top-left-radius:4px;color:var(--text);}
+.msg-bubble.user{background:linear-gradient(135deg,var(--pink),var(--pink-dark));
+  color:#fff;border-top-right-radius:4px;
+  box-shadow:0 2px 12px rgba(232,25,125,0.3);}
+.msg-bubble.system{background:rgba(232,25,125,0.06);border:1px solid var(--border);
+  color:var(--muted);font-size:12px;text-align:center;border-radius:20px;
+  padding:6px 16px;align-self:center;margin:0 auto;}
+.ticket-banner{margin-top:10px;padding:10px 14px;
+  background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);
+  border-radius:10px;font-size:12px;color:var(--success);}
+.typing-row{display:flex;gap:10px;align-items:center;}
+.typing-dots{display:flex;gap:4px;padding:12px 16px;
+  background:rgba(26,13,18,0.95);border:1px solid var(--border2);
+  border-radius:14px;border-top-left-radius:4px;}
+.typing-dots span{width:6px;height:6px;background:var(--pink);border-radius:50%;
+  animation:typing .8s infinite;}
+.typing-dots span:nth-child(2){animation-delay:.15s;}
+.typing-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.4;}
+  30%{transform:translateY(-6px);opacity:1;}}
+
+/* ── QUICK CHIPS ── */
+.quick-wrap{padding:12px 16px;border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:6px;background:rgba(13,6,8,0.6);}
+.quick-label{font-size:11px;color:var(--muted);width:100%;margin-bottom:2px;}
+.chip{padding:6px 14px;background:rgba(232,25,125,0.07);
+  border:1px solid rgba(232,25,125,0.2);border-radius:20px;
+  font-size:11.5px;color:var(--pink);cursor:pointer;
+  font-family:var(--font);transition:all .2s;font-weight:500;}
+.chip:hover{background:rgba(232,25,125,0.2);border-color:var(--pink);
+  transform:translateY(-1px);}
+
+/* ── INPUT ── */
+.chat-input-row{display:flex;gap:8px;padding:12px 14px;
+  border-top:1px solid var(--border);background:var(--bg);}
+.chat-input{flex:1;padding:12px 16px;background:rgba(26,13,18,0.8);
+  border:1px solid var(--border2);border-radius:12px;color:var(--text);
+  font-size:14px;font-family:var(--font);outline:none;transition:all .2s;}
+.chat-input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(232,25,125,0.08);}
+.chat-input::placeholder{color:var(--muted);}
+.send-btn{padding:12px 20px;background:linear-gradient(135deg,var(--pink),var(--pink-dark));
+  border:none;border-radius:12px;color:#fff;font-size:14px;
+  cursor:pointer;font-weight:600;font-family:var(--font);transition:all .2s;
+  box-shadow:0 2px 12px rgba(232,25,125,0.35);}
+.send-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(232,25,125,0.5);}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* ── TICKETS ── */
+.ticket-card{background:rgba(19,10,13,0.9);border:1px solid var(--border);
+  border-radius:14px;padding:16px;margin-bottom:10px;
+  transition:border-color .2s;}
+.ticket-card:hover{border-color:var(--border2);}
+.tkt-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.tkt-id{font-size:13px;font-weight:700;color:var(--pink);}
+.tkt-desc{font-size:13px;color:var(--text);margin:6px 0;line-height:1.5;}
+.tkt-meta{font-size:11px;color:var(--muted);}
+.badge-s{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.p-Critical{background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.2);}
+.p-High{background:rgba(251,146,60,0.12);color:#fb923c;border:1px solid rgba(251,146,60,0.2);}
+.p-Medium{background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);}
+.p-Low{background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.2);}
+.s-Open{background:rgba(232,25,125,0.1);color:var(--pink);border:1px solid rgba(232,25,125,0.2);}
+.s-In-Progress{background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.2);}
+.s-Resolved{background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.2);}
+.s-Closed{background:rgba(100,116,139,0.1);color:#64748b;border:1px solid rgba(100,116,139,0.2);}
+
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-state .e-icon{font-size:44px;margin-bottom:12px;filter:grayscale(.5);}
+.empty-state p{font-size:14px;}
 
 /* Scrollbar */
-::-webkit-scrollbar { width:5px; }
-::-webkit-scrollbar-track { background:#0f172a; }
-::-webkit-scrollbar-thumb { background:#334155; border-radius:3px; }
-
-.empty-state { text-align:center; padding:40px; color:#475569; }
-.empty-state .icon { font-size:40px; margin-bottom:12px; }
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
 </style>
 </head>
 <body>
 
-<!-- ══ LOGIN ═══════════════════════════════════════════════════════════════ -->
+<!-- ══ LOGIN ══ -->
 <div id="loginPage">
-  <div class="login-box">
-    <div class="logo">🛠️</div>
-    <h1>WIOM IT Helpdesk</h1>
-    <p>Apni Employee ID daalo — AI aapki madad karega!</p>
-    <input type="text" id="empIdInput" placeholder="Employee ID (e.g. 1234567)" maxlength="10"/>
-    <input type="text" id="empNameInput" placeholder="Aapka Naam"/>
-    <button class="btn-primary" onclick="doLogin()">🚀 Start Helpdesk</button>
-    <div class="err" id="loginErr">❌ Employee ID nahi mila. Sajan se contact karo.</div>
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="/wiom-logo.webp" alt="WIOM" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+      <div style="display:none;font-size:44px;">🛠️</div>
+      <div class="brand-name"><span>W</span>IOM IT Helpdesk</div>
+      <div class="brand-sub">Ghar Ka Net — Gurgaon Office Support</div>
+    </div>
+    <h2>Employee Login</h2>
+    <p>Apni Employee ID daalo — AI turant madad karega! 🤖</p>
+    <div class="inp-wrap">
+      <span class="inp-icon">🪪</span>
+      <input type="text" id="empIdInput" placeholder="Employee ID (jaise: 1234567)" maxlength="10"/>
+    </div>
+    <div class="inp-wrap">
+      <span class="inp-icon">👤</span>
+      <input type="text" id="empNameInput" placeholder="Aapka Naam"/>
+    </div>
+    <button class="btn-login" onclick="doLogin()">🚀 Helpdesk Shuru Karo</button>
+    <div class="err" id="loginErr">❌ Kuch problem aa gayi. Dubara try karo.</div>
+    <div class="login-footer">WIOM Internet Services · IT Department · Sajan Kumar: 9654244281</div>
   </div>
 </div>
 
-<!-- ══ MAIN ════════════════════════════════════════════════════════════════ -->
+<!-- ══ MAIN ══ -->
 <div id="mainPage">
-  <div class="topbar">
-    <div class="topbar-left">
-      <h2>🛠️ WIOM IT Helpdesk</h2>
-      <p id="empInfoBar">Loading...</p>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo">
+        <img src="/wiom-logo.webp" alt="WIOM" onerror="this.outerHTML='<div style=\'width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#E8197D,#c0146a);display:flex;align-items:center;justify-content:center;font-size:18px;\'>🛠️</div>'"/>
+      </div>
+      <div class="header-info">
+        <h2><span>W</span>IOM IT Helpdesk</h2>
+        <p id="empInfoBar">Loading...</p>
+      </div>
     </div>
-    <button class="logout-btn" onclick="doLogout()">← Logout</button>
+    <div class="header-right">
+      <div class="online-dot">AI Online</div>
+      <div class="emp-pill" id="empPill">—</div>
+      <button class="logout-btn" onclick="doLogout()">← Logout</button>
+    </div>
   </div>
 
+  <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('chat',this)">💬 AI Help Chat</button>
     <button class="tab-btn" onclick="switchTab('tickets',this)">🎫 Mere Tickets</button>
   </div>
 
-  <!-- ── CHAT TAB ── -->
+  <!-- Chat Tab -->
   <div id="tab-chat">
-    <div class="chat-wrap">
-      <div class="chat-messages" id="chatMessages">
-        <div class="msg system">🤖 WIOM IT Helpdesk AI — Ready to help!</div>
+    <div class="chat-card">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="quick-wrap">
+        <div class="quick-label">⚡ Quick Problems:</div>
+        <span class="chip" onclick="quickSend('Laptop slow hai')">💻 Laptop Slow</span>
+        <span class="chip" onclick="quickSend('WiFi nahi chal raha')">📶 WiFi Issue</span>
+        <span class="chip" onclick="quickSend('Outlook nahi khul raha')">📧 Outlook</span>
+        <span class="chip" onclick="quickSend('Teams call drop ho raha hai')">📹 Teams</span>
+        <span class="chip" onclick="quickSend('Password bhool gaya')">🔑 Password</span>
+        <span class="chip" onclick="quickSend('Printer nahi chal raha')">🖨️ Printer</span>
+        <span class="chip" onclick="quickSend('Naya laptop chahiye')">🛒 New Laptop</span>
+        <span class="chip" onclick="quickSend('Blue screen aa raha hai')">💙 BSOD</span>
+        <span class="chip" onclick="quickSend('Mic nahi chal raha Teams mein')">🎤 Mic</span>
+        <span class="chip" onclick="quickSend('Screen flickering hai')">🖥️ Monitor</span>
       </div>
-      <div class="quick-issues" id="quickIssues">
-        <span style="font-size:12px;color:#64748b;margin-right:4px;">Quick:</span>
-        <button class="quick-btn" onclick="quickSend('Laptop slow hai')">💻 Laptop Slow</button>
-        <button class="quick-btn" onclick="quickSend('WiFi nahi chal raha')">📶 WiFi Issue</button>
-        <button class="quick-btn" onclick="quickSend('Outlook nahi khul raha')">📧 Outlook Issue</button>
-        <button class="quick-btn" onclick="quickSend('Teams call drop ho raha hai')">📹 Teams Issue</button>
-        <button class="quick-btn" onclick="quickSend('Password bhool gaya')">🔑 Password Reset</button>
-        <button class="quick-btn" onclick="quickSend('Printer nahi chal raha')">🖨️ Printer</button>
-        <button class="quick-btn" onclick="quickSend('Naya laptop chahiye')">🛒 New Laptop</button>
-        <button class="quick-btn" onclick="quickSend('Blue screen aa raha hai')">💙 BSOD</button>
-      </div>
-      <div class="chat-input-wrap">
-        <input class="chat-input" id="chatInput" placeholder="Apni problem likho... (Hindi/English dono chalega)" onkeypress="if(event.key==='Enter')sendMsg()"/>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" placeholder="Apni problem likho — Hindi ya English dono chalega..." onkeypress="if(event.key==='Enter')sendMsg()"/>
         <button class="send-btn" id="sendBtn" onclick="sendMsg()">Send ➤</button>
       </div>
     </div>
   </div>
 
-  <!-- ── TICKETS TAB ── -->
+  <!-- Tickets Tab -->
   <div id="tab-tickets" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <span style="font-size:13px;color:#64748b;" id="ticketCount"></span>
-      <button onclick="loadMyTickets()" style="padding:6px 14px;background:transparent;border:1px solid #334155;border-radius:8px;color:#94a3b8;font-size:12px;cursor:pointer;">🔄 Refresh</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:13px;color:var(--muted);" id="ticketCount"></span>
+      <button onclick="loadMyTickets()" style="padding:6px 14px;background:var(--pink-soft);border:1px solid var(--border2);border-radius:8px;color:var(--pink);font-size:12px;cursor:pointer;font-family:var(--font);">🔄 Refresh</button>
     </div>
-    <div id="myTicketsList"><div class="empty-state"><div class="icon">⏳</div><p>Loading...</p></div></div>
+    <div id="myTicketsList"><div class="empty-state"><div class="e-icon">⏳</div><p>Loading...</p></div></div>
   </div>
 </div>
 
 <script>
 const API = 'https://web-production-ef6c1.up.railway.app';
-let empData = {};
-let chatHistory = [];
-let myTickets = [];
+let empData = {}, chatHistory = [], myTickets = [];
 
-// ── LOGIN ───────────────────────────────────────────────────────────────────
+// ── LOGIN ──
 async function doLogin() {
   const empId = document.getElementById('empIdInput').value.trim().toUpperCase();
   const name  = document.getElementById('empNameInput').value.trim();
   if (!empId) { showErr('Employee ID daalo!'); return; }
-
   try {
-    // Try to look up employee from API
     const res = await fetch(`${API}/api/employees/${empId}`).catch(()=>null);
     if (res && res.ok) {
-      const data = await res.json();
-      const emp  = data.employee || data;
-      empData = { empId: emp.empId, name: emp.name || name, dept: emp.department, floor: emp.floor, email: emp.email, laptop: emp.laptop, laptopSN: emp.laptopSN };
+      const d = await res.json();
+      const e = d.employee || d;
+      empData = { empId:e.empId, name:e.name||name, dept:e.department, floor:e.floor, email:e.email, laptop:e.laptop, laptopSN:e.laptopSN };
     } else {
-      // Allow manual entry if not found (guest mode)
       if (!name) { showErr('Naam bhi daalo!'); return; }
-      empData = { empId, name, dept: 'Unknown', floor: '', email: '', laptop: '', laptopSN: '' };
+      empData = { empId, name, dept:'WIOM', floor:'', email:'', laptop:'', laptopSN:'' };
     }
-
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainPage').style.display  = 'block';
-    document.getElementById('empInfoBar').textContent  =
-      `${empData.name} | ${empData.dept||'WIOM'} | ${empData.floor||''} | ${empData.laptop ? 'Laptop: '+empData.laptop : ''}`;
-
-    // Welcome message
-    addBotMsg(`Namaste ${empData.name.split(' ')[0]} bhai/didi! 👋\n\nMain aapka IT Helpdesk assistant hoon. Koi bhi laptop, internet, software ya kisi bhi cheez ki problem batao — main try karunga pehle solve karne ki, zarurat hui toh Sajan Kumar ko ticket bhej dunga! 🛠️\n\nKya problem aa rahi hai?`);
-  } catch(e) {
-    showErr('Server se connect nahi ho paa raha. Thodi der baad try karo.');
-  }
+    const initial = empData.name.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+    document.getElementById('empPill').textContent = initial + ' ' + empData.name.split(' ')[0];
+    document.getElementById('empInfoBar').textContent = [empData.dept, empData.floor, empData.laptop].filter(Boolean).join(' · ');
+    addWelcome();
+  } catch(e) { showErr('Server error. Sajan ko call karo: 9654244281'); }
 }
-
 function showErr(msg) {
   const el = document.getElementById('loginErr');
-  el.textContent = '❌ ' + msg;
-  el.style.display = 'block';
+  el.textContent = '❌ ' + msg; el.style.display = 'block';
 }
-
 function doLogout() {
-  empData = {}; chatHistory = [];
-  document.getElementById('chatMessages').innerHTML = '<div class="msg system">🤖 WIOM IT Helpdesk AI — Ready to help!</div>';
-  document.getElementById('mainPage').style.display = 'none';
-  document.getElementById('loginPage').style.display = 'flex';
-  document.getElementById('loginErr').style.display = 'none';
+  empData={}; chatHistory=[];
+  document.getElementById('chatMessages').innerHTML='';
+  document.getElementById('mainPage').style.display='none';
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('loginErr').style.display='none';
 }
 
-// ── TABS ────────────────────────────────────────────────────────────────────
+// ── WELCOME ──
+function addWelcome() {
+  const firstName = empData.name.split(' ')[0];
+  addBotMsg(`Namaste <b>${firstName}</b> ji! 👋\n\nMain WIOM IT Helpdesk AI hoon — Sajan Kumar ka digital assistant.\n\nKoi bhi laptop, WiFi, software, ya kisi bhi IT problem mein help karunga. Pehle khud solve karne ki koshish karunga, zarurat padi toh Sajan ko ticket bhej dunga.\n\nBatao — kya problem aa rahi hai? 🛠️`);
+}
+
+// ── TABS ──
 function switchTab(tab, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('tab-chat').style.display    = tab === 'chat'    ? 'block' : 'none';
-  document.getElementById('tab-tickets').style.display = tab === 'tickets' ? 'block' : 'none';
-  if (tab === 'tickets') loadMyTickets();
+  document.getElementById('tab-chat').style.display    = tab==='chat'    ? 'block':'none';
+  document.getElementById('tab-tickets').style.display = tab==='tickets' ? 'block':'none';
+  if (tab==='tickets') loadMyTickets();
 }
 
-// ── CHAT ────────────────────────────────────────────────────────────────────
-function addBotMsg(text, ticketInfo) {
+// ── CHAT ──
+function addBotMsg(html, ticketInfo) {
   const wrap = document.getElementById('chatMessages');
-  const div  = document.createElement('div');
-  div.className = 'msg bot';
-  div.innerHTML = text.replace(/\n/g,'<br/>');
-  if (ticketInfo) {
-    div.innerHTML += `<div class="ticket-created">✅ <b>${ticketInfo.ticketId}</b> create ho gaya!<br/>Sajan Kumar jald contact karenge. Priority: <b>${ticketInfo.priority}</b></div>`;
-  }
-  wrap.appendChild(div);
-  wrap.scrollTop = wrap.scrollHeight;
+  const row = document.createElement('div'); row.className='msg-row';
+  row.innerHTML = `
+    <div class="bot-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='🤖'"/></div>
+    <div class="msg-bubble bot">${html.replace(/\n/g,'<br/>')}${ticketInfo?`<div class="ticket-banner">✅ <b>${ticketInfo.ticketId}</b> create ho gaya! Priority: <b>${ticketInfo.priority}</b> | SLA: ${ticketInfo.slaHours}h<br/>Sajan Kumar jald help karenge.</div>`:''}</div>`;
+  wrap.appendChild(row); wrap.scrollTop=wrap.scrollHeight;
 }
-
 function addUserMsg(text) {
   const wrap = document.getElementById('chatMessages');
-  const div  = document.createElement('div');
-  div.className = 'msg user';
-  div.textContent = text;
-  wrap.appendChild(div);
-  wrap.scrollTop = wrap.scrollHeight;
+  const initial = (empData.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+  const row = document.createElement('div'); row.className='msg-row user';
+  row.innerHTML = `<div class="user-avatar">${initial}</div><div class="msg-bubble user">${text}</div>`;
+  wrap.appendChild(row); wrap.scrollTop=wrap.scrollHeight;
 }
-
-function addTyping() {
+function addSystemMsg(text) {
   const wrap = document.getElementById('chatMessages');
-  const div  = document.createElement('div');
-  div.className = 'msg typing'; div.id = 'typingIndicator';
-  div.textContent = '🤖 Soch raha hoon...';
-  wrap.appendChild(div);
-  wrap.scrollTop = wrap.scrollHeight;
+  const div = document.createElement('div'); div.className='msg-bubble system';
+  div.textContent=text; wrap.appendChild(div); wrap.scrollTop=wrap.scrollHeight;
 }
-
-function removeTyping() {
-  document.getElementById('typingIndicator')?.remove();
+function showTyping() {
+  const wrap = document.getElementById('chatMessages');
+  const row = document.createElement('div'); row.className='msg-row'; row.id='typingRow';
+  row.innerHTML = `<div class="bot-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='🤖'"/></div><div class="typing-dots"><span></span><span></span><span></span></div>`;
+  wrap.appendChild(row); wrap.scrollTop=wrap.scrollHeight;
 }
-
-function quickSend(text) {
-  document.getElementById('chatInput').value = text;
-  sendMsg();
-}
+function hideTyping() { document.getElementById('typingRow')?.remove(); }
+function quickSend(t) { document.getElementById('chatInput').value=t; sendMsg(); }
 
 async function sendMsg() {
   const input = document.getElementById('chatInput');
-  const text  = input.value.trim();
-  if (!text) return;
-
-  input.value = '';
-  document.getElementById('sendBtn').disabled = true;
+  const text = input.value.trim(); if (!text) return;
+  input.value='';
+  document.getElementById('sendBtn').disabled=true;
   addUserMsg(text);
-  chatHistory.push({ role: 'user', content: text });
-  addTyping();
-
+  chatHistory.push({ role:'user', content:text });
+  showTyping();
   try {
-    const res  = await fetch(`${API}/api/ai/chat`, {
-      method : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({
-        messages: chatHistory,
-        empId   : empData.empId,
-        empName : empData.name,
-        source  : 'web'
-      })
+    const res = await fetch(`${API}/api/ai/chat`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ messages:chatHistory, empId:empData.empId, empName:empData.name, source:'web' })
     });
-    const data = await res.json();
-    removeTyping();
-
-    const reply = data.reply || 'Kuch error aa gaya, dobara try karo.';
-    chatHistory.push({ role: 'assistant', content: reply });
-
+    const data = await res.json(); hideTyping();
+    const reply = data.reply || 'Kuch error aa gaya. Sajan ko call karo: 9654244281';
+    chatHistory.push({ role:'assistant', content:reply });
     let ticketInfo = null;
     if (data.shouldCreateTicket && data.ticketData) {
-      // Create ticket automatically
       ticketInfo = await createTicket(data.ticketData, text);
       if (ticketInfo) myTickets.unshift(ticketInfo);
     }
-
     addBotMsg(reply, ticketInfo);
-  } catch(e) {
-    removeTyping();
-    addBotMsg('❌ Server se connect nahi ho pa raha. Seedha Sajan se contact karo: 📞 9654244281');
-  }
-
-  document.getElementById('sendBtn').disabled = false;
+  } catch(e) { hideTyping(); addBotMsg('❌ Server se connect nahi ho pa raha.\nSeedhaa Sajan se contact karo: 📞 <b>9654244281</b>'); }
+  document.getElementById('sendBtn').disabled=false;
   document.getElementById('chatInput').focus();
 }
 
-async function createTicket(ticketData, originalMsg) {
+async function createTicket(td, orig) {
   try {
     const res = await fetch(`${API}/api/tickets`, {
-      method : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({
-        empId      : empData.empId,
-        empName    : empData.name,
-        empEmail   : empData.email,
-        empDept    : empData.dept,
-        empFloor   : empData.floor,
-        laptop     : empData.laptop,
-        category   : ticketData.category   || 'Other',
-        priority   : ticketData.priority   || 'Medium',
-        description: ticketData.description|| originalMsg,
-        source     : 'web',
-        aiTried    : true,
-        aiSteps    : ticketData.steps || []
-      })
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ empId:empData.empId, empName:empData.name, empEmail:empData.email,
+        empDept:empData.dept, empFloor:empData.floor, laptop:empData.laptop,
+        category:td.category||'Other', priority:td.priority||'Medium',
+        description:td.description||orig, source:'web', aiTried:true, aiSteps:td.steps||[] })
     });
-    const data = await res.json();
-    return data.ticket || null;
+    return (await res.json()).ticket || null;
   } catch { return null; }
 }
 
-// ── MY TICKETS ──────────────────────────────────────────────────────────────
+// ── MY TICKETS ──
 async function loadMyTickets() {
-  const list = document.getElementById('myTicketsList');
-  list.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Loading...</p></div>';
+  document.getElementById('myTicketsList').innerHTML='<div class="empty-state"><div class="e-icon">⏳</div><p>Loading...</p></div>';
   try {
     const res  = await fetch(`${API}/api/tickets?empId=${empData.empId}&limit=50`);
     const data = await res.json();
-    const tickets = (data.tickets || []).filter(t => t.empId === empData.empId);
+    const tickets = (data.tickets||[]).filter(t=>t.empId===empData.empId);
     document.getElementById('ticketCount').textContent = `Aapke ${tickets.length} ticket(s)`;
     if (!tickets.length) {
-      list.innerHTML = '<div class="empty-state"><div class="icon">🎉</div><p>Abhi koi ticket nahi! Sab theek chal raha hai.</p></div>';
-      return;
+      document.getElementById('myTicketsList').innerHTML='<div class="empty-state"><div class="e-icon">🎉</div><p>Koi ticket nahi! Sab theek chal raha hai.</p></div>'; return;
     }
-    list.innerHTML = tickets.map(t => {
-      const statusClass = (t.status||'Open').replace(' ','-');
-      const timeStr = timeAgo(t.createdAt);
-      return `
+    document.getElementById('myTicketsList').innerHTML = tickets.map(t=>`
       <div class="ticket-card">
-        <div class="ticket-card-header">
-          <span class="ticket-id">${t.ticketId}</span>
+        <div class="tkt-header">
+          <span class="tkt-id">${t.ticketId}</span>
           <div style="display:flex;gap:6px;">
-            <span class="badge-s pri-s ${t.priority}">${t.priority}</span>
-            <span class="badge-s st-s ${statusClass}">${t.status}</span>
+            <span class="badge-s p-${t.priority}">${t.priority}</span>
+            <span class="badge-s s-${(t.status||'Open').replace(' ','-')}">${t.status}</span>
           </div>
         </div>
-        <div class="ticket-desc">${t.description}</div>
-        <div class="ticket-meta">
-          📂 ${t.category||'Other'} &nbsp;|&nbsp; ⏱ ${timeStr}
-          ${t.resolution ? `<br/>✅ <em>Resolution: ${t.resolution}</em>` : ''}
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    list.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>Load failed. Refresh karo.</p></div>';
-  }
+        <div class="tkt-desc">${t.description||'—'}</div>
+        <div class="tkt-meta">📂 ${t.category||'Other'} &nbsp;·&nbsp; 🕐 ${timeAgo(t.createdAt)}${t.resolution?`<br/>✅ ${t.resolution}`:''}</div>
+      </div>`).join('');
+  } catch { document.getElementById('myTicketsList').innerHTML='<div class="empty-state"><div class="e-icon">❌</div><p>Load failed. Refresh karo.</p></div>'; }
 }
 
-function timeAgo(dateStr) {
-  const diff = (Date.now() - new Date(dateStr)) / 1000;
-  if (diff < 60)    return 'Abhi abhi';
-  if (diff < 3600)  return Math.floor(diff/60) + ' min pehle';
-  if (diff < 86400) return Math.floor(diff/3600) + ' ghante pehle';
-  return Math.floor(diff/86400) + ' din pehle';
+function timeAgo(d) {
+  const s=(Date.now()-new Date(d))/1000;
+  if(s<60) return 'abhi abhi';
+  if(s<3600) return Math.floor(s/60)+'m pehle';
+  if(s<86400) return Math.floor(s/3600)+'h pehle';
+  return Math.floor(s/86400)+'d pehle';
 }
-
-// Enter to login
-document.getElementById('empNameInput').addEventListener('keypress', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('empNameInput').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
 </script>
 </body>
 </html>
