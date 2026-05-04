@@ -243,6 +243,7 @@ app.listen(PORT, () => {
             body   : JSON.stringify({ ...data, aiTried: true })
           });
           const json = await res.json();
+          if (res.status === 409) return { _duplicate: true, ticket: json.ticket, message: json.message };
           return json.ticket;
         } catch { return null; }
       };
@@ -254,7 +255,40 @@ app.listen(PORT, () => {
         const text   = command.text?.trim() || '';
 
         if (!text) {
-          await respond({ response_type: 'ephemeral', text: '🛠 *WIOM IT Helpdesk*\nApni problem batao:\n`/helpdesk wifi nahi chal raha`\n`/helpdesk outlook nahi khul raha`\n`/helpdesk laptop slow hai`' });
+          await respond({ response_type: 'ephemeral', blocks:[
+            { type:'section', text:{ type:'mrkdwn', text:'*🛠 WIOM IT Helpdesk*\nApni IT problem batao — main try karunga solve karne ki!\n\n*Examples:*\n• `/helpdesk wifi nahi chal raha`\n• `/helpdesk laptop slow hai`\n• `/helpdesk outlook nahi khul raha`\n\n_Apne tickets dekhne ke liye:_ `/helpdesk status`' }}
+          ], text:'WIOM IT Helpdesk — apni problem batao' });
+          return;
+        }
+
+        // ── /helpdesk status — show employee's open tickets ─────────────────
+        if (text.toLowerCase() === 'status' || text.toLowerCase() === 'meri tickets') {
+          const emp = await lookupEmployee(userId, client);
+          const tickets = await Ticket.find({
+            $or: [{ empId: emp.empId }, { slackUserId: userId }],
+            status: { $nin: ['Closed'] }
+          }).sort({ createdAt: -1 }).limit(5);
+
+          if (!tickets.length) {
+            await respond({ response_type: 'ephemeral', text: '🎉 Koi open ticket nahi hai! Sab kuch theek hai.' });
+            return;
+          }
+
+          const priEmoji  = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+          const statEmoji = { Open:'⏳', 'In Progress':'🔄', Resolved:'✅', Closed:'🔒' };
+          const blocks = [
+            { type:'section', text:{ type:'mrkdwn', text:`*📋 Tere Tickets (${tickets.length})*` }},
+            { type:'divider' }
+          ];
+          tickets.forEach(t => {
+            const hrs = Math.round((Date.now() - new Date(t.createdAt)) / 3600000);
+            blocks.push({ type:'section', fields:[
+              { type:'mrkdwn', text:`*\`${t.ticketId}\`*\n${priEmoji[t.priority]||'🟡'} ${t.priority}` },
+              { type:'mrkdwn', text:`*${statEmoji[t.status]||'⏳'} ${t.status}*\n${hrs}h ago` }
+            ]});
+            blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`${(t.description||'').substring(0,60)}...` }]});
+          });
+          await respond({ response_type: 'ephemeral', text: `Tere ${tickets.length} ticket(s)`, blocks });
           return;
         }
 
@@ -274,22 +308,25 @@ app.listen(PORT, () => {
           ];
 
           if (shouldCreateTicket && ticketData) {
-            const ticket = await createTicketSlack({
+            const result = await createTicketSlack({
               empId: emp.empId, empName: emp.empName, empEmail: emp.email,
               empDept: emp.dept, empFloor: emp.floor,
               laptop: emp.laptop, laptopSN: emp.laptopSN,
               ...ticketData, description: ticketData.description || text,
               source: 'slack', slackUserId: userId
             });
-            if (ticket) {
+            if (result?._duplicate) {
+              blocks.push({ type:'divider' });
+              blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`⚠️ ${result.message}` }]});
+            } else if (result) {
               const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
               blocks.push({ type:'divider' });
               blocks.push({ type:'section', fields:[
-                { type:'mrkdwn', text:`*✅ Ticket Bana:*\n\`${ticket.ticketId}\`` },
-                { type:'mrkdwn', text:`*${priEmoji[ticket.priority]||'🟡'} Priority:*\n${ticket.priority}` }
+                { type:'mrkdwn', text:`*✅ Ticket Bana:*\n\`${result.ticketId}\`` },
+                { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority:*\n${result.priority}` }
               ]});
               blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`Sajan Kumar ko alert kar diya gaya 🙏` }]});
-              await notifySajan(client, ticket, emp);
+              await notifySajan(client, result, emp);
             }
           }
 
@@ -322,27 +359,29 @@ app.listen(PORT, () => {
           await say({ text: reply, blocks, thread_ts: message.ts });
 
           if (shouldCreateTicket && ticketData) {
-            const ticket = await createTicketSlack({
+            const result = await createTicketSlack({
               empId: emp.empId, empName: emp.empName, empEmail: emp.email,
               empDept: emp.dept, empFloor: emp.floor,
               laptop: emp.laptop, laptopSN: emp.laptopSN,
               ...ticketData, description: ticketData.description || text,
               source: 'slack', slackUserId: userId
             });
-            if (ticket) {
+            if (result?._duplicate) {
+              await say({ text: `⚠️ ${result.message}`, thread_ts: message.ts });
+            } else if (result) {
               const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
               await say({
-                text: `🎫 Ticket ${ticket.ticketId} create ho gaya!`,
+                text: `🎫 Ticket ${result.ticketId} create ho gaya!`,
                 thread_ts: message.ts,
                 blocks: [
                   { type:'section', fields:[
-                    { type:'mrkdwn', text:`*🎫 Ticket*\n\`${ticket.ticketId}\`` },
-                    { type:'mrkdwn', text:`*${priEmoji[ticket.priority]||'🟡'} Priority*\n${ticket.priority}` }
+                    { type:'mrkdwn', text:`*🎫 Ticket*\n\`${result.ticketId}\`` },
+                    { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority*\n${result.priority}` }
                   ]},
                   { type:'context', elements:[{ type:'mrkdwn', text:`✅ Ticket create ho gaya! Sajan Kumar ko notify kar diya gaya. 🙏` }]}
                 ]
               });
-              await notifySajan(client, ticket, emp);
+              await notifySajan(client, result, emp);
             }
           }
         } catch (err) {
@@ -353,7 +392,8 @@ app.listen(PORT, () => {
 
       slackApp.start().then(async () => {
         console.log('🤖 Slack Bot started! Socket Mode active.');
-        slackClient = slackApp.client; // make available to escalation cron
+        slackClient = slackApp.client;       // for escalation cron
+        app.locals.slackClient = slackApp.client; // for routes (resolve DM)
 
         // Auto-link Sajan's Slack ID if configured
         const sajanSlackId = process.env.SAJAN_SLACK_ID;

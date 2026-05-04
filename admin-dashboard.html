@@ -216,9 +216,13 @@
   <!-- Main Content -->
   <div class="main-content">
     <div class="topbar">
-      <h1 id="pageTitle">Dashboard</h1>
+      <div>
+        <h1 id="pageTitle">Dashboard</h1>
+        <div id="lastRefreshed" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+      </div>
       <div class="topbar-right">
         <span class="badge">Sajan Kumar</span>
+        <div id="autoRefreshTimer" style="font-size:12px;color:var(--muted);padding:5px 10px;background:rgba(232,25,125,0.06);border:1px solid var(--border);border-radius:8px;min-width:80px;text-align:center;"></div>
         <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
         <button class="logout-btn" onclick="doLogout()">Logout</button>
       </div>
@@ -292,7 +296,7 @@
         </div>
         <div class="card-body">
           <table>
-            <thead><tr><th class="check-col"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"/></th><th>Ticket ID</th><th>Employee</th><th>Category</th><th>Issue</th><th>Priority</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+            <thead><tr><th class="check-col"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"/></th><th>Ticket ID</th><th>Employee</th><th>Category</th><th>Issue</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Created</th><th>Action</th></tr></thead>
             <tbody id="allTicketsBody"><tr class="empty-row"><td colspan="9">Loading...</td></tr></tbody>
           </table>
         </div>
@@ -432,6 +436,94 @@ let allTickets = [];
 let allEmployees = [];
 let currentFilter = 'all';
 let currentTicketId = '';
+let autoRefreshInterval = null;
+let countdownInterval = null;
+let lastTicketCount = 0;
+let notifPermission = false;
+
+// ── SOUND ALERT (Web Audio API — no file needed) ───────────────────────────
+function playAlert(type = 'new') {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = type === 'critical' ? [880, 660, 880] : [660, 880];
+    let t = ctx.currentTime;
+    notes.forEach(freq => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.start(t); osc.stop(t + 0.3);
+      t += 0.2;
+    });
+  } catch(e) {}
+}
+
+// ── BROWSER NOTIFICATION ───────────────────────────────────────────────────
+async function requestNotifPermission() {
+  if ('Notification' in window) {
+    const perm = await Notification.requestPermission();
+    notifPermission = perm === 'granted';
+  }
+}
+
+function showBrowserNotif(title, body, isCritical = false) {
+  if (!notifPermission) return;
+  try {
+    const n = new Notification(title, {
+      body, icon: '/wiom-logo.webp',
+      tag: 'wiom-helpdesk',
+      requireInteraction: isCritical
+    });
+    n.onclick = () => { window.focus(); n.close(); };
+    if (!isCritical) setTimeout(() => n.close(), 5000);
+  } catch(e) {}
+}
+
+// ── CHECK FOR NEW TICKETS (called on every auto-refresh) ───────────────────
+function checkNewTickets(newTickets) {
+  if (lastTicketCount === 0) { lastTicketCount = newTickets.length; return; }
+  const newOnes = newTickets.filter(t =>
+    !allTickets.find(x => x._id === t._id) ||
+    (new Date(t.createdAt) > new Date(Date.now() - 65000))
+  ).filter(t => new Date(t.createdAt) > new Date(Date.now() - 65000));
+
+  if (newOnes.length > 0) {
+    const critical = newOnes.some(t => t.priority === 'Critical');
+    playAlert(critical ? 'critical' : 'new');
+    newOnes.forEach(t => {
+      showBrowserNotif(
+        `🎫 Naya Ticket: ${t.ticketId}`,
+        `${t.empName||t.empId} — ${(t.description||'').substring(0,60)}`,
+        t.priority === 'Critical'
+      );
+    });
+  }
+  lastTicketCount = newTickets.length;
+}
+
+// ── AUTO-REFRESH (60 seconds countdown) ───────────────────────────────────
+function startAutoRefresh() {
+  if (autoRefreshInterval) return;
+  let secs = 60;
+  const tick = () => {
+    const el = document.getElementById('autoRefreshTimer');
+    if (el) el.textContent = `🔄 ${secs}s`;
+    if (secs <= 0) {
+      secs = 60;
+      loadAllTickets().then(() => {
+        const now = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+        const el2 = document.getElementById('lastRefreshed');
+        if (el2) el2.textContent = `Last updated: ${now}`;
+      });
+    }
+    secs--;
+  };
+  tick();
+  countdownInterval = setInterval(tick, 1000);
+}
 
 // ── LOGIN ──────────────────────────────────────────────────────────────────
 async function doLogin() {
@@ -451,6 +543,10 @@ async function doLogin() {
       loadDashboard();
       loadAllTickets();
       loadEmployees();
+      requestNotifPermission();
+      startAutoRefresh();
+      const now = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('lastRefreshed').textContent = `Last updated: ${now}`;
     } else {
       document.getElementById('loginError').style.display = 'block';
     }
@@ -542,7 +638,9 @@ async function loadAllTickets() {
   try {
     document.getElementById('allTicketsBody').innerHTML = '<tr class="empty-row"><td colspan="8">Loading...</td></tr>';
     const data = await apiGet('/api/tickets?limit=200');
-    allTickets = data.tickets || data || [];
+    const fresh = data.tickets || data || [];
+    checkNewTickets(fresh);
+    allTickets = fresh;
     renderAllTickets();
     renderRecentTickets();
     updateStats();
@@ -575,6 +673,7 @@ function renderAllTickets() {
       <td title="${t.description||''}">${(t.description||'').substring(0,30)}...</td>
       <td><span class="pri ${t.priority}">${t.priority}</span></td>
       <td><span class="status ${(t.status||'').replace(' ','-')}">${t.status}</span></td>
+      <td style="font-size:11px;color:${t.assignedTo?'#E8197D':'var(--muted2)'};">${t.assignedTo||'—'}</td>
       <td>${timeAgo(t.createdAt)}</td>
       <td>
         <button class="action-btn view" onclick="viewTicket('${t._id}')">👁</button>
@@ -757,6 +856,17 @@ function viewTicket(id) {
         </select>
       </div>
       <div class="modal-field"><label>SLA</label><span style="color:${slaColor};font-weight:600;">${isDone ? '✅ Done' : slaLeft+'h left'}</span></div>
+      <div class="modal-field">
+        <label>👤 Assigned To</label>
+        <select id="assignSelect" style="padding:4px 8px;background:rgba(232,25,125,0.08);border:1px solid rgba(232,25,125,0.2);border-radius:6px;color:#f5e8ee;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;" onchange="changeAssign('${t.ticketId}',this.value)">
+          <option value="">— Unassigned —</option>
+          <option ${(t.assignedTo||'')==='Sajan Kumar'?'selected':''}>Sajan Kumar</option>
+          <option ${(t.assignedTo||'')==='Rahul'?'selected':''}>Rahul</option>
+          <option ${(t.assignedTo||'')==='Priya'?'selected':''}>Priya</option>
+          <option ${(t.assignedTo||'')==='Amit'?'selected':''}>Amit</option>
+          <option ${(t.assignedTo||'')==='Ravi'?'selected':''}>Ravi</option>
+        </select>
+      </div>
     </div>
     <div class="modal-field" style="margin-top:10px;"><label>Description</label><span style="display:block;margin-top:4px;line-height:1.6;color:#f1f5f9;">${t.description||'—'}</span></div>
     ${(t.aiSteps||[]).length ? `<div class="modal-field"><label>AI Steps Tried</label><span style="color:#8a6b76;">${t.aiSteps.join(' → ')}</span></div>` : ''}
@@ -791,8 +901,15 @@ async function changePriority(ticketId, priority) {
   try {
     await apiPatch(`/api/tickets/${ticketId}`, { priority });
     await loadAllTickets();
-    // Don't close modal, just update in background
   } catch(e) { alert('❌ Priority change failed: ' + e.message); }
+}
+
+async function changeAssign(ticketId, assignedTo) {
+  if (!assignedTo) return;
+  try {
+    await apiPatch(`/api/tickets/${ticketId}`, { assignedTo });
+    await loadAllTickets();
+  } catch(e) { alert('❌ Assignment failed: ' + e.message); }
 }
 
 async function saveNote() {

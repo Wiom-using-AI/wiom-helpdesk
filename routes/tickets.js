@@ -10,10 +10,27 @@ router.post('/', async (req, res) => {
   try {
     const { empId, empName, empEmail, empDept, empFloor, laptop,
             category, priority, description, source, slackUserId,
-            slackChannelId, aiSessionId, aiSteps } = req.body;
+            slackChannelId, aiSessionId, aiSteps, skipDuplicateCheck } = req.body;
 
     if (!empId || !description)
       return res.status(400).json({ error: 'empId and description required' });
+
+    // ── Duplicate ticket check (last 30 min, same employee, open ticket) ──────
+    if (!skipDuplicateCheck) {
+      const thirtyMinAgo = new Date(Date.now() - 30 * 60000);
+      const existing = await Ticket.findOne({
+        empId : empId.toUpperCase(),
+        status: { $in: ['Open', 'In Progress'] },
+        createdAt: { $gte: thirtyMinAgo }
+      });
+      if (existing) {
+        return res.status(409).json({
+          error  : 'duplicate',
+          message: `Tera ticket ${existing.ticketId} already open hai! Pehle wala resolve ho jayega.`,
+          ticket : existing
+        });
+      }
+    }
 
     const ticket = await Ticket.create({
       empId, empName, empEmail, empDept, empFloor, laptop,
@@ -140,8 +157,28 @@ router.patch('/:id', verifyAdmin, async (req, res) => {
 
     if (status === 'Resolved' && !ticket.resolvedAt) {
       ticket.resolvedAt = new Date();
+
+      // ── Email resolution to employee ────────────────────────────────────────
       if (ticket.empEmail) {
         emailSvc.sendResolutionEmail(ticket).catch(console.error);
+      }
+
+      // ── Slack DM to employee when ticket resolved ───────────────────────────
+      const slackClient = req.app.locals.slackClient;
+      if (slackClient && ticket.slackUserId) {
+        const resolvedBy_ = req.body.resolvedBy || assignedTo || 'Sajan Kumar';
+        slackClient.chat.postMessage({
+          channel: ticket.slackUserId,
+          text   : `✅ Tera ticket ${ticket.ticketId} resolve ho gaya!`,
+          blocks : [
+            { type:'section', text:{ type:'mrkdwn', text:
+              `✅ *Tera ticket resolve ho gaya!*\n\n*Ticket:* \`${ticket.ticketId}\`\n*Category:* ${ticket.category}` +
+              (ticket.resolution ? `\n*Resolution:* ${ticket.resolution}` : '')
+            }},
+            { type:'context', elements:[{ type:'mrkdwn',
+              text:`Resolved by ${resolvedBy_} | Agar problem wapas aaye toh Sajan se contact karo: 9654244281` }]}
+          ]
+        }).catch(e => console.error('Slack resolve DM error:', e.message));
       }
     }
 

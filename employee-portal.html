@@ -335,12 +335,18 @@ function switchTab(tab, btn) {
 }
 
 // ── CHAT ──
-function addBotMsg(html, ticketInfo) {
+function addBotMsg(html, ticketInfo, dupMsg) {
   const wrap = document.getElementById('chatMessages');
   const row = document.createElement('div'); row.className='msg-row';
+  let extra = '';
+  if (dupMsg) {
+    extra = `<div class="ticket-banner" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠️ ${dupMsg}</div>`;
+  } else if (ticketInfo) {
+    extra = `<div class="ticket-banner">✅ <b>${ticketInfo.ticketId}</b> create ho gaya! Priority: <b>${ticketInfo.priority}</b> | SLA: ${ticketInfo.slaHours}h<br/>Sajan Kumar jald help karenge.</div>`;
+  }
   row.innerHTML = `
     <div class="bot-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='🤖'"/></div>
-    <div class="msg-bubble bot">${html.replace(/\n/g,'<br/>')}${ticketInfo?`<div class="ticket-banner">✅ <b>${ticketInfo.ticketId}</b> create ho gaya! Priority: <b>${ticketInfo.priority}</b> | SLA: ${ticketInfo.slaHours}h<br/>Sajan Kumar jald help karenge.</div>`:''}</div>`;
+    <div class="msg-bubble bot">${html.replace(/\n/g,'<br/>')}${extra}</div>`;
   wrap.appendChild(row); wrap.scrollTop=wrap.scrollHeight;
 }
 function addUserMsg(text) {
@@ -383,7 +389,11 @@ async function sendMsg() {
     let ticketInfo = null;
     if (data.shouldCreateTicket && data.ticketData) {
       ticketInfo = await createTicket(data.ticketData, text);
-      if (ticketInfo) myTickets.unshift(ticketInfo);
+      if (ticketInfo && !ticketInfo._duplicate) myTickets.unshift(ticketInfo);
+      if (ticketInfo?._duplicate) {
+        addBotMsg(reply, null, ticketInfo._dupMsg);
+        return;
+      }
     }
     addBotMsg(reply, ticketInfo);
   } catch(e) { hideTyping(); addBotMsg('❌ Server se connect nahi ho pa raha.\nSeedhaa Sajan se contact karo: 📞 <b>9654244281</b>'); }
@@ -400,7 +410,10 @@ async function createTicket(td, orig) {
         category:td.category||'Other', priority:td.priority||'Medium',
         description:td.description||orig, source:'web', aiTried:true, aiSteps:td.steps||[] })
     });
-    return (await res.json()).ticket || null;
+    const json = await res.json();
+    // Duplicate ticket — return existing ticket with flag
+    if (res.status === 409) return { ...json.ticket, _duplicate: true, _dupMsg: json.message };
+    return json.ticket || null;
   } catch { return null; }
 }
 
