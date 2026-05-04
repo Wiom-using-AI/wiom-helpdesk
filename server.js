@@ -270,8 +270,7 @@ app.listen(PORT, () => {
           sessions[userId].messages = [...messages, { role: 'assistant', content: reply }];
 
           const blocks = [
-            { type:'section', text:{ type:'mrkdwn', text: reply }},
-            { type:'context', elements:[{ type:'mrkdwn', text:`👤 ${emp.empName || emp.empId}` }]}
+            { type:'section', text:{ type:'mrkdwn', text: reply }}
           ];
 
           if (shouldCreateTicket && ticketData) {
@@ -318,8 +317,7 @@ app.listen(PORT, () => {
           sessions[userId].messages = [...messages, { role: 'assistant', content: reply }];
 
           const blocks = [
-            { type:'section', text:{ type:'mrkdwn', text: reply }},
-            { type:'context', elements:[{ type:'mrkdwn', text:`👤 ${emp.empName || emp.empId}` }]}
+            { type:'section', text:{ type:'mrkdwn', text: reply }}
           ];
           await say({ text: reply, blocks, thread_ts: message.ts });
 
