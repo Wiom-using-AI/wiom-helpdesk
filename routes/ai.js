@@ -42,46 +42,15 @@ router.post('/chat', async (req, res) => {
     // Add assistant reply
     conv.messages.push({ role: 'assistant', content: reply });
 
-    // Auto-create ticket if Claude decides issue needs one
-    let createdTicket = null;
-    if (shouldCreateTicket && ticketData) {
-      const emp = await require('../models/Employee').findOne({ empId });
-      createdTicket = await Ticket.create({
-        empId,
-        empName      : empName || empId,
-        empEmail     : emp?.email,
-        empDept      : emp?.department,
-        empFloor     : emp?.floor,
-        laptop       : emp?.laptop,
-        category     : ticketData.category || 'Other',
-        priority     : ticketData.priority || 'Medium',
-        description  : ticketData.description || message,
-        source,
-        slackUserId,
-        slackChannelId,
-        aiSessionId  : conv.sessionId,
-        aiTried      : true,
-        aiSteps      : ticketData.steps || []
-      });
-      conv.ticketCreated = true;
-      conv.ticketId      = createdTicket.ticketId;
-
-      // Email alert
-      if (emp?.email) {
-        require('../services/email').sendTicketConfirmation(createdTicket).catch(console.error);
-      }
-      require('../services/email').sendAdminAlert(createdTicket).catch(console.error);
-    }
-
     await conv.save();
 
+    // Return shouldCreateTicket flag to frontend — frontend will ask user for confirmation
+    // Ticket is NOT auto-created here; employee portal handles confirmation + creation
     res.json({
       reply,
-      sessionId    : conv.sessionId,
-      ticketCreated: !!createdTicket,
-      ticket       : createdTicket
-        ? { id: createdTicket.ticketId, priority: createdTicket.priority, eta: createdTicket.slaHours+'h' }
-        : null
+      sessionId        : conv.sessionId,
+      shouldCreateTicket: !!shouldCreateTicket,
+      ticketData       : shouldCreateTicket ? ticketData : null
     });
 
   } catch (err) {

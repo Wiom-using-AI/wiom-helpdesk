@@ -335,7 +335,7 @@ function switchTab(tab, btn) {
 }
 
 // ── CHAT ──
-function addBotMsg(html, ticketInfo, dupMsg) {
+function addBotMsg(html, ticketInfo, dupMsg, pendingTicketData, origText) {
   const wrap = document.getElementById('chatMessages');
   const row = document.createElement('div'); row.className='msg-row';
   let extra = '';
@@ -343,11 +343,55 @@ function addBotMsg(html, ticketInfo, dupMsg) {
     extra = `<div class="ticket-banner" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠️ ${dupMsg}</div>`;
   } else if (ticketInfo) {
     extra = `<div class="ticket-banner">✅ <b>${ticketInfo.ticketId}</b> create ho gaya! Priority: <b>${ticketInfo.priority}</b> | SLA: ${ticketInfo.slaHours}h<br/>Sajan Kumar jald help karenge.</div>`;
+  } else if (pendingTicketData) {
+    const btnId = 'tktBtn_' + Date.now();
+    extra = `<div class="ticket-banner" style="background:rgba(232,25,125,0.08);border-color:rgba(232,25,125,0.25);">
+      <div style="margin-bottom:10px;font-size:13px;color:#f5e8ee;">🎫 Kya support ticket banana chahoge?</div>
+      <div style="display:flex;gap:8px;">
+        <button id="${btnId}_yes" onclick="confirmTicket('${btnId}',true)" style="flex:1;padding:9px;background:linear-gradient(135deg,#E8197D,#c0146a);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">✅ Ha, ticket bana do</button>
+        <button id="${btnId}_no"  onclick="confirmTicket('${btnId}',false)" style="flex:1;padding:9px;background:rgba(255,255,255,0.06);border:1px solid rgba(232,25,125,0.2);border-radius:10px;color:#8a6b76;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">❌ Nahi, try karte hain</button>
+      </div>
+    </div>`;
+    row._pendingTicketData = pendingTicketData;
+    row._origText = origText;
+    row.id = btnId + '_row';
   }
   row.innerHTML = `
     <div class="bot-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='🤖'"/></div>
     <div class="msg-bubble bot">${html.replace(/\n/g,'<br/>')}${extra}</div>`;
+  if (pendingTicketData) {
+    // re-attach data after innerHTML set (closures)
+    row._pendingTicketData = pendingTicketData;
+    row._origText = origText;
+  }
   wrap.appendChild(row); wrap.scrollTop=wrap.scrollHeight;
+}
+
+// ── Ticket confirm / reject from portal ──────────────────────────────────────
+async function confirmTicket(btnId, confirmed) {
+  const row = document.getElementById(btnId + '_row');
+  const td  = row?._pendingTicketData;
+  const orig= row?._origText || '';
+  const yesBtn = document.getElementById(btnId + '_yes');
+  const noBtn  = document.getElementById(btnId + '_no');
+  if (yesBtn) yesBtn.disabled = noBtn.disabled = true;
+
+  if (!confirmed) {
+    if (noBtn) noBtn.parentElement.parentElement.innerHTML = '<span style="color:#8a6b76;font-size:13px;">👍 Theek hai! Koi aur problem ho toh batao.</span>';
+    return;
+  }
+
+  if (yesBtn) yesBtn.textContent = '⏳ Ban raha hai...';
+  const ticket = await createTicket(td, orig);
+  if (ticket && !ticket._duplicate) {
+    myTickets.unshift(ticket);
+    if (noBtn) noBtn.parentElement.parentElement.innerHTML =
+      `<div class="ticket-banner">✅ <b>${ticket.ticketId}</b> create ho gaya! Priority: <b>${ticket.priority}</b> | SLA: ${ticket.slaHours}h<br/>Sajan Kumar jald help karenge.</div>`;
+    document.getElementById('ticketCount').textContent = `Aapke ${myTickets.length} ticket(s)`;
+  } else if (ticket?._duplicate) {
+    if (noBtn) noBtn.parentElement.parentElement.innerHTML =
+      `<div class="ticket-banner" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠️ ${ticket._dupMsg}</div>`;
+  }
 }
 function addUserMsg(text) {
   const wrap = document.getElementById('chatMessages');
@@ -386,16 +430,15 @@ async function sendMsg() {
     const data = await res.json(); hideTyping();
     const reply = data.reply || 'Kuch error aa gaya. Sajan ko call karo: 9654244281';
     chatHistory.push({ role:'assistant', content:reply });
-    let ticketInfo = null;
+
+    // ── Ticket confirmation — show buttons, don't auto-create ─────────────────
     if (data.shouldCreateTicket && data.ticketData) {
-      ticketInfo = await createTicket(data.ticketData, text);
-      if (ticketInfo && !ticketInfo._duplicate) myTickets.unshift(ticketInfo);
-      if (ticketInfo?._duplicate) {
-        addBotMsg(reply, null, ticketInfo._dupMsg);
-        return;
-      }
+      addBotMsg(reply, null, null, data.ticketData, text);
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('chatInput').focus();
+      return;
     }
-    addBotMsg(reply, ticketInfo);
+    addBotMsg(reply);
   } catch(e) { hideTyping(); addBotMsg('❌ Server se connect nahi ho pa raha.\nSeedhaa Sajan se contact karo: 📞 <b>9654244281</b>'); }
   document.getElementById('sendBtn').disabled=false;
   document.getElementById('chatInput').focus();
