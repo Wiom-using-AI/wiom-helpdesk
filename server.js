@@ -35,13 +35,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
+// ── Serve Employee Portal (public/) ──────────────────────────────────────────
+app.use(express.static('public'));
+
 // ── Health Check ──────────────────────────────────────────────────────────────
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({
-    status : 'ok',
-    service: 'WIOM IT Helpdesk API',
-    version: '1.0.0',
-    time   : new Date().toISOString()
+    status  : 'ok',
+    service : 'WIOM IT Helpdesk API',
+    version : '1.0.0',
+    portal  : 'https://web-production-ef6c1.up.railway.app',
+    time    : new Date().toISOString()
   });
 });
 
@@ -106,6 +110,21 @@ cron.schedule('0 * * * *', async () => {
     if (stale.length) console.log(`⚡ Escalated ${stale.length} tickets to Sajan`);
   } catch (err) {
     console.error('Escalation cron error:', err.message);
+  }
+});
+
+// ── Auto-Close Cron: Daily 2AM — Resolved 3+ days ago → Closed ───────────────
+cron.schedule('0 2 * * *', async () => {
+  try {
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 3600000);
+    const result = await Ticket.updateMany(
+      { status: 'Resolved', resolvedAt: { $lte: threeDaysAgo } },
+      { $set: { status: 'Closed', closedAt: new Date() } }
+    );
+    if (result.modifiedCount > 0)
+      console.log(`🔒 Auto-closed ${result.modifiedCount} resolved tickets`);
+  } catch (err) {
+    console.error('Auto-close cron error:', err.message);
   }
 });
 

@@ -93,15 +93,30 @@
   /* ── Modal ── */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:200; justify-content:center; align-items:center; }
   .modal-overlay.show { display:flex; }
-  .modal { background:#1e293b; border:1px solid #334155; border-radius:16px; padding:28px; width:520px; max-height:80vh; overflow-y:auto; }
+  .modal { background:#1e293b; border:1px solid #334155; border-radius:16px; padding:28px; width:560px; max-height:85vh; overflow-y:auto; }
   .modal h3 { font-size:17px; font-weight:700; margin-bottom:16px; color:#f1f5f9; }
   .modal-field { margin-bottom:12px; }
   .modal-field label { font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:4px; }
   .modal-field span  { font-size:14px; color:#e2e8f0; }
   .modal-close { float:right; background:transparent; border:none; color:#64748b; font-size:20px; cursor:pointer; }
-  .modal-actions { margin-top:20px; display:flex; gap:10px; }
+  .modal-actions { margin-top:20px; display:flex; gap:10px; flex-wrap:wrap; }
   .btn-resolve { padding:10px 20px; background:#10b981; border:none; border-radius:8px; color:#fff; font-size:14px; cursor:pointer; }
+  .btn-inprog  { padding:10px 20px; background:#6d28d9; border:none; border-radius:8px; color:#fff; font-size:14px; cursor:pointer; }
   .btn-close   { padding:10px 20px; background:#334155; border:none; border-radius:8px; color:#e2e8f0; font-size:14px; cursor:pointer; }
+  .note-box { width:100%; margin-top:14px; padding:10px 12px; background:#0f172a; border:1px solid #334155; border-radius:8px; color:#f1f5f9; font-size:13px; resize:vertical; min-height:70px; font-family:inherit; outline:none; }
+  .note-box:focus { border-color:#6366f1; }
+  .comments-list { margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+  .comment-item { background:#0f172a; border-radius:8px; padding:10px 12px; font-size:13px; }
+  .comment-item .c-author { font-size:11px; color:#64748b; margin-bottom:4px; }
+  .comment-item .c-text   { color:#e2e8f0; }
+
+  /* ── Checkbox bulk ── */
+  .check-col { width:36px; }
+  input[type=checkbox] { accent-color:#6366f1; width:15px; height:15px; cursor:pointer; }
+  .bulk-bar { display:none; align-items:center; gap:12px; padding:10px 14px; background:#1e3a5f; border-radius:8px; margin-bottom:12px; font-size:13px; color:#93c5fd; }
+  .bulk-bar.show { display:flex; }
+  .bulk-resolve-btn { padding:6px 14px; background:#10b981; border:none; border-radius:6px; color:#fff; font-size:13px; cursor:pointer; font-weight:600; }
+  .bulk-clear-btn   { padding:6px 12px; background:transparent; border:1px solid #334155; border-radius:6px; color:#64748b; font-size:13px; cursor:pointer; }
 
   /* ── Tab Content ── */
   .tab-content { display:none; }
@@ -225,6 +240,11 @@
           <button class="filter-btn" onclick="setFilter('High',this)">🟠 High</button>
         </div>
       </div>
+      <div class="bulk-bar" id="bulkBar">
+        <span id="bulkCount">0 selected</span>
+        <button class="bulk-resolve-btn" onclick="bulkResolve()">✅ Resolve Selected</button>
+        <button class="bulk-clear-btn"   onclick="clearBulk()">✕ Clear</button>
+      </div>
       <div class="card">
         <div class="card-header">
           <h3>🎫 Tickets</h3>
@@ -232,8 +252,8 @@
         </div>
         <div class="card-body">
           <table>
-            <thead><tr><th>Ticket ID</th><th>Employee</th><th>Category</th><th>Issue</th><th>Priority</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
-            <tbody id="allTicketsBody"><tr class="empty-row"><td colspan="8">Loading...</td></tr></tbody>
+            <thead><tr><th class="check-col"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"/></th><th>Ticket ID</th><th>Employee</th><th>Category</th><th>Issue</th><th>Priority</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+            <tbody id="allTicketsBody"><tr class="empty-row"><td colspan="9">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -340,10 +360,28 @@
     <button class="modal-close" onclick="closeModal()">✕</button>
     <h3 id="modalTitle">Ticket Details</h3>
     <div id="modalBody"></div>
+    <!-- Notes Section -->
+    <div style="margin-top:16px;border-top:1px solid #334155;padding-top:14px;">
+      <label style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">📝 Add Note</label>
+      <textarea class="note-box" id="noteInput" placeholder="Kya kiya, kya dekha — internal note..."></textarea>
+      <button onclick="saveNote()" style="margin-top:8px;padding:7px 14px;background:#334155;border:none;border-radius:6px;color:#e2e8f0;font-size:13px;cursor:pointer;">💾 Save Note</button>
+    </div>
+    <div id="commentsList" class="comments-list"></div>
     <div class="modal-actions">
       <button class="btn-resolve" id="modalResolveBtn" onclick="resolveTicket()">✅ Mark Resolved</button>
+      <button class="btn-inprog"  id="modalInProgBtn"  onclick="markInProgress()">🔄 In Progress</button>
       <button class="btn-close" onclick="closeModal()">Close</button>
     </div>
+  </div>
+</div>
+
+<!-- ══ EMPLOYEE HISTORY MODAL ════════════════════════════════════════════ -->
+<div class="modal-overlay" id="empModal">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('empModal').classList.remove('show')">✕</button>
+    <h3 id="empModalTitle">Employee Tickets</h3>
+    <div id="empModalInfo" style="margin-bottom:14px;padding:12px;background:#0f172a;border-radius:8px;font-size:13px;color:#94a3b8;"></div>
+    <div id="empModalBody"></div>
   </div>
 </div>
 
@@ -486,21 +524,24 @@ function renderAllTickets() {
   tickets.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
   const tbody = document.getElementById('allTicketsBody');
   if (!tickets.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Koi ticket nahi mila</td></tr>'; return; }
-  tbody.innerHTML = tickets.map(t => `
+  tbody.innerHTML = tickets.map(t => {
+    const isOpen = t.status !== 'Resolved' && t.status !== 'Closed';
+    return `
     <tr>
-      <td><b>${t.ticketId}</b></td>
-      <td>${t.empName || t.empId}</td>
+      <td><input type="checkbox" class="row-check" value="${t.ticketId}" onchange="updateBulkBar()" ${!isOpen?'disabled':''}></td>
+      <td><b style="cursor:pointer;color:#6366f1;" onclick="viewTicket('${t._id}')">${t.ticketId}</b></td>
+      <td style="cursor:pointer;" onclick="showEmpHistory('${t.empId}','${t.empName||t.empId}')">${t.empName||t.empId}</td>
       <td>${t.category||'Other'}</td>
-      <td title="${t.description||''}">${(t.description||'').substring(0,35)}...</td>
+      <td title="${t.description||''}">${(t.description||'').substring(0,30)}...</td>
       <td><span class="pri ${t.priority}">${t.priority}</span></td>
       <td><span class="status ${(t.status||'').replace(' ','-')}">${t.status}</span></td>
       <td>${timeAgo(t.createdAt)}</td>
       <td>
         <button class="action-btn view" onclick="viewTicket('${t._id}')">👁</button>
         ${t.status === 'Open' ? `<button class="action-btn" style="background:#3b1f6b;color:#c4b5fd;" onclick="setInProgress('${t._id}','${t.ticketId}')">🔄</button>` : ''}
-        ${t.status !== 'Resolved' && t.status !== 'Closed' ? `<button class="action-btn resolve" onclick="quickResolve('${t._id}','${t.ticketId}')">✅</button>` : ''}
+        ${isOpen ? `<button class="action-btn resolve" onclick="quickResolve('${t._id}','${t.ticketId}')">✅</button>` : ''}
       </td>
-    </tr>`).join('');
+    </tr>`}).join('');
 }
 
 function setFilter(f, btn) {
@@ -529,9 +570,9 @@ function loadOpenTickets() {
     const slaStyle = left < 2 ? 'color:#f87171;font-weight:bold;' : left < 6 ? 'color:#fbbf24;' : 'color:#86efac;';
     return `
       <tr>
-        <td><b>${t.ticketId}</b></td>
-        <td>${t.empName || t.empId}</td>
-        <td>${(t.description||'').substring(0,40)}...</td>
+        <td><b style="cursor:pointer;color:#6366f1;" onclick="viewTicket('${t._id}')">${t.ticketId}</b></td>
+        <td style="cursor:pointer;" onclick="showEmpHistory('${t.empId}','${t.empName||t.empId}')">${t.empName||t.empId}</td>
+        <td title="${t.description||''}">${(t.description||'').substring(0,40)}...</td>
         <td><span class="pri ${t.priority}">${t.priority}</span></td>
         <td style="${slaStyle}">${left}h left</td>
         <td>${t.source || 'Web'}</td>
@@ -635,26 +676,102 @@ function viewTicket(id) {
   const t = allTickets.find(x => x._id === id);
   if (!t) return;
   currentTicketId = id;
+  const isDone = t.status === 'Resolved' || t.status === 'Closed';
   document.getElementById('modalTitle').textContent = `🎫 ${t.ticketId}`;
-  document.getElementById('modalResolveBtn').style.display = (t.status === 'Resolved' || t.status === 'Closed') ? 'none' : 'block';
+  document.getElementById('modalResolveBtn').style.display = isDone ? 'none' : 'inline-block';
+  document.getElementById('modalInProgBtn').style.display  = (t.status === 'Open') ? 'inline-block' : 'none';
+  document.getElementById('noteInput').value = '';
+
+  const slaHours = t.slaHours || 24;
+  const elapsed  = (Date.now() - new Date(t.createdAt)) / 3600000;
+  const slaLeft  = Math.max(0, slaHours - elapsed).toFixed(1);
+  const slaColor = slaLeft < 2 ? '#f87171' : slaLeft < 6 ? '#fbbf24' : '#86efac';
+
   document.getElementById('modalBody').innerHTML = `
-    <div class="modal-field"><label>Employee</label><span>${t.empName || t.empId}</span></div>
-    <div class="modal-field"><label>Department</label><span>${t.empDept || '—'}</span></div>
-    <div class="modal-field"><label>Email</label><span>${t.empEmail || '—'}</span></div>
-    <div class="modal-field"><label>Category</label><span>${t.category}</span></div>
-    <div class="modal-field"><label>Priority</label><span class="pri ${t.priority}">${t.priority}</span></div>
-    <div class="modal-field"><label>Status</label><span class="status ${(t.status||'').replace(' ','-')}">${t.status}</span></div>
-    <div class="modal-field"><label>Source</label><span>${t.source || 'Web'}</span></div>
-    <div class="modal-field"><label>Description</label><span>${t.description || '—'}</span></div>
-    <div class="modal-field"><label>AI Steps Tried</label><span>${(t.aiSteps||[]).join(', ') || 'None'}</span></div>
-    <div class="modal-field"><label>Created</label><span>${new Date(t.createdAt).toLocaleString('en-IN')}</span></div>
-    <div class="modal-field"><label>SLA Hours</label><span>${t.slaHours || 24}h</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="modal-field"><label>Employee</label><span style="cursor:pointer;color:#6366f1;" onclick="showEmpHistory('${t.empId}','${t.empName||t.empId}')">${t.empName||t.empId} ↗</span></div>
+      <div class="modal-field"><label>Emp ID</label><span>${t.empId||'—'}</span></div>
+      <div class="modal-field"><label>Department</label><span>${t.empDept||'—'}</span></div>
+      <div class="modal-field"><label>Email</label><span>${t.empEmail||'—'}</span></div>
+      <div class="modal-field"><label>Category</label><span>${t.category}</span></div>
+      <div class="modal-field"><label>Source</label><span>${t.source||'Web'}</span></div>
+      <div class="modal-field"><label>Priority</label><span class="pri ${t.priority}">${t.priority}</span></div>
+      <div class="modal-field"><label>Status</label><span class="status ${(t.status||'').replace(' ','-')}">${t.status}</span></div>
+      <div class="modal-field"><label>SLA</label><span style="color:${slaColor};">${isDone ? '✅ Done' : slaLeft+'h left'}</span></div>
+      <div class="modal-field"><label>Created</label><span>${new Date(t.createdAt).toLocaleString('en-IN')}</span></div>
+    </div>
+    <div class="modal-field" style="margin-top:10px;"><label>Description</label><span style="display:block;margin-top:4px;line-height:1.5;">${t.description||'—'}</span></div>
+    ${(t.aiSteps||[]).length ? `<div class="modal-field"><label>AI Steps Tried</label><span>${t.aiSteps.join(' → ')}</span></div>` : ''}
     ${t.resolution ? `<div class="modal-field"><label>Resolution</label><span>${t.resolution}</span></div>` : ''}
   `;
+
+  // Show comments
+  const cl = document.getElementById('commentsList');
+  if ((t.comments||[]).length) {
+    cl.innerHTML = `<div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Previous Notes</div>` +
+      t.comments.map(c => `
+        <div class="comment-item">
+          <div class="c-author">${c.author} — ${new Date(c.addedAt||c.createdAt).toLocaleString('en-IN')}</div>
+          <div class="c-text">${c.message}</div>
+        </div>`).join('');
+  } else { cl.innerHTML = ''; }
+
   document.getElementById('ticketModal').classList.add('show');
 }
 
 function closeModal() { document.getElementById('ticketModal').classList.remove('show'); }
+
+async function markInProgress() {
+  const t = allTickets.find(x => x._id === currentTicketId);
+  if (!t) return;
+  await apiPatch(`/api/tickets/${t.ticketId}`, { status: 'In Progress' });
+  closeModal();
+  await loadAllTickets();
+}
+
+async function saveNote() {
+  const t = allTickets.find(x => x._id === currentTicketId);
+  const note = document.getElementById('noteInput').value.trim();
+  if (!t || !note) return;
+  try {
+    await apiPatch(`/api/tickets/${t.ticketId}`, { comment: note });
+    document.getElementById('noteInput').value = '';
+    await loadAllTickets();
+    // Refresh modal
+    viewTicket(currentTicketId);
+    alert('✅ Note save ho gaya!');
+  } catch(e) { alert('❌ Error: ' + e.message); }
+}
+
+// ── EMPLOYEE HISTORY MODAL ──────────────────────────────────────────────────
+function showEmpHistory(empId, empName) {
+  const emp = allEmployees.find(e => e.empId === empId);
+  document.getElementById('empModalTitle').textContent = `👤 ${empName}`;
+  document.getElementById('empModalInfo').innerHTML = emp
+    ? `🏢 ${emp.department||'—'} &nbsp;|&nbsp; 🏠 ${emp.floor||'—'} &nbsp;|&nbsp; 💻 ${emp.laptop||'—'} &nbsp;|&nbsp; 📟 SN: <b style="color:#6366f1;">${emp.laptopSN||'—'}</b>`
+    : `Emp ID: ${empId}`;
+
+  const tickets = allTickets.filter(t => t.empId === empId).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const body = document.getElementById('empModalBody');
+  if (!tickets.length) {
+    body.innerHTML = '<p style="color:#475569;text-align:center;padding:20px;">Is employee ka koi ticket nahi hai 🎉</p>';
+  } else {
+    body.innerHTML = `<p style="font-size:12px;color:#64748b;margin-bottom:10px;">Total: ${tickets.length} ticket(s)</p>` +
+      tickets.map(t => `
+        <div style="background:#0f172a;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #1e293b;cursor:pointer;" onclick="document.getElementById('empModal').classList.remove('show');viewTicket('${t._id}')">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <b style="color:#6366f1;font-size:13px;">${t.ticketId}</b>
+            <div style="display:flex;gap:6px;">
+              <span class="pri ${t.priority}" style="font-size:11px;">${t.priority}</span>
+              <span class="status ${(t.status||'').replace(' ','-')}" style="font-size:11px;">${t.status}</span>
+            </div>
+          </div>
+          <div style="font-size:12px;color:#94a3b8;">${(t.description||'').substring(0,60)}...</div>
+          <div style="font-size:11px;color:#475569;margin-top:4px;">${t.category||'Other'} • ${timeAgo(t.createdAt)}</div>
+        </div>`).join('');
+  }
+  document.getElementById('empModal').classList.add('show');
+}
 
 async function resolveTicket() {
   const t = allTickets.find(x => x._id === currentTicketId);
@@ -696,6 +813,46 @@ function timeAgo(dateStr) {
   if (diff < 3600) return Math.floor(diff/60) + ' min ago';
   if (diff < 86400)return Math.floor(diff/3600) + ' hrs ago';
   return Math.floor(diff/86400) + ' days ago';
+}
+
+// ── BULK RESOLVE ───────────────────────────────────────────────────────────
+function getCheckedTickets() {
+  return [...document.querySelectorAll('.row-check:checked')].map(c => c.value);
+}
+
+function updateBulkBar() {
+  const checked = getCheckedTickets();
+  const bar = document.getElementById('bulkBar');
+  bar.classList.toggle('show', checked.length > 0);
+  document.getElementById('bulkCount').textContent = `${checked.length} selected`;
+}
+
+function toggleSelectAll(cb) {
+  document.querySelectorAll('.row-check:not(:disabled)').forEach(c => { c.checked = cb.checked; });
+  updateBulkBar();
+}
+
+function clearBulk() {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+  const sa = document.getElementById('selectAll');
+  if (sa) sa.checked = false;
+  updateBulkBar();
+}
+
+async function bulkResolve() {
+  const ids = getCheckedTickets();
+  if (!ids.length) return;
+  if (!confirm(`${ids.length} tickets resolve karna hai? (${ids.join(', ')})`)) return;
+  let done = 0;
+  for (const ticketId of ids) {
+    try {
+      await apiPatch(`/api/tickets/${ticketId}`, { status:'Resolved', resolvedBy:'Human', resolution:'Bulk resolved by Sajan Kumar' });
+      done++;
+    } catch(e) { console.error('Bulk resolve failed:', ticketId, e.message); }
+  }
+  clearBulk();
+  await loadAllTickets();
+  alert(`✅ ${done}/${ids.length} tickets resolve ho gaye!`);
 }
 
 // ── SET IN PROGRESS ────────────────────────────────────────────────────────
@@ -780,8 +937,9 @@ function exportTodayCSV() {
 // Enter key login
 document.getElementById('password').addEventListener('keypress', e => { if (e.key==='Enter') doLogin(); });
 
-// Close modal on overlay click
-document.getElementById('ticketModal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
+// Close modals on overlay click
+document.getElementById('ticketModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('empModal').addEventListener('click',    e => { if(e.target===e.currentTarget) document.getElementById('empModal').classList.remove('show'); });
 </script>
 </body>
 </html>
