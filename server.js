@@ -23,7 +23,19 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 
 // ── Security & Middleware ─────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc    : ["'self'"],
+      scriptSrc     : ["'self'", "'unsafe-inline'"],
+      scriptSrcAttr : ["'unsafe-inline'"],
+      styleSrc      : ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc       : ["'self'", "https://fonts.gstatic.com"],
+      imgSrc        : ["'self'", "data:", "https:"],
+      connectSrc    : ["'self'", "https://web-production-ef6c1.up.railway.app"]
+    }
+  }
+}));
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
