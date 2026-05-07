@@ -337,7 +337,7 @@ app.listen(PORT, () => {
                 { type:'mrkdwn', text:`*✅ Ticket Bana:*\n\`${result.ticketId}\`` },
                 { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority:*\n${result.priority}` }
               ]});
-              blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`Sajan Kumar ko alert kar diya gaya 🙏` }]});
+              blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko alert kar diya gaya 🙏` }]});
               await notifySajan(client, result, emp);
             }
           }
@@ -345,7 +345,7 @@ app.listen(PORT, () => {
           await respond({ response_type: 'ephemeral', text: reply, blocks });
         } catch (err) {
           console.error('Slack error:', err.message);
-          await respond({ text: '❌ Error aa gaya. Seedha Sajan se contact karo: 9654244281', response_type: 'ephemeral' });
+          await respond({ text: '❌ Error aa gaya. Baad mein try karo ya IT team se contact karo.', response_type: 'ephemeral' });
         }
       });
 
@@ -380,7 +380,7 @@ app.listen(PORT, () => {
                     { type:'mrkdwn', text:`*🎫 Ticket Bana!*\n\`${result.ticketId}\`` },
                     { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority*\n${result.priority}` }
                   ]},
-                  { type:'context', elements:[{ type:'mrkdwn', text:`✅ Sajan Kumar ko notify kar diya gaya 🙏` }]}
+                  { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya 🙏` }]}
                 ]
               });
               await notifySajan(client, result, emp);
@@ -391,7 +391,7 @@ app.listen(PORT, () => {
           if (isNo) {
             delete sess.pendingTicket;
             sessions[userId] = sess;
-            await say({ text: '👍 Theek hai! Koi aur problem ho toh batao. Sajan ka number: 9654244281' });
+            await say({ text: '👍 Theek hai! Koi aur problem ho toh batao.' });
             return;
           }
         }

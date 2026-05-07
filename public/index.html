@@ -347,7 +347,7 @@ function doLogout() {
 // ── WELCOME ──
 function addWelcome() {
   const firstName = empData.name.split(' ')[0];
-  addBotMsg(`Namaste <b>${firstName}</b> ji! 👋\n\nMain WIOM IT Helpdesk AI hoon — Sajan Kumar ka digital assistant.\n\nKoi bhi laptop, WiFi, software, ya kisi bhi IT problem mein help karunga. Pehle khud solve karne ki koshish karunga, zarurat padi toh Sajan ko ticket bhej dunga.\n\nBatao — kya problem aa rahi hai? 🛠️`);
+  addBotMsg(`Namaste <b>${firstName}</b> ji! 👋\n\nMain WIOM IT Helpdesk AI hoon — aapka IT assistant.\n\nKoi bhi laptop, WiFi, software, ya kisi bhi IT problem mein help karunga. Pehle khud solve karne ki koshish karunga, zarurat padi toh support ticket create karunga.\n\nBatao — kya problem aa rahi hai? 🛠️`);
 }
 
 // ── TABS ──
@@ -367,7 +367,7 @@ function addBotMsg(html, ticketInfo, dupMsg, pendingTicketData, origText) {
   if (dupMsg) {
     extra = `<div class="ticket-banner" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:#fbbf24;">⚠️ ${dupMsg}</div>`;
   } else if (ticketInfo) {
-    extra = `<div class="ticket-banner">✅ <b>${ticketInfo.ticketId}</b> create ho gaya! Priority: <b>${ticketInfo.priority}</b> | SLA: ${ticketInfo.slaHours}h<br/>Sajan Kumar jald help karenge.</div>`;
+    extra = `<div class="ticket-banner">✅ <b>${ticketInfo.ticketId}</b> create ho gaya! Priority: <b>${ticketInfo.priority}</b><br/>IT team jald resolve karegi. 👍</div>`;
   } else if (pendingTicketData) {
     const btnId = 'tktBtn_' + Date.now();
     extra = `<div class="ticket-banner" style="background:rgba(232,25,125,0.08);border-color:rgba(232,25,125,0.25);">
@@ -411,7 +411,7 @@ async function confirmTicket(btnId, confirmed) {
   if (ticket && !ticket._duplicate) {
     myTickets.unshift(ticket);
     if (noBtn) noBtn.parentElement.parentElement.innerHTML =
-      `<div class="ticket-banner">✅ <b>${ticket.ticketId}</b> create ho gaya! Priority: <b>${ticket.priority}</b> | SLA: ${ticket.slaHours}h<br/>Sajan Kumar jald help karenge.</div>`;
+      `<div class="ticket-banner">✅ <b>${ticket.ticketId}</b> create ho gaya! Priority: <b>${ticket.priority}</b><br/>IT team jald resolve karegi. 👍</div>`;
     document.getElementById('ticketCount').textContent = `Aapke ${myTickets.length} ticket(s)`;
   } else if (ticket?._duplicate) {
     if (noBtn) noBtn.parentElement.parentElement.innerHTML =
