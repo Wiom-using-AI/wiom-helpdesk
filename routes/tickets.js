@@ -172,11 +172,20 @@ router.patch('/:id', verifyAdmin, async (req, res) => {
           text   : `✅ Aapka ticket ${ticket.ticketId} resolve ho gaya!`,
           blocks : [
             { type:'section', text:{ type:'mrkdwn', text:
-              `✅ *Aapka support ticket resolve ho gaya hai.*\n\n*Ticket:* \`${ticket.ticketId}\`\n*Category:* ${ticket.category}` +
+              `✅ *Aapka support ticket resolve ho gaya hai!*\n\n*Ticket:* \`${ticket.ticketId}\`\n*Category:* ${ticket.category}` +
               (ticket.resolution ? `\n*Resolution:* ${ticket.resolution}` : '')
             }},
+            { type:'divider' },
+            { type:'section', text:{ type:'mrkdwn', text:`*Aapka experience kaisa raha? Rating dein:*` }},
+            { type:'actions', elements:[
+              { type:'button', text:{ type:'plain_text', text:'⭐ 1', emoji:true }, value:`${ticket.ticketId}:1`, action_id:'rate_ticket' },
+              { type:'button', text:{ type:'plain_text', text:'⭐⭐ 2', emoji:true }, value:`${ticket.ticketId}:2`, action_id:'rate_ticket' },
+              { type:'button', text:{ type:'plain_text', text:'⭐⭐⭐ 3', emoji:true }, value:`${ticket.ticketId}:3`, action_id:'rate_ticket' },
+              { type:'button', text:{ type:'plain_text', text:'⭐⭐⭐⭐ 4', emoji:true }, value:`${ticket.ticketId}:4`, action_id:'rate_ticket' },
+              { type:'button', text:{ type:'plain_text', text:'⭐⭐⭐⭐⭐ 5', emoji:true }, value:`${ticket.ticketId}:5`, action_id:'rate_ticket' }
+            ]},
             { type:'context', elements:[{ type:'mrkdwn',
-              text:`Resolved by ${resolvedBy_} | Agar problem wapas aaye toh IT Helpdesk: 9654244281` }]}
+              text:`Resolved by ${resolvedBy_} | Agar problem wapas aaye: IT Helpdesk 9654244281` }]}
           ]
         }).catch(e => console.error('Slack resolve DM error:', e.message));
       }

@@ -12,6 +12,7 @@ const aiRoutes       = require('./routes/ai');
 const employeeRoutes = require('./routes/employees');
 const slaService     = require('./services/sla');
 const Ticket         = require('./models/Ticket');
+const Conversation   = require('./models/Conversation');
 
 // ── Slack client (set after bot starts) ──────────────────────────────────────
 let slackClient = null;
@@ -91,11 +92,11 @@ cron.schedule('*/30 * * * *', () => {
   slaService.checkBreaches();
 });
 
-// ── Auto-Escalation Cron: Every hour — Slack DM Sajan for 4h+ open tickets ──
+// ── Auto-Escalation Cron: Every hour ─────────────────────────────────────────
 cron.schedule('0 * * * *', async () => {
   try {
-    const sajanId = process.env.SAJAN_SLACK_ID;
-    if (!slackClient || !sajanId || sajanId === 'FILL_KARO') return;
+    const adminId = process.env.SAJAN_SLACK_ID;
+    if (!slackClient || !adminId || adminId === 'FILL_KARO') return;
 
     const fourHoursAgo = new Date(Date.now() - 4 * 3600000);
     const stale = await Ticket.find({
@@ -109,7 +110,7 @@ cron.schedule('0 * * * *', async () => {
       const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
       try {
         await slackClient.chat.postMessage({
-          channel: sajanId,
+          channel: adminId,
           text: `⚠️ Escalation: ${t.ticketId} — ${t.empName} (${hoursOld}h open)`,
           attachments: [{
             color: '#ef4444',
@@ -133,7 +134,7 @@ cron.schedule('0 * * * *', async () => {
         console.error(`Escalation DM failed for ${t.ticketId}:`, err.message);
       }
     }
-    if (stale.length) console.log(`⚡ Escalated ${stale.length} tickets to Sajan`);
+    if (stale.length) console.log(`⚡ Escalated ${stale.length} tickets`);
   } catch (err) {
     console.error('Escalation cron error:', err.message);
   }
@@ -160,11 +161,12 @@ app.listen(PORT, () => {
   console.log(`📋 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 Health: http://localhost:${PORT}/health\n`);
 
-  // ── Start Slack Bot (if tokens are configured) ─────────────────────────────
+  // ── Start Slack Bot ────────────────────────────────────────────────────────
   if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_BOT_TOKEN !== 'FILL_KARO') {
     try {
-      const { App } = require('@slack/bolt');
+      const { App }   = require('@slack/bolt');
       const claudeSvc = require('./services/claude');
+      const Employee  = require('./models/Employee');
       const API_BASE  = process.env.API_BASE_URL || `http://localhost:${PORT}`;
 
       const slackApp = new App({
@@ -174,59 +176,85 @@ app.listen(PORT, () => {
         appToken     : process.env.SLACK_APP_TOKEN
       });
 
-      // Sessions store
-      const sessions = {};
+      // ── In-memory store for pending ticket confirmations (short-lived) ─────
+      const pendingTickets = new Map(); // slackUserId -> ticketData
 
-      const Employee = require('./models/Employee');
+      // ── FEATURE 5: Office hours check (IST = UTC+5:30) ────────────────────
+      const isOfficeHours = () => {
+        const now = new Date();
+        const istMins = now.getUTCHours() * 60 + now.getUTCMinutes() + 330;
+        const istHour = Math.floor(istMins / 60) % 24;
+        return istHour >= 9 && istHour < 19; // 9AM–7PM IST
+      };
 
+      // ── FEATURE 2: Format reply for Slack mrkdwn ─────────────────────────
+      const formatForSlack = (text) => {
+        return text
+          .replace(/\bStep (\d+):\s*/gi, '\n*Step $1:* ')  // Bold step numbers
+          .replace(/^\n+/, '')                               // Remove leading newline
+          .replace(/\n{3,}/g, '\n\n')                       // Max 2 blank lines
+          .trim();
+      };
+
+      // ── FEATURE 1: Load/create MongoDB conversation session ───────────────
+      const getSlackSession = async (slackUserId, emp) => {
+        const cutoff = new Date(Date.now() - 24 * 3600000); // 24h window
+        let conv = await Conversation.findOne({
+          slackUserId,
+          source  : 'slack',
+          resolved: false,
+          lastActive: { $gte: cutoff }
+        }).sort({ lastActive: -1 });
+
+        if (!conv) {
+          conv = new Conversation({
+            sessionId: `slack-${slackUserId}-${Date.now()}`,
+            empId    : emp.empId,
+            empName  : emp.empName,
+            source   : 'slack',
+            slackUserId,
+            messages : []
+          });
+        }
+        return conv;
+      };
+
+      // ── Employee lookup ───────────────────────────────────────────────────
       const lookupEmployee = async (slackUserId, client) => {
         try {
-          // 1️⃣ Try DB lookup by saved slackUserId (fastest)
           let dbEmp = await Employee.findOne({ slackUserId });
           if (dbEmp) {
             return { empId: dbEmp.empId, empName: dbEmp.name, email: dbEmp.email,
                      dept: dbEmp.department, floor: dbEmp.floor,
                      laptop: dbEmp.laptop, laptopSN: dbEmp.laptopSN };
           }
-
-          // 2️⃣ Get Slack profile (name + email)
           const profile = await client.users.info({ user: slackUserId });
           const email   = profile.user?.profile?.email;
           const name    = profile.user?.profile?.real_name || profile.user?.name;
-
-          // 3️⃣ Try DB lookup by email
-          if (email) {
-            dbEmp = await Employee.findOne({ email: email.toLowerCase() });
-          }
-          // 4️⃣ Try DB lookup by name (partial match)
-          if (!dbEmp && name) {
-            dbEmp = await Employee.findOne({ name: { $regex: name.split(' ')[0], $options: 'i' } });
-          }
-
+          if (email)  dbEmp = await Employee.findOne({ email: email.toLowerCase() });
+          if (!dbEmp && name) dbEmp = await Employee.findOne({ name: { $regex: name.split(' ')[0], $options: 'i' } });
           if (dbEmp) {
-            // Save Slack ID for future fast lookups
             dbEmp.slackUserId = slackUserId;
             await dbEmp.save();
             return { empId: dbEmp.empId, empName: dbEmp.name, email: dbEmp.email,
                      dept: dbEmp.department, floor: dbEmp.floor,
                      laptop: dbEmp.laptop, laptopSN: dbEmp.laptopSN };
           }
-
-          // 5️⃣ Fallback — unknown employee
           return { empId: slackUserId, empName: name || 'Employee', email, dept: 'Unknown' };
         } catch {
           return { empId: slackUserId, empName: 'Employee', email: null, dept: 'Unknown' };
         }
       };
 
-      const notifySajan = async (client, ticket, emp) => {
+      // ── Notify admin ──────────────────────────────────────────────────────
+      const notifyAdmin = async (client, ticket, emp) => {
         try {
-          const sajanId = process.env.SAJAN_SLACK_ID;
-          if (!sajanId || sajanId === 'FILL_KARO') return;
+          const adminId = process.env.SAJAN_SLACK_ID;
+          if (!adminId || adminId === 'FILL_KARO') return;
           const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
           const priColor = { Critical:'#ef4444', High:'#f59e0b', Medium:'#3b82f6', Low:'#10b981' };
           await client.chat.postMessage({
-            channel: sajanId,
+            channel: adminId,
             text: `${priEmoji[ticket.priority]||'🟡'} Naya ticket: ${ticket.ticketId} — ${emp.empName}`,
             attachments: [{
               color: priColor[ticket.priority] || '#3b82f6',
@@ -238,15 +266,16 @@ app.listen(PORT, () => {
                   { type:'mrkdwn', text:`*⏱ SLA*\n${ticket.slaHours}h` }
                 ]},
                 { type:'section', text:{ type:'mrkdwn', text:`*📝 Issue:*\n${ticket.description}` }},
-                { type:'context', elements:[{ type:'mrkdwn', text:`Category: ${ticket.category} | Source: ${ticket.source||'web'} | ${emp.dept||'Unknown Dept'}` }]}
+                { type:'context', elements:[{ type:'mrkdwn', text:`Category: ${ticket.category} | ${emp.dept||'Unknown Dept'}` }]}
               ]
             }]
           });
         } catch (err) {
-          console.error('Sajan DM error:', err.message);
+          console.error('Admin DM error:', err.message);
         }
       };
 
+      // ── Create ticket via API ─────────────────────────────────────────────
       const createTicketSlack = async (data) => {
         try {
           const res = await fetch(`${API_BASE}/api/tickets`, {
@@ -260,7 +289,7 @@ app.listen(PORT, () => {
         } catch { return null; }
       };
 
-      // /helpdesk command
+      // ── /helpdesk command ─────────────────────────────────────────────────
       slackApp.command('/helpdesk', async ({ command, ack, respond, client }) => {
         await ack();
         const userId = command.user_id;
@@ -268,12 +297,12 @@ app.listen(PORT, () => {
 
         if (!text) {
           await respond({ response_type: 'ephemeral', blocks:[
-            { type:'section', text:{ type:'mrkdwn', text:'*🛠 WIOM IT Helpdesk*\nApni IT problem batao — main try karunga solve karne ki!\n\n*Examples:*\n• `/helpdesk wifi nahi chal raha`\n• `/helpdesk laptop slow hai`\n• `/helpdesk outlook nahi khul raha`\n\n_Apne tickets dekhne ke liye:_ `/helpdesk status`' }}
+            { type:'section', text:{ type:'mrkdwn', text:'*🛠 WIOM IT Helpdesk*\nApni IT problem batao!\n\n*Examples:*\n• `/helpdesk wifi nahi chal raha`\n• `/helpdesk laptop slow hai`\n• `/helpdesk outlook nahi khul raha`\n\n_Apne tickets dekhne ke liye:_ `/helpdesk status`' }}
           ], text:'WIOM IT Helpdesk — apni problem batao' });
           return;
         }
 
-        // ── /helpdesk status — show employee's open tickets ─────────────────
+        // ── /helpdesk status ────────────────────────────────────────────────
         if (text.toLowerCase() === 'status' || text.toLowerCase() === 'meri tickets') {
           const emp = await lookupEmployee(userId, client);
           const tickets = await Ticket.find({
@@ -287,9 +316,9 @@ app.listen(PORT, () => {
           }
 
           const priEmoji  = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
-          const statEmoji = { Open:'⏳', 'In Progress':'🔄', Resolved:'✅', Closed:'🔒' };
+          const statEmoji = { Open:'⏳', 'In Progress':'🔄', Waiting:'⏸', Resolved:'✅', Closed:'🔒' };
           const blocks = [
-            { type:'section', text:{ type:'mrkdwn', text:`*📋 Tere Tickets (${tickets.length})*` }},
+            { type:'section', text:{ type:'mrkdwn', text:`*📋 Aapke Tickets (${tickets.length})*` }},
             { type:'divider' }
           ];
           tickets.forEach(t => {
@@ -298,26 +327,29 @@ app.listen(PORT, () => {
               { type:'mrkdwn', text:`*\`${t.ticketId}\`*\n${priEmoji[t.priority]||'🟡'} ${t.priority}` },
               { type:'mrkdwn', text:`*${statEmoji[t.status]||'⏳'} ${t.status}*\n${hrs}h ago` }
             ]});
-            blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`${(t.description||'').substring(0,60)}...` }]});
+            blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_${(t.description||'').substring(0,70)}..._` }]});
           });
-          await respond({ response_type: 'ephemeral', text: `Tere ${tickets.length} ticket(s)`, blocks });
+          await respond({ response_type: 'ephemeral', text: `Aapke ${tickets.length} ticket(s)`, blocks });
           return;
         }
 
         await respond({ text: '🤖 _Soch raha hoon..._ ek second!', response_type: 'ephemeral' });
 
-        const emp = await lookupEmployee(userId, client);
-        const sess = sessions[userId] || { messages: [] };
-        const messages = [...(sess.messages || []), { role: 'user', content: text }];
-        sessions[userId] = { ...emp, messages };
+        const emp  = await lookupEmployee(userId, client);
+        const conv = await getSlackSession(userId, emp);
+        conv.messages.push({ role: 'user', content: text });
 
         try {
-          const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack', laptop: emp.laptop, laptopSN: emp.laptopSN, dept: emp.dept, floor: emp.floor });
-          sessions[userId].messages = [...messages, { role: 'assistant', content: reply }];
+          const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(
+            conv.messages,
+            { empId: emp.empId, empName: emp.empName, source: 'slack',
+              laptop: emp.laptop, laptopSN: emp.laptopSN, dept: emp.dept, floor: emp.floor }
+          );
+          conv.messages.push({ role: 'assistant', content: reply });
+          await conv.save();
 
-          const blocks = [
-            { type:'section', text:{ type:'mrkdwn', text: reply }}
-          ];
+          const formattedReply = formatForSlack(reply);
+          const blocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}];
 
           if (shouldCreateTicket && ticketData) {
             const result = await createTicketSlack({
@@ -338,39 +370,137 @@ app.listen(PORT, () => {
                 { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority:*\n${result.priority}` }
               ]});
               blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko alert kar diya gaya 🙏` }]});
-              await notifySajan(client, result, emp);
+              await notifyAdmin(client, result, emp);
             }
           }
 
           await respond({ response_type: 'ephemeral', text: reply, blocks });
         } catch (err) {
-          console.error('Slack error:', err.message);
-          await respond({ text: '❌ Error aa gaya. Baad mein try karo ya IT team se contact karo.', response_type: 'ephemeral' });
+          console.error('Slack /helpdesk error:', err.message);
+          await respond({ text: '❌ Error aa gaya. Baad mein try karo.', response_type: 'ephemeral' });
         }
       });
 
-      // DM handler
+      // ── FEATURE 8: Rating action handler ─────────────────────────────────
+      slackApp.action('rate_ticket', async ({ body, ack, client }) => {
+        await ack();
+        try {
+          const value    = body.actions[0].value;          // "WIOM-TKT-0001:4"
+          const [ticketId, ratingStr] = value.split(':');
+          const rating   = parseInt(ratingStr);
+          const userId   = body.user.id;
+
+          await Ticket.findOneAndUpdate(
+            { ticketId },
+            { userRating: rating, userFeedback: `${rating}/5 stars via Slack` }
+          );
+
+          const stars     = '⭐'.repeat(rating);
+          const ratingMsg = rating >= 4 ? 'Shukriya! Bahut accha feedback mila 😊'
+                          : rating >= 3 ? 'Shukriya! Hum aur behtar karne ki koshish karenge 🙏'
+                          : 'Shukriya! Hum is feedback ko improve karne mein use karenge 😔';
+
+          await client.chat.update({
+            channel: body.channel.id,
+            ts     : body.message.ts,
+            text   : `✅ Ticket ${ticketId} — Rating: ${stars}`,
+            blocks : [
+              { type:'section', text:{ type:'mrkdwn', text:
+                `✅ *Ticket \`${ticketId}\` resolve ho gaya!*\n\n*Aapki Rating:* ${stars} (${rating}/5)\n${ratingMsg}`
+              }},
+              { type:'context', elements:[{ type:'mrkdwn', text:`IT Helpdesk: 9654244281 | Koi aur problem ho toh batao!` }]}
+            ]
+          });
+          console.log(`⭐ Rating ${rating}/5 saved for ${ticketId}`);
+        } catch (err) {
+          console.error('Rating action error:', err.message);
+        }
+      });
+
+      // ── DM Handler ────────────────────────────────────────────────────────
       slackApp.message(async ({ message, client, say }) => {
-        // ── Guard: ignore bot messages and empty messages ─────────────────────
         if (message.bot_id || message.subtype) return;
         const userId = message.user;
         const text   = message.text?.trim();
         if (!text) return;
 
-        // ── Wrap EVERYTHING in try-catch so user always gets a response ───────
         try {
-          const emp  = await lookupEmployee(userId, client);
-          const sess = sessions[userId] || { messages: [] };
+          const emp = await lookupEmployee(userId, client);
 
-          // ── Check if user is confirming/rejecting a pending ticket ──────────
-          if (sess.pendingTicket) {
+          // ── FEATURE 4: Reset command ──────────────────────────────────────
+          const isReset = /^(reset|nayi baat|new problem|naya|shuru karo|start over|naya topic|clear|naya sawal)$/i.test(text.trim());
+          if (isReset) {
+            await Conversation.updateMany(
+              { slackUserId: userId, source: 'slack', resolved: false },
+              { resolved: true }
+            );
+            pendingTickets.delete(userId);
+            const firstName = (emp.empName || 'there').split(' ')[0];
+            await say({ text: `🔄 Theek hai ${firstName}! Nayi baat shuru karte hain. Aapki nai IT problem kya hai?` });
+            return;
+          }
+
+          // ── FEATURE 7: Meri tickets command ──────────────────────────────
+          const isTicketCheck = /^(meri tickets|my tickets|tickets dikhao|ticket status|mera ticket|open tickets|meri ticket)$/i.test(text.trim());
+          if (isTicketCheck) {
+            const tickets = await Ticket.find({
+              $or: [{ empId: emp.empId }, { slackUserId: userId }],
+              status: { $nin: ['Closed'] }
+            }).sort({ createdAt: -1 }).limit(5);
+
+            if (!tickets.length) {
+              await say({ text: '🎉 *Koi open ticket nahi hai!* Sab kuch theek chal raha hai.' });
+              return;
+            }
+
+            const priEmoji  = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+            const statEmoji = { Open:'⏳', 'In Progress':'🔄', Waiting:'⏸', Resolved:'✅', Closed:'🔒' };
+            let ticketText  = `*📋 Aapke Open Tickets (${tickets.length}):*\n\n`;
+            tickets.forEach(t => {
+              const hrs = Math.round((Date.now() - new Date(t.createdAt)) / 3600000);
+              ticketText += `${priEmoji[t.priority]||'🟡'} *\`${t.ticketId}\`* ${statEmoji[t.status]||'⏳'} ${t.status} — _${hrs}h pehle_\n`;
+              ticketText += `> ${(t.description||'').substring(0,60)}...\n\n`;
+            });
+            await say({ blocks:[
+              { type:'section', text:{ type:'mrkdwn', text: ticketText }},
+              { type:'context', elements:[{ type:'mrkdwn', text:`_Aur help chahiye to batao, ya call karein: 9654244281_` }]}
+            ], text: `Aapke ${tickets.length} open ticket(s)` });
+            return;
+          }
+
+          // ── Greeting ──────────────────────────────────────────────────────
+          const isGreeting = /^(hello|hi|hey|namaste|hlo|hii|namaskar|good morning|good afternoon|good evening|salam|sup|helo|helllo)$/i.test(text.trim());
+          if (isGreeting) {
+            await Conversation.updateMany(
+              { slackUserId: userId, source: 'slack', resolved: false },
+              { resolved: true }
+            );
+            pendingTickets.delete(userId);
+            const firstName  = (emp.empName || 'there').split(' ')[0];
+            const laptopInfo = emp.laptop
+              ? `\n💻 *Aapka Laptop:* ${emp.laptop}${emp.laptopSN ? ` | *S/N:* ${emp.laptopSN}` : ''}`
+              : '';
+            await say({
+              text: `Hello ${firstName}! 👋`,
+              blocks: [
+                { type:'section', text:{ type:'mrkdwn', text:
+                  `Hello *${firstName}!* 👋 WIOM IT Helpdesk mein aapka swagat hai.${laptopInfo}\n\nAapki kya IT samasya hai? Batayein, main madad karunga.`
+                }},
+                { type:'context', elements:[{ type:'mrkdwn', text:`_Type "meri tickets" apne tickets dekhne ke liye | "reset" nayi baat shuru karne ke liye_` }]}
+              ]
+            });
+            return;
+          }
+
+          // ── Pending ticket confirmation check ─────────────────────────────
+          const pending = pendingTickets.get(userId);
+          if (pending) {
             const isYes = /^(ha|haan|haa|yes|bilkul|ok|theek hai|ticket|bana do|create|kar do|ho jaye)/i.test(text.trim());
             const isNo  = /^(nahi|na|no|nope|mat|band karo|chodo|rehne do)/i.test(text.trim());
 
             if (isYes) {
-              const result = await createTicketSlack(sess.pendingTicket);
-              delete sess.pendingTicket;
-              sessions[userId] = sess;
+              pendingTickets.delete(userId);
+              const result = await createTicketSlack(pending);
               if (result?._duplicate) {
                 await say({ text: `⚠️ ${result.message}` });
               } else if (result) {
@@ -382,59 +512,57 @@ app.listen(PORT, () => {
                       { type:'mrkdwn', text:`*🎫 Ticket Bana!*\n\`${result.ticketId}\`` },
                       { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority*\n${result.priority}` }
                     ]},
-                    { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya 🙏` }]}
+                    { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya 🙏 | Ticket track karne ke liye type karein: *meri tickets*` }]}
                   ]
                 });
-                await notifySajan(client, result, emp);
+                await notifyAdmin(client, result, emp);
               }
               return;
             }
 
             if (isNo) {
-              delete sess.pendingTicket;
-              sessions[userId] = sess;
+              pendingTickets.delete(userId);
               await say({ text: '👍 Theek hai! Koi aur problem ho toh batao.' });
               return;
             }
           }
 
-          // ── Greeting — reset session and reply ───────────────────────────────
-          const isGreeting = /^(hello|hi|hey|namaste|hlo|hii|namaskar|good morning|good afternoon|good evening|salam|sup|helo)$/i.test(text.trim());
-          if (isGreeting) {
-            sessions[userId] = { ...emp, messages: [] };
-            const firstName = (emp.empName || 'there').split(' ')[0];
-            await say({ text: `Hello ${firstName}! 👋 WIOM IT Helpdesk mein aapka swagat hai. Aapki kya IT samasya hai? Batayein, main sahayata karunga.` });
-            return;
-          }
-
-          // ── Normal AI chat ──────────────────────────────────────────────────
-          // Use previous messages for context but add current message
-          const prevMessages = sess.messages || [];
-          const allMessages  = [...prevMessages, { role: 'user', content: text }];
-
-          // Save immediately so parallel messages don't overwrite each other
-          sessions[userId] = { ...emp, messages: allMessages };
+          // ── Normal AI chat ────────────────────────────────────────────────
+          const conv = await getSlackSession(userId, emp);
+          conv.messages.push({ role: 'user', content: text });
+          // Trim to last 20 messages to keep DB lean
+          if (conv.messages.length > 20) conv.messages = conv.messages.slice(-20);
+          await conv.save();
 
           const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(
-            allMessages,
+            conv.messages,
             { empId: emp.empId, empName: emp.empName, source: 'slack',
               laptop: emp.laptop, laptopSN: emp.laptopSN, dept: emp.dept, floor: emp.floor }
           );
 
-          // Save assistant reply to session
-          sessions[userId].messages = [...allMessages, { role: 'assistant', content: reply }];
+          conv.messages.push({ role: 'assistant', content: reply });
+          await conv.save();
 
-          const blocks = [{ type:'section', text:{ type:'mrkdwn', text: reply }}];
+          // ── FEATURE 2: Format for Slack ───────────────────────────────────
+          const formattedReply = formatForSlack(reply);
+
+          // ── FEATURE 5: Office hours note ──────────────────────────────────
+          let officeNote = '';
+          if (!isOfficeHours()) {
+            officeNote = '\n\n_⏰ Office hours baad mein hain (9AM–7PM IST). Urgent ho to: *9654244281*_';
+          }
+
+          const blocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedReply + officeNote }}];
 
           if (shouldCreateTicket && ticketData) {
-            sessions[userId].pendingTicket = {
+            pendingTickets.set(userId, {
               empId: emp.empId, empName: emp.empName, empEmail: emp.email,
               empDept: emp.dept, empFloor: emp.floor,
               laptop: emp.laptop, laptopSN: emp.laptopSN,
               ...ticketData,
               description: ticketData.description || text,
               source: 'slack', slackUserId: userId
-            };
+            });
             blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? *"Ha"* ya *"Nahi"* reply karo_ 🎫` }]});
           }
 
@@ -445,26 +573,87 @@ app.listen(PORT, () => {
           try {
             await say({ text: '❌ Kuch technical problem aa gayi. Thoda wait karein aur dobara try karein. IT Helpdesk: 9654244281' });
           } catch (sayErr) {
-            console.error('❌ Could not send error message to user:', sayErr.message);
+            console.error('❌ Could not send error message:', sayErr.message);
           }
         }
       });
 
+      // ── Start Slack App ───────────────────────────────────────────────────
       slackApp.start().then(async () => {
         console.log('🤖 Slack Bot started! Socket Mode active.');
-        slackClient = slackApp.client;       // for escalation cron
-        app.locals.slackClient = slackApp.client; // for routes (resolve DM)
+        slackClient = slackApp.client;
+        app.locals.slackClient = slackApp.client;
 
-        // Auto-link Sajan's Slack ID if configured
-        const sajanSlackId = process.env.SAJAN_SLACK_ID;
-        if (sajanSlackId && sajanSlackId !== 'FILL_KARO') {
-          const Employee = require('./models/Employee');
+        // Auto-link admin Slack ID
+        const adminSlackId = process.env.SAJAN_SLACK_ID;
+        if (adminSlackId && adminSlackId !== 'FILL_KARO') {
           await Employee.findOneAndUpdate(
             { name: { $regex: 'sajan', $options: 'i' } },
-            { slackUserId: sajanSlackId },
+            { slackUserId: adminSlackId },
             { new: true }
           ).catch(() => {});
         }
+
+        // ── FEATURE 6: Daily 9AM IST summary (= 03:30 UTC) ───────────────
+        cron.schedule('30 3 * * *', async () => {
+          try {
+            const adminId = process.env.SAJAN_SLACK_ID;
+            if (!adminId || adminId === 'FILL_KARO') return;
+
+            const todayStart = new Date();
+            todayStart.setUTCHours(0, 0, 0, 0);
+
+            const [totalOpen, newToday, resolvedToday, critical, slaBreached] = await Promise.all([
+              Ticket.countDocuments({ status: { $in: ['Open', 'In Progress'] } }),
+              Ticket.countDocuments({ createdAt: { $gte: todayStart } }),
+              Ticket.countDocuments({ resolvedAt: { $gte: todayStart } }),
+              Ticket.countDocuments({ priority: 'Critical', status: { $nin: ['Resolved', 'Closed'] } }),
+              Ticket.countDocuments({ slaBreached: true, status: { $nin: ['Resolved', 'Closed'] } })
+            ]);
+
+            // Top 3 oldest unresolved tickets
+            const oldest = await Ticket.find({ status: { $in: ['Open', 'In Progress'] } })
+              .sort({ createdAt: 1 }).limit(3);
+
+            const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+            let oldestText = '';
+            oldest.forEach(t => {
+              const hrs = Math.round((Date.now() - new Date(t.createdAt)) / 3600000);
+              oldestText += `${priEmoji[t.priority]||'🟡'} \`${t.ticketId}\` — ${t.empName} _(${hrs}h pending)_\n`;
+            });
+
+            const dateStr = new Date().toLocaleDateString('en-IN', {
+              weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+              timeZone: 'Asia/Kolkata'
+            });
+
+            await slackApp.client.chat.postMessage({
+              channel: adminId,
+              text   : `📊 Good Morning! IT Helpdesk Daily Summary — ${dateStr}`,
+              blocks : [
+                { type:'header', text:{ type:'plain_text', text:`📊 IT Helpdesk — Daily Summary`, emoji:true }},
+                { type:'context', elements:[{ type:'mrkdwn', text:`_${dateStr}_` }]},
+                { type:'divider' },
+                { type:'section', fields:[
+                  { type:'mrkdwn', text:`*📬 Aaj Aaye*\n*${newToday}* tickets` },
+                  { type:'mrkdwn', text:`*✅ Aaj Resolve*\n*${resolvedToday}* tickets` },
+                  { type:'mrkdwn', text:`*⏳ Total Open*\n*${totalOpen}* tickets` },
+                  { type:'mrkdwn', text:`*🔴 Critical Open*\n*${critical}*` },
+                  { type:'mrkdwn', text:`*⚠️ SLA Breached*\n*${slaBreached}*` }
+                ]},
+                ...(oldestText ? [
+                  { type:'divider' },
+                  { type:'section', text:{ type:'mrkdwn', text:`*⏳ Sabse Purane Pending Tickets:*\n${oldestText}` }}
+                ] : []),
+                { type:'context', elements:[{ type:'mrkdwn', text:`_Aaj ki shuruat mubarak! IT Helpdesk: 9654244281_` }]}
+              ]
+            });
+            console.log('📊 Daily summary sent to admin');
+          } catch (err) {
+            console.error('Daily summary cron error:', err.message);
+          }
+        });
+
       }).catch(err => {
         console.error('❌ Slack Bot start failed:', err.message);
       });
