@@ -351,71 +351,81 @@ app.listen(PORT, () => {
 
       // DM handler
       slackApp.message(async ({ message, client, say }) => {
+        // ── Guard: ignore bot messages and empty messages ─────────────────────
         if (message.bot_id || message.subtype) return;
         const userId = message.user;
         const text   = message.text?.trim();
         if (!text) return;
 
-        const emp  = await lookupEmployee(userId, client);
-        const sess = sessions[userId] || { messages: [] };
-
-        // ── Check if user is confirming/rejecting a pending ticket ────────────
-        if (sess.pendingTicket) {
-          const isYes = /^(ha|haan|haa|yes|bilkul|ok|theek hai|ticket|bana do|create|kar do|ho jaye)/i.test(text.trim());
-          const isNo  = /^(nahi|na|no|nope|mat|band karo|chodo|rehne do)/i.test(text.trim());
-
-          if (isYes) {
-            const result = await createTicketSlack(sess.pendingTicket);
-            delete sess.pendingTicket;
-            sessions[userId] = sess;
-
-            if (result?._duplicate) {
-              await say({ text: `⚠️ ${result.message}` });
-            } else if (result) {
-              const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
-              await say({
-                text: `🎫 Ticket ${result.ticketId} create ho gaya!`,
-                blocks: [
-                  { type:'section', fields:[
-                    { type:'mrkdwn', text:`*🎫 Ticket Bana!*\n\`${result.ticketId}\`` },
-                    { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority*\n${result.priority}` }
-                  ]},
-                  { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya 🙏` }]}
-                ]
-              });
-              await notifySajan(client, result, emp);
-            }
-            return;
-          }
-
-          if (isNo) {
-            delete sess.pendingTicket;
-            sessions[userId] = sess;
-            await say({ text: '👍 Theek hai! Koi aur problem ho toh batao.' });
-            return;
-          }
-        }
-
-        // ── Reset session on greeting — fresh start ───────────────────────────
-        const isGreeting = /^(hello|hi|hey|namaste|hlo|hii|namaskar|good morning|good afternoon|good evening|salam|sup|helo)$/i.test(text.trim());
-        if (isGreeting) {
-          sessions[userId] = { ...emp, messages: [] };
-          const firstName = (emp.empName || 'there').split(' ')[0];
-          await say({ text: `Hello ${firstName}! 👋 WIOM IT Helpdesk mein aapka swagat hai. Aapki kya IT samasya hai? Batayein, main turant sahayata karunga.` });
-          return;
-        }
-
-        // ── Normal AI chat ────────────────────────────────────────────────────
-        const messages = [...(sess.messages || []), { role: 'user', content: text }];
-        sessions[userId] = { ...sess, messages };
-
+        // ── Wrap EVERYTHING in try-catch so user always gets a response ───────
         try {
-          const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack', laptop: emp.laptop, laptopSN: emp.laptopSN, dept: emp.dept, floor: emp.floor });
-          sessions[userId].messages = [...messages, { role: 'assistant', content: reply }];
+          const emp  = await lookupEmployee(userId, client);
+          const sess = sessions[userId] || { messages: [] };
+
+          // ── Check if user is confirming/rejecting a pending ticket ──────────
+          if (sess.pendingTicket) {
+            const isYes = /^(ha|haan|haa|yes|bilkul|ok|theek hai|ticket|bana do|create|kar do|ho jaye)/i.test(text.trim());
+            const isNo  = /^(nahi|na|no|nope|mat|band karo|chodo|rehne do)/i.test(text.trim());
+
+            if (isYes) {
+              const result = await createTicketSlack(sess.pendingTicket);
+              delete sess.pendingTicket;
+              sessions[userId] = sess;
+              if (result?._duplicate) {
+                await say({ text: `⚠️ ${result.message}` });
+              } else if (result) {
+                const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+                await say({
+                  text: `🎫 Ticket ${result.ticketId} create ho gaya!`,
+                  blocks: [
+                    { type:'section', fields:[
+                      { type:'mrkdwn', text:`*🎫 Ticket Bana!*\n\`${result.ticketId}\`` },
+                      { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority*\n${result.priority}` }
+                    ]},
+                    { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya 🙏` }]}
+                  ]
+                });
+                await notifySajan(client, result, emp);
+              }
+              return;
+            }
+
+            if (isNo) {
+              delete sess.pendingTicket;
+              sessions[userId] = sess;
+              await say({ text: '👍 Theek hai! Koi aur problem ho toh batao.' });
+              return;
+            }
+          }
+
+          // ── Greeting — reset session and reply ───────────────────────────────
+          const isGreeting = /^(hello|hi|hey|namaste|hlo|hii|namaskar|good morning|good afternoon|good evening|salam|sup|helo)$/i.test(text.trim());
+          if (isGreeting) {
+            sessions[userId] = { ...emp, messages: [] };
+            const firstName = (emp.empName || 'there').split(' ')[0];
+            await say({ text: `Hello ${firstName}! 👋 WIOM IT Helpdesk mein aapka swagat hai. Aapki kya IT samasya hai? Batayein, main sahayata karunga.` });
+            return;
+          }
+
+          // ── Normal AI chat ──────────────────────────────────────────────────
+          // Use previous messages for context but add current message
+          const prevMessages = sess.messages || [];
+          const allMessages  = [...prevMessages, { role: 'user', content: text }];
+
+          // Save immediately so parallel messages don't overwrite each other
+          sessions[userId] = { ...emp, messages: allMessages };
+
+          const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(
+            allMessages,
+            { empId: emp.empId, empName: emp.empName, source: 'slack',
+              laptop: emp.laptop, laptopSN: emp.laptopSN, dept: emp.dept, floor: emp.floor }
+          );
+
+          // Save assistant reply to session
+          sessions[userId].messages = [...allMessages, { role: 'assistant', content: reply }];
 
           const blocks = [{ type:'section', text:{ type:'mrkdwn', text: reply }}];
 
-          // ── AI wants to create ticket — save as pending, ask user ────────────
           if (shouldCreateTicket && ticketData) {
             sessions[userId].pendingTicket = {
               empId: emp.empId, empName: emp.empName, empEmail: emp.email,
@@ -428,11 +438,15 @@ app.listen(PORT, () => {
             blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? *"Ha"* ya *"Nahi"* reply karo_ 🎫` }]});
           }
 
-          await say({ text: reply, blocks }); // ← NO thread_ts — normal message
+          await say({ text: reply, blocks });
 
         } catch (err) {
           console.error('❌ DM handler error:', err.message);
-          await say({ text: '❌ Kuch error aa gaya. Baad mein dobara try karein ya IT Helpdesk: 9654244281' });
+          try {
+            await say({ text: '❌ Kuch technical problem aa gayi. Thoda wait karein aur dobara try karein. IT Helpdesk: 9654244281' });
+          } catch (sayErr) {
+            console.error('❌ Could not send error message to user:', sayErr.message);
+          }
         }
       });
 
