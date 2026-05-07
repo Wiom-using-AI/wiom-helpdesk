@@ -606,13 +606,7 @@ app.listen(PORT, () => {
           // ── FEATURE 2: Format for Slack ───────────────────────────────────
           const formattedReply = formatForSlack(reply);
 
-          // ── FEATURE 5: Office hours note ──────────────────────────────────
-          let officeNote = '';
-          if (!isOfficeHours()) {
-            officeNote = '\n\n_⏰ Office hours baad mein hain (9AM–7PM IST). Urgent ho to: *9654244281*_';
-          }
-
-          const blocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedReply + officeNote }}];
+          const blocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}];
 
           if (shouldCreateTicket && ticketData) {
             pendingTickets.set(userId, {
