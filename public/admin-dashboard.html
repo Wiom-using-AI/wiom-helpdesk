@@ -7,6 +7,7 @@
 <link rel="icon" href="/wiom-logo.webp" type="image/webp"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --pink:#E8197D; --pink-dark:#c0146a; --pink-glow:rgba(232,25,125,0.18);
@@ -211,6 +212,11 @@
     <div class="nav-item" onclick="showTab('open')"><span class="icon">⏳</span> Open Tickets</div>
     <div class="nav-item" onclick="showTab('employees')"><span class="icon">👥</span> Employees</div>
     <div class="nav-item" onclick="showTab('report')"><span class="icon">📈</span> Aaj Ka Report</div>
+    <div class="nav-item" onclick="showTab('analytics')"><span class="icon">📉</span> Analytics</div>
+    <div class="nav-item" onclick="showTab('broadcast')"><span class="icon">📢</span> Broadcast</div>
+    <div class="nav-item" onclick="showTab('team')"><span class="icon">🛡️</span> IT Team</div>
+    <div class="nav-item" onclick="showTab('kb')"><span class="icon">📚</span> Knowledge Base</div>
+    <div class="nav-item" onclick="showTab('import')"><span class="icon">📥</span> Bulk Import</div>
   </div>
 
   <!-- Main Content -->
@@ -391,6 +397,159 @@
             <thead><tr><th>Ticket ID</th><th>Employee</th><th>Category</th><th>Priority</th><th>Status</th><th>Time</th></tr></thead>
             <tbody id="todayTickets"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ANALYTICS TAB ── -->
+    <div id="tab-analytics" class="tab-content">
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px;">
+        <div class="stat-card blue"><div class="icon">⏱</div><div class="label">Avg Resolution</div><div class="value" id="aAvgRes">—</div><div class="sub">Hours</div></div>
+        <div class="stat-card green"><div class="icon">⭐</div><div class="label">Avg Rating</div><div class="value" id="aAvgRating">—</div><div class="sub">out of 5</div></div>
+        <div class="stat-card orange"><div class="icon">📝</div><div class="label">Ratings Count</div><div class="value" id="aRatingCount">—</div><div class="sub">Total feedback</div></div>
+        <div class="stat-card red"><div class="icon">👤</div><div class="label">Top Reporter</div><div class="value" id="aTopReporter" style="font-size:14px;margin-top:8px;">—</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div class="card"><div class="card-header"><h3>📈 Last 7 Days Trend</h3></div><div class="card-body" style="padding:20px;"><canvas id="trendChart" height="200"></canvas></div></div>
+        <div class="card"><div class="card-header"><h3>🍩 Category Breakdown</h3></div><div class="card-body" style="padding:20px;"><canvas id="catChart" height="200"></canvas></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card"><div class="card-header"><h3>🎯 Open Tickets by Priority</h3></div><div class="card-body" style="padding:20px;"><canvas id="priChart" height="200"></canvas></div></div>
+        <div class="card"><div class="card-header"><h3>🏆 Top 5 Reporters</h3></div><div class="card-body" style="padding:20px;"><canvas id="reporterChart" height="200"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ── BROADCAST TAB ── -->
+    <div id="tab-broadcast" class="tab-content">
+      <div class="card">
+        <div class="card-header"><h3>📢 Broadcast Message — All Employees ke Slack pe bhejo</h3></div>
+        <div class="card-body" style="padding:24px;">
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:6px;">Message</label>
+            <textarea id="broadcastMsg" class="note-box" style="min-height:100px;font-size:14px;" placeholder="e.g. Server maintenance tonight 10PM–12AM. Please save your work before 9:45PM."></textarea>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+              <input type="checkbox" id="urgentCheck" style="width:16px;height:16px;"/> 🚨 Urgent Alert
+            </label>
+          </div>
+          <button onclick="sendBroadcast()" style="padding:12px 28px;background:var(--pink);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;">📢 Send to All Employees</button>
+          <div id="broadcastResult" style="margin-top:16px;font-size:13px;"></div>
+
+          <div style="margin-top:24px;padding:16px;background:rgba(232,25,125,0.06);border:1px solid var(--border);border-radius:10px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📌 Recent Broadcasts</div>
+            <div id="broadcastHistory" style="font-size:13px;color:var(--text);">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TEAM TAB ── -->
+    <div id="tab-team" class="tab-content">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><h3>🛡️ IT Team Members</h3><button class="refresh-btn" onclick="loadTeam()">Refresh</button></div>
+        <div class="card-body">
+          <table>
+            <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Email</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="teamBody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>➕ Add New IT Team Member</h3></div>
+        <div class="card-body" style="padding:24px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:600px;">
+            <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;">Full Name</label><input id="newAdminName" class="search-box" style="width:100%;" placeholder="e.g. Rahul Sharma"/></div>
+            <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;">Username</label><input id="newAdminUser" class="search-box" style="width:100%;" placeholder="e.g. rahul.it"/></div>
+            <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;">Email</label><input id="newAdminEmail" class="search-box" style="width:100%;" placeholder="rahul@wiom.in"/></div>
+            <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;">Password</label><input id="newAdminPass" type="password" class="search-box" style="width:100%;" placeholder="Strong password"/></div>
+            <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;">Role</label>
+              <select id="newAdminRole" class="filter-select" style="width:100%;">
+                <option value="admin">Admin</option>
+                <option value="viewer">Viewer (Read-only)</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="addTeamMember()" style="margin-top:16px;padding:10px 24px;background:var(--pink);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;">➕ Add Member</button>
+          <div id="teamResult" style="margin-top:12px;font-size:13px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── KNOWLEDGE BASE TAB ── -->
+    <div id="tab-kb" class="tab-content">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <h3>📚 Knowledge Base (<span id="kbCount">—</span> entries)</h3>
+          <button class="refresh-btn" onclick="loadKB()">Refresh</button>
+        </div>
+        <div class="card-body">
+          <table>
+            <thead><tr><th>Question</th><th>Category</th><th>Keywords</th><th>Used</th><th>Action</th></tr></thead>
+            <tbody id="kbBody"><tr class="empty-row"><td colspan="5">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>➕ Add FAQ Entry</h3></div>
+        <div class="card-body" style="padding:24px;max-width:700px;">
+          <div style="margin-bottom:12px;">
+            <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;">Question (User kya poochh sakta hai)</label>
+            <input id="kbQ" class="search-box" style="width:100%;" placeholder="e.g. WiFi connect nahi ho raha hai"/>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;">Answer (Step-by-step solution)</label>
+            <textarea id="kbA" class="note-box" style="min-height:120px;" placeholder="Step 1: WiFi icon pe right-click karein...&#10;Step 2: ...&#10;Step 3: ..."></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <div>
+              <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;">Category</label>
+              <select id="kbCat" class="filter-select" style="width:100%;">
+                <option>Network</option><option>Hardware</option><option>Software</option>
+                <option>Account</option><option>Printer</option><option>General</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px;">Keywords (comma separated)</label>
+              <input id="kbKw" class="search-box" style="width:100%;" placeholder="wifi, connect, nahi, chal"/>
+            </div>
+          </div>
+          <button onclick="addKBEntry()" style="padding:10px 24px;background:var(--pink);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;">➕ Add Entry</button>
+          <div id="kbResult" style="margin-top:12px;font-size:13px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BULK IMPORT TAB ── -->
+    <div id="tab-import" class="tab-content">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><h3>📥 Bulk Employee Import — CSV se</h3></div>
+        <div class="card-body" style="padding:24px;">
+          <div style="padding:16px;background:rgba(232,25,125,0.06);border:1px solid var(--border);border-radius:10px;margin-bottom:20px;font-size:13px;color:var(--text);">
+            <strong>📋 CSV Format (Header row required):</strong><br/>
+            <code style="font-size:12px;color:#f08ab0;">empId,name,email,phone,department,floor,designation,laptop,laptopSN</code><br/><br/>
+            <strong>Example:</strong><br/>
+            <code style="font-size:12px;color:#a0cfff;">WIOM001,Rahul Sharma,rahul@wiom.in,9876543210,Technology,1st Floor,Engineer,Lenovo ThinkPad E14,SN123456</code>
+          </div>
+          <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:6px;">Paste CSV Data Here</label>
+          <textarea id="csvData" class="note-box" style="min-height:200px;font-size:12px;font-family:monospace;" placeholder="empId,name,email,phone,department,floor,designation,laptop,laptopSN&#10;WIOM001,Rahul Sharma,rahul@wiom.in,9876543210,Technology,1st Floor,Engineer,Lenovo ThinkPad,SN123&#10;WIOM002,..."></textarea>
+          <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <button onclick="importCSV()" style="padding:10px 24px;background:var(--pink);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;">📥 Import Employees</button>
+            <button onclick="downloadSampleCSV()" style="padding:10px 20px;background:transparent;border:1px solid var(--success);border-radius:8px;color:var(--success);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;">📄 Download Sample CSV</button>
+          </div>
+          <div id="importResult" style="margin-top:16px;font-size:13px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>🔗 Keka HRMS Auto-Sync</h3></div>
+        <div class="card-body" style="padding:24px;">
+          <div style="padding:14px;background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.2);border-radius:8px;margin-bottom:16px;font-size:13px;color:#fde047;">
+            ⚙️ <strong>Setup required:</strong> Railway mein <code>KEKA_API_KEY</code> environment variable add karein.<br/>
+            Keka Admin → Integrations → API → Generate Token
+          </div>
+          <button onclick="kekaSync()" style="padding:10px 24px;background:rgba(232,25,125,0.15);border:1px solid rgba(232,25,125,0.3);border-radius:8px;color:var(--pink);font-size:14px;font-family:'Inter',sans-serif;cursor:pointer;font-weight:600;">🔄 Sync from Keka Now</button>
+          <div id="kekaResult" style="margin-top:12px;font-size:13px;"></div>
         </div>
       </div>
     </div>
@@ -587,10 +746,13 @@ function showTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   event.currentTarget.classList.add('active');
-  const titles = { dashboard:'Dashboard', tickets:'All Tickets', open:'Open Tickets', employees:'Employees', report:'Aaj Ka Report' };
+  const titles = { dashboard:'Dashboard', tickets:'All Tickets', open:'Open Tickets', employees:'Employees', report:'Aaj Ka Report', analytics:'Analytics', broadcast:'Broadcast', team:'IT Team', kb:'Knowledge Base', import:'Bulk Import' };
   document.getElementById('pageTitle').textContent = titles[tab] || tab;
-  if (tab === 'report') loadReport();
-  if (tab === 'open') loadOpenTickets();
+  if (tab === 'report')    loadReport();
+  if (tab === 'open')      loadOpenTickets();
+  if (tab === 'analytics') loadAnalytics();
+  if (tab === 'team')      loadTeam();
+  if (tab === 'kb')        loadKB();
 }
 
 function refreshData() {
@@ -1132,6 +1294,233 @@ document.getElementById('password').addEventListener('keypress', e => { if (e.ke
 // Close modals on overlay click
 document.getElementById('ticketModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
 document.getElementById('empModal').addEventListener('click',    e => { if(e.target===e.currentTarget) document.getElementById('empModal').classList.remove('show'); });
+
+// ── ANALYTICS ────────────────────────────────────────────────────────────────
+let chartInstances = {};
+async function loadAnalytics() {
+  try {
+    const d = await apiGet('/api/admin/charts');
+    document.getElementById('aAvgRes').textContent     = d.avgResolutionHrs ? d.avgResolutionHrs + 'h' : '—';
+    document.getElementById('aAvgRating').textContent  = d.avgRating || '—';
+    document.getElementById('aRatingCount').textContent= d.ratingCount || 0;
+    document.getElementById('aTopReporter').textContent= d.topReporters?.[0]?.name || '—';
+
+    const PINK = '#E8197D'; const PINK2 = 'rgba(232,25,125,0.15)';
+    const palette = ['#E8197D','#a78bfa','#34d399','#fbbf24','#60a5fa','#f87171','#fb923c'];
+
+    const def = (id, type, labels, data, opts = {}) => {
+      if (chartInstances[id]) chartInstances[id].destroy();
+      const ctx = document.getElementById(id)?.getContext('2d');
+      if (!ctx) return;
+      chartInstances[id] = new Chart(ctx, {
+        type,
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: type === 'line' ? PINK2 : palette, borderColor: type === 'line' ? PINK : palette, borderWidth: type === 'line' ? 2 : 1, fill: type === 'line', tension: 0.4, pointBackgroundColor: PINK }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: type !== 'line', labels: { color: '#d4bac6', boxWidth: 12, font: { family: 'Inter' } } } },
+          scales: type === 'line' || type === 'bar' ? { x: { ticks: { color: '#8a6b76', font: { size: 11 } }, grid: { color: 'rgba(232,25,125,0.06)' } }, y: { ticks: { color: '#8a6b76' }, grid: { color: 'rgba(232,25,125,0.06)' }, beginAtZero: true } } : undefined,
+          ...opts
+        }
+      });
+    };
+
+    def('trendChart', 'line',  d.trend.labels,                  d.trend.data);
+    def('catChart',   'doughnut', d.categories.map(c=>c.label), d.categories.map(c=>c.value));
+    def('priChart',   'bar',   d.priorities.map(p=>p.label),    d.priorities.map(p=>p.value));
+    def('reporterChart','bar', d.topReporters.map(r=>r.name),   d.topReporters.map(r=>r.count));
+  } catch(e) { console.error('Analytics load failed:', e); }
+}
+
+// ── BROADCAST ────────────────────────────────────────────────────────────────
+async function sendBroadcast() {
+  const msg = document.getElementById('broadcastMsg').value.trim();
+  const urgent = document.getElementById('urgentCheck').checked;
+  const res = document.getElementById('broadcastResult');
+  if (!msg) { res.innerHTML = '<span style="color:#f87171;">❌ Message khali hai!</span>'; return; }
+  res.innerHTML = '⏳ Bhej raha hoon...';
+  try {
+    const d = await (await fetch(`${API}/api/admin/broadcast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ message: msg, urgent })
+    })).json();
+    if (d.success) {
+      res.innerHTML = `<span style="color:#34d399;">✅ Bhej diya! ${d.sent} success, ${d.failed} failed (total: ${d.total})</span>`;
+      document.getElementById('broadcastMsg').value = '';
+      document.getElementById('urgentCheck').checked = false;
+      const hist = document.getElementById('broadcastHistory');
+      const time = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+      hist.innerHTML = `<div style="padding:8px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.15);border-radius:6px;margin-bottom:6px;font-size:12px;"><span style="color:#34d399;">${urgent?'🚨':'📢'} ${time}</span> — ${msg.substring(0,80)}${msg.length>80?'...':''}</div>` + (hist.innerHTML === '—' ? '' : hist.innerHTML);
+    } else {
+      res.innerHTML = `<span style="color:#f87171;">❌ ${d.error || 'Failed'}</span>`;
+    }
+  } catch(e) { res.innerHTML = `<span style="color:#f87171;">❌ Server error: ${e.message}</span>`; }
+}
+
+// ── TEAM ─────────────────────────────────────────────────────────────────────
+async function loadTeam() {
+  try {
+    const d = await apiGet('/api/admin/team');
+    const admins = d.admins || [];
+    const tbody = document.getElementById('teamBody');
+    if (!admins.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Koi team member nahi</td></tr>'; return; }
+    tbody.innerHTML = admins.map(a => `
+      <tr>
+        <td>${a.name}</td>
+        <td style="font-family:monospace;color:#E8197D;">${a.username}</td>
+        <td><span style="padding:2px 8px;border-radius:12px;font-size:11px;background:${a.role==='superadmin'?'rgba(251,191,36,0.15)':'rgba(232,25,125,0.1)'};color:${a.role==='superadmin'?'#fbbf24':'#f08ab0'};">${a.role}</span></td>
+        <td style="font-size:12px;">${a.email||'—'}</td>
+        <td><span style="padding:2px 8px;border-radius:12px;font-size:11px;background:${a.isActive!==false?'rgba(52,211,153,0.1)':'rgba(248,113,113,0.1)'};color:${a.isActive!==false?'#34d399':'#f87171'};">${a.isActive!==false?'Active':'Inactive'}</span></td>
+        <td>
+          <button onclick="toggleAdmin('${a.username}',${a.isActive!==false})" style="padding:3px 10px;background:transparent;border:1px solid rgba(232,25,125,0.3);border-radius:6px;color:#E8197D;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">${a.isActive!==false?'Deactivate':'Activate'}</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) { document.getElementById('teamBody').innerHTML = `<tr class="empty-row"><td colspan="6">❌ ${e.message}</td></tr>`; }
+}
+
+async function addTeamMember() {
+  const res = document.getElementById('teamResult');
+  const name  = document.getElementById('newAdminName').value.trim();
+  const user  = document.getElementById('newAdminUser').value.trim();
+  const email = document.getElementById('newAdminEmail').value.trim();
+  const pass  = document.getElementById('newAdminPass').value;
+  const role  = document.getElementById('newAdminRole').value;
+  if (!name || !user || !email || !pass) { res.innerHTML = '<span style="color:#f87171;">❌ Sab fields bharo!</span>'; return; }
+  res.innerHTML = '⏳ Ban raha hai...';
+  try {
+    const d = await (await fetch(`${API}/api/admin/team`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ name, username: user, email, password: pass, role })
+    })).json();
+    if (d.success) {
+      res.innerHTML = `<span style="color:#34d399;">✅ ${d.admin.name} add ho gaya!</span>`;
+      ['newAdminName','newAdminUser','newAdminEmail','newAdminPass'].forEach(id => document.getElementById(id).value = '');
+      loadTeam();
+    } else { res.innerHTML = `<span style="color:#f87171;">❌ ${d.error}</span>`; }
+  } catch(e) { res.innerHTML = `<span style="color:#f87171;">❌ ${e.message}</span>`; }
+}
+
+async function toggleAdmin(username, currentlyActive) {
+  try {
+    await (await fetch(`${API}/api/admin/team/${username}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ isActive: !currentlyActive })
+    })).json();
+    loadTeam();
+  } catch(e) { alert('❌ Error: ' + e.message); }
+}
+
+// ── KNOWLEDGE BASE ────────────────────────────────────────────────────────────
+async function loadKB() {
+  try {
+    const d = await apiGet('/api/kb');
+    const entries = d.entries || [];
+    document.getElementById('kbCount').textContent = entries.length;
+    const tbody = document.getElementById('kbBody');
+    if (!entries.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Koi entry nahi hai. Neeche add karo.</td></tr>'; return; }
+    tbody.innerHTML = entries.map(e => `
+      <tr>
+        <td style="max-width:280px;">${e.question}</td>
+        <td><span style="padding:2px 8px;border-radius:12px;font-size:11px;background:rgba(232,25,125,0.1);color:#f08ab0;">${e.category||'General'}</span></td>
+        <td style="font-size:11px;color:#8a6b76;">${(e.keywords||[]).slice(0,5).join(', ')}</td>
+        <td style="text-align:center;color:#E8197D;font-weight:600;">${e.useCount||0}</td>
+        <td>
+          <button onclick="deleteKBEntry('${e._id}')" style="padding:3px 10px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);border-radius:6px;color:#f87171;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">🗑 Delete</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) { document.getElementById('kbBody').innerHTML = `<tr class="empty-row"><td colspan="5">❌ ${e.message}</td></tr>`; }
+}
+
+async function addKBEntry() {
+  const res  = document.getElementById('kbResult');
+  const q    = document.getElementById('kbQ').value.trim();
+  const a    = document.getElementById('kbA').value.trim();
+  const cat  = document.getElementById('kbCat').value;
+  const kwRaw= document.getElementById('kbKw').value.trim();
+  const kw   = kwRaw ? kwRaw.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean) : [];
+  if (!q || !a) { res.innerHTML = '<span style="color:#f87171;">❌ Question aur Answer dono chahiye!</span>'; return; }
+  res.innerHTML = '⏳ Add ho raha hai...';
+  try {
+    const d = await (await fetch(`${API}/api/kb`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ question: q, answer: a, category: cat, keywords: kw })
+    })).json();
+    if (d.success) {
+      res.innerHTML = '<span style="color:#34d399;">✅ Entry add ho gayi!</span>';
+      ['kbQ','kbA','kbKw'].forEach(id => document.getElementById(id).value = '');
+      loadKB();
+    } else { res.innerHTML = `<span style="color:#f87171;">❌ ${d.error}</span>`; }
+  } catch(e) { res.innerHTML = `<span style="color:#f87171;">❌ ${e.message}</span>`; }
+}
+
+async function deleteKBEntry(id) {
+  if (!confirm('Yeh entry delete karni hai?')) return;
+  try {
+    await fetch(`${API}/api/kb/${id}`, { method:'DELETE', headers:{ 'Authorization':`Bearer ${token}` } });
+    loadKB();
+  } catch(e) { alert('❌ Delete failed: ' + e.message); }
+}
+
+// ── BULK IMPORT ───────────────────────────────────────────────────────────────
+async function importCSV() {
+  const raw = document.getElementById('csvData').value.trim();
+  const res = document.getElementById('importResult');
+  if (!raw) { res.innerHTML = '<span style="color:#f87171;">❌ CSV data paste karo!</span>'; return; }
+  const lines = raw.split('\n').filter(l => l.trim());
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/^"|"$/g,''));
+  const rows = lines.slice(1);
+  if (!rows.length) { res.innerHTML = '<span style="color:#f87171;">❌ Koi data row nahi mili!</span>'; return; }
+  res.innerHTML = `⏳ ${rows.length} employees import ho rahe hain...`;
+  let success = 0, failed = 0;
+  for (const row of rows) {
+    const cols = row.split(',').map(c => c.trim().replace(/^"|"$/g,''));
+    const emp = {};
+    headers.forEach((h, i) => { emp[h] = cols[i] || ''; });
+    if (!emp.empid && !emp['emp id']) continue;
+    try {
+      const r = await fetch(`${API}/api/employees`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          empId: (emp.empid || emp['emp id'] || '').toUpperCase(),
+          name: emp.name || '', email: emp.email || '', phone: emp.phone || '',
+          department: emp.department || '', floor: emp.floor || '',
+          designation: emp.designation || '', laptop: emp.laptop || '', laptopSN: emp.laptopsn || emp.laptopsn || ''
+        })
+      });
+      r.ok ? success++ : failed++;
+    } catch { failed++; }
+  }
+  res.innerHTML = `<span style="color:#34d399;">✅ Done! ${success} imported, ${failed} failed</span>`;
+  if (success) loadEmployees();
+}
+
+function downloadSampleCSV() {
+  const csv = 'empId,name,email,phone,department,floor,designation,laptop,laptopSN\nWIOM001,Rahul Sharma,rahul@wiom.in,9876543210,Technology,1st Floor,Engineer,Lenovo ThinkPad E14,PF3ABCDE\nWIOM002,Priya Gupta,priya@wiom.in,9876543211,Operations,2nd Floor,Manager,Dell Latitude 5420,CN1234567';
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'WIOM_Employee_Import_Sample.csv'; a.click();
+}
+
+async function kekaSync() {
+  const res = document.getElementById('kekaResult');
+  res.innerHTML = '⏳ Keka se sync ho raha hai...';
+  try {
+    const d = await (await fetch(`${API}/api/admin/keka-sync`, {
+      method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
+    })).json();
+    if (d.success) {
+      res.innerHTML = `<span style="color:#34d399;">✅ Sync complete! ${d.synced} employees synced, ${d.errors} errors (total: ${d.total})</span>`;
+      loadEmployees();
+    } else { res.innerHTML = `<span style="color:#f87171;">❌ ${d.error}</span>`; }
+  } catch(e) { res.innerHTML = `<span style="color:#f87171;">❌ ${e.message}</span>`; }
+}
 </script>
 </body>
 </html>

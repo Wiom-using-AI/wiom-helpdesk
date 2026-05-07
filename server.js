@@ -10,6 +10,8 @@ const authRoutes     = require('./routes/auth');
 const ticketRoutes   = require('./routes/tickets');
 const aiRoutes       = require('./routes/ai');
 const employeeRoutes = require('./routes/employees');
+const adminRoutes    = require('./routes/admin');
+const kbRoutes       = require('./routes/kb');
 const slaService     = require('./services/sla');
 const Ticket         = require('./models/Ticket');
 const Conversation   = require('./models/Conversation');
@@ -71,6 +73,24 @@ app.use('/api/auth',      authRoutes);
 app.use('/api/tickets',   ticketRoutes);
 app.use('/api/ai',        aiRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/admin',     adminRoutes);
+app.use('/api/kb',        kbRoutes);
+
+// ── WhatsApp Webhook (Twilio) ──────────────────────────────────────────────────
+app.post('/api/whatsapp/incoming', async (req, res) => {
+  try {
+    const accountSid  = process.env.TWILIO_ACCOUNT_SID;
+    const authToken   = process.env.TWILIO_AUTH_TOKEN;
+    if (!accountSid || !authToken) return res.send('<Response></Response>');
+    const twilio = require('twilio')(accountSid, authToken);
+    const waSvc  = require('./services/whatsapp');
+    await waSvc.handleIncoming(req, res, twilio);
+  } catch (err) {
+    console.error('WhatsApp webhook error:', err.message);
+    res.set('Content-Type', 'text/xml');
+    res.send('<Response></Response>');
+  }
+});
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {
@@ -152,6 +172,46 @@ cron.schedule('0 2 * * *', async () => {
       console.log(`🔒 Auto-closed ${result.modifiedCount} resolved tickets`);
   } catch (err) {
     console.error('Auto-close cron error:', err.message);
+  }
+});
+
+// ── Recurring Issue Alert: Every 30 min — flag when 3+ employees report same problem ──
+cron.schedule('*/30 * * * *', async () => {
+  try {
+    if (!slackClient) return;
+    const adminId = process.env.SAJAN_SLACK_ID;
+    if (!adminId || adminId === 'FILL_KARO') return;
+
+    const oneHourAgo = new Date(Date.now() - 3600000);
+    // Group recent tickets by category
+    const grouped = await Ticket.aggregate([
+      { $match: { createdAt: { $gte: oneHourAgo }, status: { $in: ['Open','In Progress'] } } },
+      { $group: { _id: '$category', count: { $sum: 1 }, employees: { $push: '$empName' } } },
+      { $match: { count: { $gte: 3 } } }
+    ]);
+
+    for (const g of grouped) {
+      const key = `recurring-alert-${g._id}-${new Date().toISOString().slice(0,13)}`;
+      // Avoid duplicate alerts in same hour (use simple in-memory set)
+      if (global._sentRecurringAlerts?.has(key)) continue;
+      if (!global._sentRecurringAlerts) global._sentRecurringAlerts = new Set();
+      global._sentRecurringAlerts.add(key);
+
+      await slackClient.chat.postMessage({
+        channel: adminId,
+        text   : `⚠️ ${g.count} employees same problem report kar rahe hain: ${g._id}`,
+        blocks : [
+          { type:'header', text:{ type:'plain_text', text:`⚠️ Recurring Issue Alert`, emoji:true }},
+          { type:'section', text:{ type:'mrkdwn', text:
+            `*${g.count} employees ne last 1 hour mein same issue report kiya!*\n\n*Category:* ${g._id}\n*Employees:* ${g.employees.slice(0,5).join(', ')}${g.count > 5 ? ` +${g.count-5} more` : ''}`
+          }},
+          { type:'context', elements:[{ type:'mrkdwn', text:`_Systemic problem ho sakta hai — please investigate!_` }]}
+        ]
+      });
+      console.log(`⚠️ Recurring issue alert sent for category: ${g._id} (${g.count} tickets)`);
+    }
+  } catch (err) {
+    console.error('Recurring issue cron error:', err.message);
   }
 });
 

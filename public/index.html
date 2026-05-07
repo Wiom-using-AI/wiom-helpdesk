@@ -283,6 +283,18 @@ input::placeholder{color:var(--muted);}
         <span class="chip" onclick="quickSend('Mic nahi chal raha Teams mein')">🎤 Mic</span>
         <span class="chip" onclick="quickSend('Screen flickering hai')">🖥️ Monitor</span>
         <span class="chip" id="diagChip" onclick="openDiagnostics()" style="display:none;background:rgba(52,211,153,0.07);border-color:rgba(52,211,153,0.3);color:#34d399;">🔍 Run Diagnostics</span>
+        <span class="chip" onclick="requestRemoteHelp()" style="background:rgba(167,139,250,0.07);border-color:rgba(167,139,250,0.3);color:#a78bfa;">🖥️ Remote Help</span>
+      </div>
+      <!-- Quick Ticket Templates -->
+      <div style="padding:10px 16px;border-top:1px solid var(--border);background:rgba(13,6,8,0.4);">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">🎫 Seedha Ticket Banao:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <button onclick="quickTicket('Hardware','High','Laptop screen kharab ho gayi hai — display nahi aa raha')" style="padding:5px 12px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:16px;color:#f87171;font-size:11px;cursor:pointer;font-family:var(--font);">🔴 Screen Kharab</button>
+          <button onclick="quickTicket('Network','High','VPN connect nahi ho raha — kaam nahi ho pa raha')" style="padding:5px 12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:16px;color:#fbbf24;font-size:11px;cursor:pointer;font-family:var(--font);">🟡 VPN Issue</button>
+          <button onclick="quickTicket('Account','High','Email ya password reset karna hai')" style="padding:5px 12px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:16px;color:#60a5fa;font-size:11px;cursor:pointer;font-family:var(--font);">🔵 Password Reset</button>
+          <button onclick="quickTicket('Hardware','Medium','Naya hardware/accessory chahiye — mouse/keyboard/headset')" style="padding:5px 12px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:16px;color:#34d399;font-size:11px;cursor:pointer;font-family:var(--font);">🟢 New Hardware</button>
+          <button onclick="quickTicket('Software','Critical','Laptop nahi chal raha — bilkul band ho gaya')" style="padding:5px 12px;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:16px;color:#f87171;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);">🆘 Laptop Dead</button>
+        </div>
       </div>
       <div class="chat-input-row">
         <input class="chat-input" id="chatInput" placeholder="Apni problem likho — Hindi ya English dono chalega..." onkeypress="if(event.key==='Enter')sendMsg()"/>
@@ -580,6 +592,53 @@ function openDiagnostics() {
   if (_diagUrl) window.open(_diagUrl, '_blank');
   const diag = getDiagInfo(empData.laptop);
   if (diag) quickSend(`Mera ${empData.laptop} hai. ${diag.name} se diagnostic run karna chahta hoon.`);
+}
+
+// ── QUICK TICKET TEMPLATE ─────────────────────────────────────────────────────
+async function quickTicket(category, priority, description) {
+  const btn = event.currentTarget;
+  btn.disabled = true;
+  btn.textContent = '⏳ Ban raha hai...';
+  try {
+    const res = await fetch(`${API}/api/tickets`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        empId: empData.empId, empName: empData.name, empEmail: empData.email,
+        empDept: empData.dept, empFloor: empData.floor, laptop: empData.laptop,
+        category, priority, description, source: 'web', aiTried: false
+      })
+    });
+    const data = await res.json();
+    if (res.status === 409) {
+      addBotMsg(`⚠️ Is problem ka ticket pehle se hai: <b>${data.ticket?.ticketId||''}</b>`);
+    } else if (data.ticket) {
+      myTickets.unshift(data.ticket);
+      addBotMsg(`🎫 Ticket ban gaya! <b>${data.ticket.ticketId}</b> — Priority: <b>${data.ticket.priority}</b>\n\nIT team jald aapke paas aayegi. 🚀`);
+    }
+  } catch(e) {
+    addBotMsg('❌ Ticket create nahi ho paya. IT Helpdesk: 9654244281');
+  }
+  btn.disabled = false;
+  btn.textContent = btn.textContent.replace('⏳ Ban raha hai...', btn.getAttribute('data-orig') || description.substring(0,15) + '...');
+}
+
+// ── REMOTE HELP REQUEST ───────────────────────────────────────────────────────
+async function requestRemoteHelp() {
+  const msg = `🖥️ Remote Help Request\n\nEmployee: ${empData.name} (${empData.empId})\nLaptop: ${empData.laptop || 'N/A'} — SN: ${empData.laptopSN || 'N/A'}\nDept: ${empData.dept || 'N/A'} | Floor: ${empData.floor || 'N/A'}`;
+  addUserMsg('Mujhe remote help chahiye — IT team mera screen dekhe');
+  addBotMsg(`🖥️ <b>Remote Help Request bheja ja raha hai...</b>\n\nIT team aapko jaldi Slack/call pe contact karegi.\n\n📞 Urgent ho to: <b>9654244281</b>`);
+  try {
+    await fetch(`${API}/api/tickets`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        empId: empData.empId, empName: empData.name, empEmail: empData.email,
+        empDept: empData.dept, empFloor: empData.floor, laptop: empData.laptop,
+        category: 'Remote Support', priority: 'High',
+        description: `Remote help request — Employee needs screen share/remote access assistance. Laptop: ${empData.laptop||'N/A'} SN: ${empData.laptopSN||'N/A'}`,
+        source: 'web', aiTried: false
+      })
+    });
+  } catch(e) { console.error('Remote help ticket failed:', e); }
 }
 </script>
 </body>
