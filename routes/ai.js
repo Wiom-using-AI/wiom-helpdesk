@@ -8,7 +8,7 @@ const claudeSvc    = require('../services/claude');
 router.post('/chat', async (req, res) => {
   try {
     const { message, sessionId, empId, empName, source = 'web',
-            slackUserId, slackChannelId } = req.body;
+            slackUserId, slackChannelId, laptop, laptopSN, dept, floor } = req.body;
 
     if (!message || !empId)
       return res.status(400).json({ error: 'message and empId required' });
@@ -36,7 +36,7 @@ router.post('/chat', async (req, res) => {
     // Call Claude with full history
     const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(
       conv.messages,
-      { empId, empName, source }
+      { empId, empName, source, laptop, laptopSN, dept, floor }
     );
 
     // Add assistant reply

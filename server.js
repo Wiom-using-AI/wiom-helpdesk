@@ -312,7 +312,7 @@ app.listen(PORT, () => {
         sessions[userId] = { ...emp, messages };
 
         try {
-          const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack' });
+          const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack', laptop: emp.laptop, laptopSN: emp.laptopSN, dept: emp.dept, floor: emp.floor });
           sessions[userId].messages = [...messages, { role: 'assistant', content: reply }];
 
           const blocks = [
@@ -401,7 +401,7 @@ app.listen(PORT, () => {
         sessions[userId] = { ...sess, messages };
 
         try {
-          const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack' });
+          const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack', laptop: emp.laptop, laptopSN: emp.laptopSN, dept: emp.dept, floor: emp.floor });
           sessions[userId].messages = [...messages, { role: 'assistant', content: reply }];
 
           const blocks = [{ type:'section', text:{ type:'mrkdwn', text: reply }}];

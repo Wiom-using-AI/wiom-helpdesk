@@ -114,16 +114,32 @@ Emergency IT support: Call 9654244281 (Available 9AM–7PM)`;
 
 
 // ── Main chat function ────────────────────────────────────────────────────────
-const chat = async (messages, { empId, empName, source }) => {
+const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, floor }) => {
   const history = messages.slice(-20).map(m => ({
     role   : m.role === 'assistant' ? 'assistant' : 'user',
     content: m.content
   }));
 
+  const userContext = [
+    `Employee: ${empName||empId} (ID: ${empId})`,
+    dept   ? `Department: ${dept}`                          : null,
+    floor  ? `Floor: ${floor}`                              : null,
+    laptop ? `Assigned Laptop Model: ${laptop}`             : null,
+    laptopSN ? `Laptop Serial Number: ${laptopSN}`         : null,
+  ].filter(Boolean).join(' | ');
+
+  const firstMsg = messages.filter(m => m.role === 'user').length === 1;
+  const laptopIntro = (firstMsg && laptop)
+    ? `\nIMPORTANT — In your FIRST reply, before answering the issue, start by acknowledging the employee's device. Say something like:\n` +
+      `English: "I can see your assigned laptop is ${laptop} (Serial: ${laptopSN||'N/A'}). I will keep this in mind while assisting you."\n` +
+      `Hindi: "Hamari records ke anusaar aapka assigned laptop ${laptop} (Serial: ${laptopSN||'N/A'}) hai. Main isi ke anusaar aapki sahayata karunga."\n` +
+      `Then continue with solving their issue.`
+    : '';
+
   const completion = await groq.chat.completions.create({
     model      : 'llama-3.1-8b-instant',
     messages   : [
-      { role: 'system', content: SYSTEM_PROMPT + `\nUser: ${empName||empId} (ID:${empId})` },
+      { role: 'system', content: SYSTEM_PROMPT + `\n\nUSER CONTEXT: ${userContext}${laptopIntro}` },
       ...history
     ],
     temperature: 0.5,
@@ -168,11 +184,12 @@ const chat = async (messages, { empId, empName, source }) => {
 };
 
 // ── Quick single reply (for Slack) ───────────────────────────────────────────
-const quickReply = async (userMessage, empName = 'Employee') => {
+const quickReply = async (userMessage, empName = 'Employee', laptop = null, laptopSN = null) => {
+  const laptopCtx = laptop ? ` | Laptop: ${laptop}${laptopSN ? ` (SN: ${laptopSN})` : ''}` : '';
   const completion = await groq.chat.completions.create({
     model    : 'llama-3.1-8b-instant',
     messages : [
-      { role: 'system', content: SYSTEM_PROMPT + `\nUser: ${empName}. Keep reply under 3 lines.` },
+      { role: 'system', content: SYSTEM_PROMPT + `\nUser: ${empName}${laptopCtx}. Keep reply under 3 lines.` },
       { role: 'user',   content: userMessage }
     ],
     max_tokens: 200
