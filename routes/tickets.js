@@ -26,7 +26,7 @@ router.post('/', async (req, res) => {
       if (existing) {
         return res.status(409).json({
           error  : 'duplicate',
-          message: `Tera ticket ${existing.ticketId} already open hai! Pehle wala resolve ho jayega.`,
+          message: `Aapka ticket ${existing.ticketId} already open hai. Pehle wala resolve hone ke baad naya ticket create karein.`,
           ticket : existing
         });
       }
@@ -132,7 +132,7 @@ router.get('/stats', verifyAdmin, async (req, res) => {
 });
 
 // ── GET /api/tickets/:id ──────────────────────────────────────────────────────
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyAdmin, async (req, res) => {
   try {
     const ticket = await Ticket.findOne({ ticketId: req.params.id });
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
@@ -166,17 +166,17 @@ router.patch('/:id', verifyAdmin, async (req, res) => {
       // ── Slack DM to employee when ticket resolved ───────────────────────────
       const slackClient = req.app.locals.slackClient;
       if (slackClient && ticket.slackUserId) {
-        const resolvedBy_ = req.body.resolvedBy || assignedTo || 'Sajan Kumar';
+        const resolvedBy_ = req.body.resolvedBy || assignedTo || 'IT Team';
         slackClient.chat.postMessage({
           channel: ticket.slackUserId,
-          text   : `✅ Tera ticket ${ticket.ticketId} resolve ho gaya!`,
+          text   : `✅ Aapka ticket ${ticket.ticketId} resolve ho gaya!`,
           blocks : [
             { type:'section', text:{ type:'mrkdwn', text:
-              `✅ *Tera ticket resolve ho gaya!*\n\n*Ticket:* \`${ticket.ticketId}\`\n*Category:* ${ticket.category}` +
+              `✅ *Aapka support ticket resolve ho gaya hai.*\n\n*Ticket:* \`${ticket.ticketId}\`\n*Category:* ${ticket.category}` +
               (ticket.resolution ? `\n*Resolution:* ${ticket.resolution}` : '')
             }},
             { type:'context', elements:[{ type:'mrkdwn',
-              text:`Resolved by ${resolvedBy_} | Agar problem wapas aaye toh Sajan se contact karo: 9654244281` }]}
+              text:`Resolved by ${resolvedBy_} | Agar problem wapas aaye toh IT Helpdesk: 9654244281` }]}
           ]
         }).catch(e => console.error('Slack resolve DM error:', e.message));
       }
@@ -184,7 +184,7 @@ router.patch('/:id', verifyAdmin, async (req, res) => {
 
     if (comment) {
       ticket.comments.push({
-        author : req.admin?.name || 'Sajan Kumar',
+        author : req.admin?.name || 'IT Team',
         role   : 'admin',
         message: comment
       });

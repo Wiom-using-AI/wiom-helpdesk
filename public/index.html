@@ -233,7 +233,7 @@ input::placeholder{color:var(--muted);}
     </div>
     <button class="btn-login" onclick="doLogin()">🚀 Helpdesk Shuru Karo</button>
     <div class="err" id="loginErr">❌ Kuch problem aa gayi. Dubara try karo.</div>
-    <div class="login-footer">WIOM Internet Services · IT Department · Sajan Kumar: 9654244281</div>
+    <div class="login-footer">WIOM Internet Services · IT Department · Helpdesk: 9654244281</div>
   </div>
 </div>
 
@@ -311,14 +311,17 @@ async function doLogin() {
   const name  = document.getElementById('empNameInput').value.trim();
   if (!empId) { showErr('Employee ID daalo!'); return; }
   try {
-    const res = await fetch(`${API}/api/employees/${empId}`).catch(()=>null);
-    if (res && res.ok) {
-      const d = await res.json();
-      const e = d.employee || d;
-      empData = { empId:e.empId, name:e.name||name, dept:e.department, floor:e.floor, email:e.email, laptop:e.laptop, laptopSN:e.laptopSN };
+    // Try employee login with auth token
+    const loginRes = await fetch(`${API}/api/auth/employee-login`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ empId })
+    }).catch(()=>null);
+    if (loginRes && loginRes.ok) {
+      const d = await loginRes.json();
+      empData = { empId:d.empId, name:d.name||name, dept:d.dept, floor:d.floor, email:d.email, laptop:d.laptop, laptopSN:d.laptopSN, token:d.token };
     } else {
-      if (!name) { showErr('Naam bhi daalo!'); return; }
-      empData = { empId, name, dept:'WIOM', floor:'', email:'', laptop:'', laptopSN:'' };
+      if (!name) { showErr('Employee ID nahi mila. Naam bhi daalo.'); return; }
+      empData = { empId, name, dept:'WIOM', floor:'', email:'', laptop:'', laptopSN:'', token:'' };
     }
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainPage').style.display  = 'block';
@@ -327,7 +330,7 @@ async function doLogin() {
     document.getElementById('empInfoBar').textContent = [empData.dept, empData.floor, empData.laptop].filter(Boolean).join(' · ');
     addWelcome();
     showDiagBanner();
-  } catch(e) { showErr('Server error. Sajan ko call karo: 9654244281'); }
+  } catch(e) { showErr('Server error. IT Helpdesk: 9654244281'); }
 }
 function showErr(msg) {
   const el = document.getElementById('loginErr');
@@ -459,10 +462,10 @@ async function sendMsg() {
   try {
     const res = await fetch(`${API}/api/ai/chat`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ messages:chatHistory, empId:empData.empId, empName:empData.name, source:'web', laptop:empData.laptop, laptopSN:empData.laptopSN, dept:empData.dept, floor:empData.floor })
+      body: JSON.stringify({ message:text, messages:chatHistory, empId:empData.empId, empName:empData.name, source:'web', laptop:empData.laptop, laptopSN:empData.laptopSN, dept:empData.dept, floor:empData.floor })
     });
     const data = await res.json(); hideTyping();
-    const reply = data.reply || 'Kuch error aa gaya. Sajan ko call karo: 9654244281';
+    const reply = data.reply || 'Kuch error aa gaya. IT Helpdesk: 9654244281';
     chatHistory.push({ role:'assistant', content:reply });
 
     // ── Ticket confirmation — show buttons, don't auto-create ─────────────────
@@ -473,7 +476,7 @@ async function sendMsg() {
       return;
     }
     addBotMsg(reply);
-  } catch(e) { hideTyping(); addBotMsg('❌ Server se connect nahi ho pa raha.\nSeedhaa Sajan se contact karo: 📞 <b>9654244281</b>'); }
+  } catch(e) { hideTyping(); addBotMsg('❌ Server se connect nahi ho pa raha. IT Helpdesk se contact karein: 📞 <b>9654244281</b>'); }
   document.getElementById('sendBtn').disabled=false;
   document.getElementById('chatInput').focus();
 }
@@ -498,9 +501,11 @@ async function createTicket(td, orig) {
 async function loadMyTickets() {
   document.getElementById('myTicketsList').innerHTML='<div class="empty-state"><div class="e-icon">⏳</div><p>Loading...</p></div>';
   try {
-    const res  = await fetch(`${API}/api/tickets?empId=${empData.empId}&limit=50`);
+    const res  = await fetch(`${API}/api/tickets/my`, {
+      headers: empData.token ? { 'Authorization': `Bearer ${empData.token}` } : {}
+    });
     const data = await res.json();
-    const tickets = (data.tickets||[]).filter(t=>t.empId===empData.empId);
+    const tickets = data.tickets || [];
     document.getElementById('ticketCount').textContent = `Aapke ${tickets.length} ticket(s)`;
     if (!tickets.length) {
       document.getElementById('myTicketsList').innerHTML='<div class="empty-state"><div class="e-icon">🎉</div><p>Koi ticket nahi! Sab theek chal raha hai.</p></div>'; return;

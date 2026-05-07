@@ -187,9 +187,9 @@
       <div class="brand-sub">IT Helpdesk — Admin Portal</div>
     </div>
     <h1>Welcome back 👋</h1>
-    <p>Sajan Kumar ke liye admin dashboard</p>
-    <input type="text" id="username" placeholder="Username" value="sajan"/>
-    <input type="password" id="password" placeholder="Password" value="Wiom@2024"/>
+    <p>WIOM IT Admin Dashboard</p>
+    <input type="text" id="username" placeholder="Username"/>
+    <input type="password" id="password" placeholder="Password"/>
     <button class="btn-primary" onclick="doLogin()">🔐 Login</button>
     <div class="login-error" id="loginError">❌ Wrong credentials!</div>
   </div>
@@ -221,7 +221,7 @@
         <div id="lastRefreshed" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
       </div>
       <div class="topbar-right">
-        <span class="badge">Sajan Kumar</span>
+        <span class="badge" id="adminNameBadge">Admin</span>
         <div id="autoRefreshTimer" style="font-size:12px;color:var(--muted);padding:5px 10px;background:rgba(232,25,125,0.06);border:1px solid var(--border);border-radius:8px;min-width:80px;text-align:center;"></div>
         <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
         <button class="logout-btn" onclick="doLogout()">Logout</button>
@@ -506,7 +506,8 @@ function checkNewTickets(newTickets) {
 
 // ── AUTO-REFRESH (60 seconds countdown) ───────────────────────────────────
 function startAutoRefresh() {
-  if (autoRefreshInterval) return;
+  // Clear any existing intervals before starting fresh
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
   let secs = 60;
   const tick = () => {
     const el = document.getElementById('autoRefreshTimer');
@@ -538,6 +539,7 @@ async function doLogin() {
     const data = await res.json();
     if (data.token) {
       token = data.token;
+      document.getElementById('adminNameBadge').textContent = data.name || username;
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('mainPage').style.display = 'block';
       loadDashboard();
@@ -558,6 +560,8 @@ async function doLogin() {
 
 function doLogout() {
   token = '';
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  document.getElementById('adminNameBadge').textContent = 'Admin';
   document.getElementById('mainPage').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
 }
@@ -960,7 +964,7 @@ async function resolveTicket() {
   const t = allTickets.find(x => x._id === currentTicketId);
   if (!t) return;
   const note = document.getElementById('noteInput')?.value?.trim();
-  const resolution = note || 'Resolved by Sajan Kumar';
+  const resolution = note || 'Resolved by IT Team';
   try {
     await apiPatch(`/api/tickets/${t.ticketId}`, {
       status: 'Resolved', resolvedBy: 'Human',
@@ -975,7 +979,7 @@ async function resolveTicket() {
 async function quickResolve(id, ticketId) {
   if (!confirm(`${ticketId} resolve mark karna hai?`)) return;
   try {
-    await apiPatch(`/api/tickets/${ticketId}`, { status: 'Resolved', resolvedBy: 'Human', resolution: 'Resolved by Sajan Kumar' });
+    await apiPatch(`/api/tickets/${ticketId}`, { status: 'Resolved', resolvedBy: 'Human', resolution: 'Resolved by IT Team' });
     await loadAllTickets();
   } catch(e) { alert('❌ Error: ' + e.message); }
 }
@@ -1034,7 +1038,7 @@ async function bulkResolve() {
   let done = 0;
   for (const ticketId of ids) {
     try {
-      await apiPatch(`/api/tickets/${ticketId}`, { status:'Resolved', resolvedBy:'Human', resolution:'Bulk resolved by Sajan Kumar' });
+      await apiPatch(`/api/tickets/${ticketId}`, { status:'Resolved', resolvedBy:'Human', resolution:'Resolved by IT Team' });
       done++;
     } catch(e) { console.error('Bulk resolve failed:', ticketId, e.message); }
   }

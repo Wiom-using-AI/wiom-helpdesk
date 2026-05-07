@@ -432,7 +432,7 @@ app.listen(PORT, () => {
 
         } catch (err) {
           console.error('❌ DM handler error:', err.message);
-          await say({ text: '❌ Kuch error aa gaya. Sajan se contact karo: 9654244281' });
+          await say({ text: '❌ Kuch error aa gaya. Baad mein dobara try karein ya IT Helpdesk: 9654244281' });
         }
       });
 

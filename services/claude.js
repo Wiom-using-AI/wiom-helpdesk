@@ -134,8 +134,8 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
       { role: 'system', content: SYSTEM_PROMPT + `\n\nUSER CONTEXT: ${userContext}${laptopIntro}` },
       ...history
     ],
-    temperature: 0.5,
-    max_tokens : 512
+    temperature: 0.4,
+    max_tokens : 1024
   });
 
   const raw = completion.choices[0]?.message?.content?.trim() || '';

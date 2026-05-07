@@ -37,7 +37,7 @@ const ticketSchema = new mongoose.Schema({
     enum: ['Open','In Progress','Waiting','Resolved','Closed'],
     default: 'Open'
   },
-  assignedTo : { type: String, default: 'Sajan Kumar' },
+  assignedTo : { type: String, default: 'IT Team' },
 
   // ── SLA Tracking ────────────────────────────────────────────────────────────
   slaHours       : { type: Number },          // SLA target in hours
