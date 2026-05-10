@@ -680,7 +680,7 @@ app.listen(PORT, () => {
           let myTickets = [];
           if (emp?.empId) {
             myTickets = await Ticket.find({ empId: emp.empId })
-              .sort({ createdAt: -1 }).limit(10).lean();
+              .sort({ createdAt: -1 }).limit(1).lean();
           }
           const openTickets = myTickets.filter(t => t.status === 'Open' || t.status === 'In Progress');
 
@@ -715,12 +715,12 @@ app.listen(PORT, () => {
             // ── #1 MERI TICKETS ───────────────────────────────────────────────
             {
               type: 'section',
-              text: { type: 'mrkdwn', text: `*🎫 Mere Tickets (Last 10)*` }
+              text: { type: 'mrkdwn', text: `*🎫 Mera Last Ticket*` }
             },
             ...(myTickets.length === 0 ? [{
               type: 'section',
               text: { type: 'mrkdwn', text: '✅ Koi ticket nahi — sab theek chal raha hai!' }
-            }] : myTickets.map(t => ({
+            }] : myTickets.slice(0,1).map(t => ({
               type: 'section',
               text: { type: 'mrkdwn', text:
                 `${statusEmoji[t.status]||'🟡'} *${t.ticketId}* — ${(t.description||'').substring(0,50)}${(t.description||'').length>50?'...':''}\n` +
