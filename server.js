@@ -520,7 +520,7 @@ app.listen(PORT, () => {
             },
             {
               type: 'section',
-              text: { type: 'mrkdwn', text: `*Namaste ${name}!* 👋  Aapka swagat hai WIOM IT Helpdesk mein.\n*Ghar Ka Net — Gurgaon Office Support*\n\nKoi bhi IT problem ho — DM karo ya neeche se quick action lo. 🤖` }
+              text: { type: 'mrkdwn', text: `*Namaste ${name}!* 👋\nKoi bhi IT problem ho — neeche button dabao ya DM karo. AI turant jawab dega! 🤖` }
             },
 
             // ── Employee Info ────────────────────────────────────────────────
@@ -531,7 +531,6 @@ app.listen(PORT, () => {
                 { type: 'mrkdwn', text: `🏢 *Dept:* ${dept || '—'}` },
                 { type: 'mrkdwn', text: `💻 *Laptop:* ${laptop || '—'}` },
                 { type: 'mrkdwn', text: `🔢 *Serial No:* \`${laptopSN || '—'}\`` },
-                { type: 'mrkdwn', text: `🏠 *Floor:* ${floor || '—'}` },
                 { type: 'mrkdwn', text: `🎫 *Open Tickets:* ${openCount > 0 ? `*${openCount}*` : '✅ None'}` }
               ]
             }] : []),
@@ -541,116 +540,51 @@ app.listen(PORT, () => {
             // ── Quick Actions ─────────────────────────────────────────────────
             {
               type: 'section',
-              text: { type: 'mrkdwn', text: '*⚡ Quick Self-Service — ek message karo:*' }
+              text: { type: 'mrkdwn', text: '*⚡ Quick Self-Service — problem select karo:*' }
             },
+            // Row 1 — Laptop problems
             {
               type: 'actions',
               elements: [
-                { type:'button', text:{ type:'plain_text', text:'💻 Laptop Slow', emoji:true }, value:'laptop slow hai', action_id:'home_quick_1' },
-                { type:'button', text:{ type:'plain_text', text:'📶 WiFi Issue', emoji:true  }, value:'WiFi nahi chal raha', action_id:'home_quick_2' },
-                { type:'button', text:{ type:'plain_text', text:'📧 Outlook', emoji:true     }, value:'Outlook nahi khul raha', action_id:'home_quick_3' },
-                { type:'button', text:{ type:'plain_text', text:'📹 Teams', emoji:true       }, value:'Teams call drop ho raha hai', action_id:'home_quick_4' },
-                { type:'button', text:{ type:'plain_text', text:'🔑 Password', emoji:true    }, value:'Password reset karna hai', action_id:'home_quick_5' }
+                { type:'button', text:{ type:'plain_text', text:'💻 Laptop Slow',     emoji:true }, value:'Laptop bahut slow hai, kya karun', action_id:'home_quick_1' },
+                { type:'button', text:{ type:'plain_text', text:'💻 Laptop On Nahi',  emoji:true }, value:'Laptop on nahi ho raha hai', action_id:'home_quick_2' },
+                { type:'button', text:{ type:'plain_text', text:'💙 Blue Screen',     emoji:true }, value:'Blue screen of death aa raha hai', action_id:'home_quick_3' },
+                { type:'button', text:{ type:'plain_text', text:'🌡️ Overheating',     emoji:true }, value:'Laptop bahut garam ho raha hai overheating', action_id:'home_quick_4' },
+                { type:'button', text:{ type:'plain_text', text:'🔋 Battery Issue',   emoji:true }, value:'Laptop ki battery jaldi khatam ho rahi hai ya charge nahi ho rahi', action_id:'home_quick_5' }
               ]
             },
+            // Row 2 — Laptop hardware
             {
               type: 'actions',
               elements: [
-                { type:'button', text:{ type:'plain_text', text:'🖨️ Printer', emoji:true      }, value:'Printer nahi chal raha', action_id:'home_quick_6' },
-                { type:'button', text:{ type:'plain_text', text:'💙 Blue Screen', emoji:true  }, value:'Blue screen aa raha hai', action_id:'home_quick_7' },
-                { type:'button', text:{ type:'plain_text', text:'🌡️ Overheating', emoji:true  }, value:'Laptop overheating hai', action_id:'home_quick_8' },
-                { type:'button', text:{ type:'plain_text', text:'🔇 Mic Issue', emoji:true    }, value:'Mic nahi chal raha Teams mein', action_id:'home_quick_9' },
-                { type:'button', text:{ type:'plain_text', text:'🆘 Emergency', emoji:true }, style:'danger', value:'emergency it help chahiye', action_id:'home_sos' }
+                { type:'button', text:{ type:'plain_text', text:'🖥️ Screen Black',    emoji:true }, value:'Laptop screen black hai kuch nahi dikh raha', action_id:'home_quick_6' },
+                { type:'button', text:{ type:'plain_text', text:'⌨️ Keyboard Issue',  emoji:true }, value:'Laptop ki keyboard kaam nahi kar rahi kuch keys nahi chal rahi', action_id:'home_quick_7' },
+                { type:'button', text:{ type:'plain_text', text:'🖱️ Mouse/Touchpad',  emoji:true }, value:'Mouse ya touchpad kaam nahi kar raha', action_id:'home_quick_8' },
+                { type:'button', text:{ type:'plain_text', text:'🔊 No Sound',        emoji:true }, value:'Laptop mein sound nahi aa rahi speaker kaam nahi kar raha', action_id:'home_quick_9' },
+                { type:'button', text:{ type:'plain_text', text:'🔌 Charger Issue',   emoji:true }, value:'Laptop ka charger kaam nahi kar raha charge nahi ho raha', action_id:'home_quick_10' }
               ]
             },
-
-            { type: 'divider' },
-
-            // ── IT Tips ───────────────────────────────────────────────────────
+            // Row 3 — Network & software
             {
-              type: 'section',
-              text: { type: 'mrkdwn', text: '*📋 IT Best Practices — Zaroori Tips (Must Follow)*' }
-            },
-            {
-              type: 'section',
-              text: { type: 'mrkdwn', text:
-                '🔒 *Security*\n' +
-                '• `#1` Lock screen when away — *Win + L* press karo\n' +
-                '• `#2` Password 12+ characters, special symbols daalo\n' +
-                '• `#3` Public WiFi pe company kaam mat karo (cafe, train, hotel)\n' +
-                '• `#4` Suspicious email links pe click mat karo — phishing ho sakta hai\n' +
-                '• `#5` Company data personal WhatsApp/email pe share mat karo\n' +
-                '• `#6` Unauthorized software install mat karo — IT se request karo'
-              }
-            },
-            {
-              type: 'section',
-              text: { type: 'mrkdwn', text:
-                '💻 *Laptop Care*\n' +
-                '• `#7` Laptop hamesha bag mein le jaao — haath mein nahi\n' +
-                '• `#8` Charger/USB cable seedha nikalo — angle se nahi (port damage hoti hai)\n' +
-                '• `#9` Keyboard aur screen monthly saaf karo — microfiber cloth se\n' +
-                '• `#10` Power mode: *Balanced* use karo — High Performance nahi\n' +
-                '• `#11` Screen timeout 5 minutes set karo: Settings → Power & Sleep'
-              }
-            },
-            {
-              type: 'section',
-              text: { type: 'mrkdwn', text:
-                '📁 *Data & Performance*\n' +
-                '• `#12` Important files *OneDrive* pe save karo — sirf Desktop pe nahi (crash hone pe sab kho jaata hai)\n' +
-                '• `#13` Laptop din mein ek baar restart karo — 80% slowness issues fix ho jaate hain\n' +
-                '• `#14` IT issues same day report karo — der karne se choti problem badi ho jaati hai\n' +
-                '• `#15` Software install ke liye IT se bolo — manager approval ke baad admin password milega'
-              }
-            },
-            {
-              type: 'section',
-              text: { type: 'mrkdwn', text:
-                '📧 *Email & Communication*\n' +
-                '• `#16` Company email se hi official kaam karo — Gmail nahi\n' +
-                '• `#17` Email mein OTP, password, payment links pe click mat karo\n' +
-                '• `#18` IT/HR se aaya bhi email lage to pehle call karke verify karo\n' +
-                '• `#19` Teams pe meetings join karte waqt earphones use karo — noise reduce hoti hai'
-              }
-            },
-
-            { type: 'divider' },
-
-            // ── Self-Fix Guide ─────────────────────────────────────────────────
-            {
-              type: 'section',
-              text: { type: 'mrkdwn', text: '*🔧 Common Problems — Pehle Ye Try Karo*' }
-            },
-            {
-              type: 'section',
-              fields: [
-                { type: 'mrkdwn', text: '*💻 Laptop Slow?*\nTask Manager → CPU/RAM dekho → Chrome tabs band karo → Restart' },
-                { type: 'mrkdwn', text: '*📶 WiFi Nahi?*\nWiFi off/on karo → Airplane mode on/off → Restart' },
-                { type: 'mrkdwn', text: '*💻 Laptop On Nahi?*\nCharger lagao → 5 min wait → Power button ek baar press' },
-                { type: 'mrkdwn', text: '*🌐 Internet Nahi (WiFi hai)?*\nCMD → `ipconfig /flushdns` → Browser restart' },
-                { type: 'mrkdwn', text: '*📧 Outlook Error?*\nOutlook → File → Account Settings → Repair karo' },
-                { type: 'mrkdwn', text: '*📹 Teams Audio/Video?*\nSettings → Devices → Correct mic/camera select karo' }
+              type: 'actions',
+              elements: [
+                { type:'button', text:{ type:'plain_text', text:'📶 WiFi Issue',      emoji:true }, value:'WiFi nahi chal raha internet nahi hai', action_id:'home_quick_11' },
+                { type:'button', text:{ type:'plain_text', text:'📧 Outlook',         emoji:true }, value:'Outlook nahi khul raha ya mail nahi aa raha', action_id:'home_quick_12' },
+                { type:'button', text:{ type:'plain_text', text:'📹 Teams',           emoji:true }, value:'Teams mein problem hai call drop ho raha hai', action_id:'home_quick_13' },
+                { type:'button', text:{ type:'plain_text', text:'🔑 Password Reset',  emoji:true }, value:'Password bhool gaya reset karna hai', action_id:'home_quick_14' },
+                { type:'button', text:{ type:'plain_text', text:'🖨️ Printer',         emoji:true }, value:'Printer nahi chal raha print nahi ho raha', action_id:'home_quick_15' }
               ]
             },
-
-            { type: 'divider' },
-
-            // ── Contact ───────────────────────────────────────────────────────
+            // Row 4 — Emergency
             {
-              type: 'section',
-              text: { type: 'mrkdwn', text:
-                '*📞 IT Team Contact*\n' +
-                '👤 *Sajan Kumar* — IT Admin\n' +
-                '📱 *9654244281*\n' +
-                '📧 sajan.kumar@wiom.in\n' +
-                '⏰ Mon–Sat, 9AM–7PM IST\n\n' +
-                '_Koi bhi problem ho — is app ko DM karo! AI turant jawab dega. 🤖_'
-              }
-            },
-            {
-              type: 'context',
-              elements: [{ type: 'mrkdwn', text: `🔄 Last updated: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })} IST  |  WIOM Internet Services — IT Department` }]
+              type: 'actions',
+              elements: [
+                { type:'button', text:{ type:'plain_text', text:'🎤 Mic Issue',       emoji:true }, value:'Mic kaam nahi kar raha Teams ya calls mein awaaz nahi jaati', action_id:'home_quick_16' },
+                { type:'button', text:{ type:'plain_text', text:'🖥️ External Monitor',emoji:true }, value:'External monitor detect nahi ho raha screen nahi aa rahi', action_id:'home_quick_17' },
+                { type:'button', text:{ type:'plain_text', text:'💾 Storage Full',    emoji:true }, value:'Laptop ki storage full ho gayi C drive full hai', action_id:'home_quick_18' },
+                { type:'button', text:{ type:'plain_text', text:'🦠 Virus/Slow PC',   emoji:true }, value:'Laptop mein virus lag gaya bahut slow hai ya ads aa rahe hain', action_id:'home_quick_19' },
+                { type:'button', text:{ type:'plain_text', text:'🆘 Emergency Help', emoji:true }, style:'danger', value:'Emergency IT help chahiye turant', action_id:'home_sos' }
+              ]
             }
           ];
 
@@ -664,7 +598,7 @@ app.listen(PORT, () => {
       });
 
       // ── Quick Action buttons from Home tab ────────────────────────────────
-      const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_8','home_quick_9','home_sos'];
+      const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_sos'];
       homeQuickActions.forEach(actionId => {
         slackApp.action(actionId, async ({ body, ack, client }) => {
           await ack();
