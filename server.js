@@ -568,22 +568,42 @@ app.listen(PORT, () => {
             {
               type: 'actions',
               elements: [
-                { type:'button', text:{ type:'plain_text', text:'📶 WiFi Issue',      emoji:true }, value:'WiFi nahi chal raha internet nahi hai', action_id:'home_quick_11' },
-                { type:'button', text:{ type:'plain_text', text:'📧 Outlook',         emoji:true }, value:'Outlook nahi khul raha ya mail nahi aa raha', action_id:'home_quick_12' },
-                { type:'button', text:{ type:'plain_text', text:'📹 Teams',           emoji:true }, value:'Teams mein problem hai call drop ho raha hai', action_id:'home_quick_13' },
-                { type:'button', text:{ type:'plain_text', text:'🔑 Password Reset',  emoji:true }, value:'Password bhool gaya reset karna hai', action_id:'home_quick_14' },
-                { type:'button', text:{ type:'plain_text', text:'🖨️ Printer',         emoji:true }, value:'Printer nahi chal raha print nahi ho raha', action_id:'home_quick_15' }
+                { type:'button', text:{ type:'plain_text', text:'📶 WiFi Issue',       emoji:true }, value:'WiFi nahi chal raha internet nahi hai', action_id:'home_quick_11' },
+                { type:'button', text:{ type:'plain_text', text:'📧 Outlook',          emoji:true }, value:'Outlook nahi khul raha ya mail nahi aa raha', action_id:'home_quick_12' },
+                { type:'button', text:{ type:'plain_text', text:'📹 Teams',            emoji:true }, value:'Teams mein problem hai call drop ho raha hai', action_id:'home_quick_13' },
+                { type:'button', text:{ type:'plain_text', text:'🔑 Password Reset',   emoji:true }, value:'Password bhool gaya reset karna hai', action_id:'home_quick_14' },
+                { type:'button', text:{ type:'plain_text', text:'🔒 VPN Issue',        emoji:true }, value:'VPN connect nahi ho raha', action_id:'home_quick_15' }
               ]
             },
-            // Row 4 — Emergency
+            // Row 4 — More problems
             {
               type: 'actions',
               elements: [
-                { type:'button', text:{ type:'plain_text', text:'🎤 Mic Issue',       emoji:true }, value:'Mic kaam nahi kar raha Teams ya calls mein awaaz nahi jaati', action_id:'home_quick_16' },
-                { type:'button', text:{ type:'plain_text', text:'🖥️ External Monitor',emoji:true }, value:'External monitor detect nahi ho raha screen nahi aa rahi', action_id:'home_quick_17' },
-                { type:'button', text:{ type:'plain_text', text:'💾 Storage Full',    emoji:true }, value:'Laptop ki storage full ho gayi C drive full hai', action_id:'home_quick_18' },
-                { type:'button', text:{ type:'plain_text', text:'🦠 Virus/Slow PC',   emoji:true }, value:'Laptop mein virus lag gaya bahut slow hai ya ads aa rahe hain', action_id:'home_quick_19' },
-                { type:'button', text:{ type:'plain_text', text:'🆘 Emergency Help', emoji:true }, style:'danger', value:'Emergency IT help chahiye turant', action_id:'home_sos' }
+                { type:'button', text:{ type:'plain_text', text:'🎤 Mic Issue',        emoji:true }, value:'Mic kaam nahi kar raha Teams ya calls mein awaaz nahi jaati', action_id:'home_quick_16' },
+                { type:'button', text:{ type:'plain_text', text:'🖥️ Monitor Issue',    emoji:true }, value:'External monitor detect nahi ho raha screen nahi aa rahi', action_id:'home_quick_17' },
+                { type:'button', text:{ type:'plain_text', text:'💾 Storage Full',     emoji:true }, value:'Laptop ki storage full ho gayi C drive full hai', action_id:'home_quick_18' },
+                { type:'button', text:{ type:'plain_text', text:'🦠 Virus/Slow PC',    emoji:true }, value:'Laptop mein virus lag gaya bahut slow hai ya ads aa rahe hain', action_id:'home_quick_19' },
+                { type:'button', text:{ type:'plain_text', text:'📷 Camera Nahi',      emoji:true }, value:'Laptop ki camera kaam nahi kar rahi Teams ya Zoom mein', action_id:'home_quick_20' }
+              ]
+            },
+            // Row 5 — More problems
+            {
+              type: 'actions',
+              elements: [
+                { type:'button', text:{ type:'plain_text', text:'❄️ Laptop Hang',      emoji:true }, value:'Laptop hang ya freeze ho raha hai respond nahi kar raha', action_id:'home_quick_21' },
+                { type:'button', text:{ type:'plain_text', text:'💿 USB Detect Nahi',  emoji:true }, value:'USB pen drive ya external hard disk detect nahi ho raha', action_id:'home_quick_22' },
+                { type:'button', text:{ type:'plain_text', text:'📄 Word/Excel Error', emoji:true }, value:'Microsoft Word ya Excel nahi khul raha error aa raha hai', action_id:'home_quick_23' },
+                { type:'button', text:{ type:'plain_text', text:'🔄 Windows Update',   emoji:true }, value:'Windows update mein problem hai ya update stuck hai', action_id:'home_quick_24' },
+                { type:'button', text:{ type:'plain_text', text:'🔐 Software Install', emoji:true }, value:'Naya software install karna hai permission chahiye', action_id:'home_quick_25' }
+              ]
+            },
+            // Row 6 — Emergency
+            {
+              type: 'actions',
+              elements: [
+                { type:'button', text:{ type:'plain_text', text:'📡 Hotspot Issue',    emoji:true }, value:'Mobile hotspot se laptop connect nahi ho raha', action_id:'home_quick_26' },
+                { type:'button', text:{ type:'plain_text', text:'🖥️ Zoom Problem',     emoji:true }, value:'Zoom kaam nahi kar raha meeting join nahi ho rahi', action_id:'home_quick_27' },
+                { type:'button', text:{ type:'plain_text', text:'🆘 Emergency Help',   emoji:true }, style:'danger', value:'Emergency IT help chahiye turant', action_id:'home_sos' }
               ]
             }
           ];
@@ -598,7 +618,7 @@ app.listen(PORT, () => {
       });
 
       // ── Quick Action buttons from Home tab ────────────────────────────────
-      const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_sos'];
+      const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_sos'];
       homeQuickActions.forEach(actionId => {
         slackApp.action(actionId, async ({ body, ack, client }) => {
           await ack();
