@@ -277,11 +277,33 @@ cron.schedule('*/30 * * * *', async () => {
   }
 });
 
+// ── Auto-create default admin if none exists ──────────────────────────────────
+const ensureAdminExists = async () => {
+  try {
+    const Admin = require('./models/Admin');
+    const count = await Admin.countDocuments();
+    if (count === 0) {
+      await Admin.create({
+        username    : 'sajan',
+        passwordHash: process.env.ADMIN_PASSWORD || 'Wiom@2024',
+        name        : 'Sajan Kumar',
+        email       : 'sajan.kumar@wiom.in',
+        role        : 'superadmin'
+      });
+      console.log('✅ Default admin created: sajan / Wiom@2024');
+    }
+  } catch (err) {
+    console.error('Admin setup error:', err.message);
+  }
+};
+
 // ── Start Server ──────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`\n🚀 WIOM Helpdesk API running on port ${PORT}`);
   console.log(`📋 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 Health: http://localhost:${PORT}/health\n`);
+
+  await ensureAdminExists();
 
   // ── Start Slack Bot ────────────────────────────────────────────────────────
   if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_BOT_TOKEN !== 'FILL_KARO') {
