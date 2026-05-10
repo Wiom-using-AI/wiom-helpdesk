@@ -31,7 +31,7 @@ const employeeSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-employeeSchema.index({ empId: 1 });
+// Note: empId index is already created via unique:true above — no duplicate needed
 employeeSchema.index({ email: 1 });
 employeeSchema.index({ slackUserId: 1 });
 

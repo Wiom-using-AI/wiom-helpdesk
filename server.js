@@ -16,6 +16,22 @@ const slaService     = require('./services/sla');
 const Ticket         = require('./models/Ticket');
 const Conversation   = require('./models/Conversation');
 
+// ── FIX: Global crash guards — Slack Socket Mode disconnect nahi crash karein ─
+process.on('uncaughtException', (err) => {
+  // Slack Socket Mode "server explicit disconnect" is normal — ignore it
+  if (err.message && err.message.includes('Unhandled event')) {
+    console.warn('⚠️  Slack WebSocket disconnect (auto-reconnecting):', err.message);
+    return; // do NOT exit — let Bolt auto-reconnect
+  }
+  console.error('💥 Uncaught Exception:', err.message);
+  // For truly unexpected errors, log but keep running
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('💥 Unhandled Rejection:', reason?.message || reason);
+  // Never crash the process on unhandled promise rejections
+});
+
 // ── Slack client (set after bot starts) ──────────────────────────────────────
 let slackClient = null;
 
