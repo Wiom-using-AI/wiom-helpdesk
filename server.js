@@ -339,7 +339,7 @@ app.listen(PORT, () => {
                   { type:'mrkdwn', text:`*🎫 Ticket ID*\n\`${ticket.ticketId}\`` },
                   { type:'mrkdwn', text:`*👤 Employee*\n${emp.empName}` },
                   { type:'mrkdwn', text:`*${priEmoji[ticket.priority]||'🟡'} Priority*\n${ticket.priority}` },
-                  { type:'mrkdwn', text:`*⏱ SLA*\n${ticket.slaHours}h` }
+                  { type:'mrkdwn', text:`*📂 Category*\n${ticket.category||'Other'}` }
                 ]},
                 { type:'section', text:{ type:'mrkdwn', text:`*📝 Issue:*\n${ticket.description}` }},
                 { type:'context', elements:[{ type:'mrkdwn', text:`Category: ${ticket.category} | ${emp.dept||'Unknown Dept'}` }]}
@@ -603,7 +603,19 @@ app.listen(PORT, () => {
               elements: [
                 { type:'button', text:{ type:'plain_text', text:'🐢 Slow Internet',    emoji:true }, value:'Internet bahut slow chal raha hai speed kam hai', action_id:'home_quick_29' },
                 { type:'button', text:{ type:'plain_text', text:'⚡ Sudden Shutdown',  emoji:true }, value:'Laptop achanak band ho jaata hai shutdown ho jaata hai', action_id:'home_quick_30' },
-                { type:'button', text:{ type:'plain_text', text:'🌐 Browser Crash',    emoji:true }, value:'Browser slow hai ya crash ho raha hai Chrome Firefox band ho jaata hai', action_id:'home_quick_31' }
+                { type:'button', text:{ type:'plain_text', text:'🌐 Browser Crash',    emoji:true }, value:'Browser slow hai ya crash ho raha hai Chrome Firefox band ho jaata hai', action_id:'home_quick_31' },
+                { type:'button', text:{ type:'plain_text', text:'📶 WiFi Password',    emoji:true }, value:'WiFi ka password bhool gaya ya galat ho gaya', action_id:'home_quick_32' },
+                { type:'button', text:{ type:'plain_text', text:'🖥️ Restart Loop',     emoji:true }, value:'Laptop restart loop mein hai baar baar restart ho raha hai', action_id:'home_quick_33' }
+              ]
+            },
+            // Row 7 — More problems
+            {
+              type: 'actions',
+              elements: [
+                { type:'button', text:{ type:'plain_text', text:'📋 Copy Paste Nahi',  emoji:true }, value:'Copy paste kaam nahi kar raha Ctrl+C Ctrl+V nahi chal raha', action_id:'home_quick_34' },
+                { type:'button', text:{ type:'plain_text', text:'🕐 Date/Time Wrong',  emoji:true }, value:'Laptop ki date ya time galat dikh rahi hai', action_id:'home_quick_35' },
+                { type:'button', text:{ type:'plain_text', text:'🔗 Shared Drive',     emoji:true }, value:'Shared drive ya network folder access nahi ho raha', action_id:'home_quick_36' },
+                { type:'button', text:{ type:'plain_text', text:'🔄 Laptop Replace',   emoji:true }, value:'Laptop exchange ya replace karna hai purana kharab ho gaya', action_id:'home_quick_37' }
               ]
             }
           ];
@@ -618,7 +630,7 @@ app.listen(PORT, () => {
       });
 
       // ── Quick Action buttons from Home tab ────────────────────────────────
-      const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_sos'];
+      const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_sos'];
       homeQuickActions.forEach(actionId => {
         slackApp.action(actionId, async ({ body, ack, client }) => {
           await ack();
