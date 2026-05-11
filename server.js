@@ -930,17 +930,95 @@ app.listen(PORT, async () => {
               { resolved: true }
             );
             pendingTickets.delete(userId);
-            const firstName  = (emp.empName || 'there').split(' ')[0];
-            const laptopInfo = emp.laptop
-              ? `\n💻 *Aapka Laptop:* ${emp.laptop}${emp.laptopSN ? ` | *S/N:* ${emp.laptopSN}` : ''}`
-              : '';
+            const firstName = (emp.empName || 'there').split(' ')[0];
             await say({
-              text: `Hello ${firstName}! 👋`,
+              text: `Hello ${firstName}! 👋 WIOM IT Helpdesk`,
               blocks: [
+                // ── Welcome Header ─────────────────────────────────────────
+                { type:'header', text:{ type:'plain_text', text:'🛠️ WIOM IT Helpdesk', emoji:true }},
                 { type:'section', text:{ type:'mrkdwn', text:
-                  `Hello *${firstName}!* 👋 WIOM IT Helpdesk mein aapka swagat hai.${laptopInfo}\n\nAapki kya IT samasya hai? Batayein, main madad karunga.`
+                  `*Hello ${firstName}!* 👋 WIOM IT Helpdesk mein aapka swagat hai.` +
+                  (emp?.laptop ? `\n\n💻 *Aapka Laptop:* ${emp.laptop}${emp?.laptopSN ? ` · SN: \`${emp.laptopSN}\`` : ''}` : '') +
+                  (emp?.department ? `\n🏢 *Department:* ${emp.department}${emp?.floor ? ` · ${emp.floor}` : ''}` : '') +
+                  `\n\n*Neeche se apni problem select karo — ya seedha type karo:*`
                 }},
-                { type:'context', elements:[{ type:'mrkdwn', text:`_Type "meri tickets" apne tickets dekhne ke liye | "reset" nayi baat shuru karne ke liye_` }]}
+                { type:'context', elements:[{ type:'mrkdwn', text:`_"meri tickets" — apne tickets dekho  ·  "reset" — nayi baat shuru karo  ·  \`/ticket\` — seedha ticket banao_` }]},
+                { type:'divider' },
+
+                // ── 💻 Laptop Hardware ─────────────────────────────────────
+                { type:'section', text:{ type:'mrkdwn', text:'*💻 Laptop — Hardware*' }},
+                { type:'actions', elements:[
+                  { type:'button', text:{ type:'plain_text', text:'💻 Laptop Slow',    emoji:true }, value:'Laptop bahut slow hai, kya karun', action_id:'home_quick_1' },
+                  { type:'button', text:{ type:'plain_text', text:'💻 Laptop On Nahi', emoji:true }, value:'Laptop on nahi ho raha hai', action_id:'home_quick_2' },
+                  { type:'button', text:{ type:'plain_text', text:'💙 Blue Screen',    emoji:true }, value:'Blue screen of death aa raha hai', action_id:'home_quick_3' },
+                  { type:'button', text:{ type:'plain_text', text:'🌡️ Overheating',    emoji:true }, value:'Laptop bahut garam ho raha hai overheating', action_id:'home_quick_4' },
+                  { type:'button', text:{ type:'plain_text', text:'🔋 Battery Issue',  emoji:true }, value:'Laptop ki battery jaldi khatam ho rahi hai ya charge nahi ho rahi', action_id:'home_quick_5' }
+                ]},
+                { type:'actions', elements:[
+                  { type:'button', text:{ type:'plain_text', text:'🖥️ Screen Black',   emoji:true }, value:'Laptop screen black hai kuch nahi dikh raha', action_id:'home_quick_6' },
+                  { type:'button', text:{ type:'plain_text', text:'⌨️ Keyboard Issue', emoji:true }, value:'Laptop ki keyboard kaam nahi kar rahi', action_id:'home_quick_7' },
+                  { type:'button', text:{ type:'plain_text', text:'🖱️ Mouse/Touchpad', emoji:true }, value:'Mouse ya touchpad kaam nahi kar raha', action_id:'home_quick_8' },
+                  { type:'button', text:{ type:'plain_text', text:'🔌 Charger Issue',  emoji:true }, value:'Laptop ka charger kaam nahi kar raha', action_id:'home_quick_10' },
+                  { type:'button', text:{ type:'plain_text', text:'❄️ Laptop Hang',    emoji:true }, value:'Laptop hang ya freeze ho raha hai', action_id:'home_quick_21' }
+                ]},
+                { type:'actions', elements:[
+                  { type:'button', text:{ type:'plain_text', text:'⚡ Sudden Shutdown', emoji:true }, value:'Laptop achanak band ho jaata hai', action_id:'home_quick_30' },
+                  { type:'button', text:{ type:'plain_text', text:'🔁 Restart Loop',    emoji:true }, value:'Laptop restart loop mein hai baar baar restart ho raha hai', action_id:'home_quick_33' }
+                ]},
+                { type:'divider' },
+
+                // ── 🌐 Network / Internet ──────────────────────────────────
+                { type:'section', text:{ type:'mrkdwn', text:'*🌐 Network / Internet*' }},
+                { type:'actions', elements:[
+                  { type:'button', text:{ type:'plain_text', text:'📶 WiFi Issue',    emoji:true }, value:'WiFi nahi chal raha internet nahi hai', action_id:'home_quick_11' },
+                  { type:'button', text:{ type:'plain_text', text:'🐢 Slow Internet', emoji:true }, value:'Internet bahut slow chal raha hai', action_id:'home_quick_29' },
+                  { type:'button', text:{ type:'plain_text', text:'🔑 WiFi Password', emoji:true }, value:'WiFi ka password bhool gaya ya galat ho gaya', action_id:'home_quick_32' },
+                  { type:'button', text:{ type:'plain_text', text:'📡 Hotspot Issue', emoji:true }, value:'Mobile hotspot se laptop connect nahi ho raha', action_id:'home_quick_26' }
+                ]},
+                { type:'divider' },
+
+                // ── 🎤 Audio / Video / Display ────────────────────────────
+                { type:'section', text:{ type:'mrkdwn', text:'*🎤 Audio / Video / Display*' }},
+                { type:'actions', elements:[
+                  { type:'button', text:{ type:'plain_text', text:'🔊 No Sound',      emoji:true }, value:'Laptop mein sound nahi aa rahi', action_id:'home_quick_9' },
+                  { type:'button', text:{ type:'plain_text', text:'🔇 Speaker Issue', emoji:true }, value:'Laptop ka speaker kaam nahi kar raha', action_id:'home_quick_28' },
+                  { type:'button', text:{ type:'plain_text', text:'🎤 Mic Issue',     emoji:true }, value:'Mic kaam nahi kar raha', action_id:'home_quick_16' },
+                  { type:'button', text:{ type:'plain_text', text:'📷 Camera Nahi',   emoji:true }, value:'Laptop ki camera kaam nahi kar rahi', action_id:'home_quick_20' },
+                  { type:'button', text:{ type:'plain_text', text:'🖥️ Monitor Issue', emoji:true }, value:'External monitor detect nahi ho raha', action_id:'home_quick_17' }
+                ]},
+                { type:'divider' },
+
+                // ── 💿 Software / Apps ────────────────────────────────────
+                { type:'section', text:{ type:'mrkdwn', text:'*💿 Software / Apps*' }},
+                { type:'actions', elements:[
+                  { type:'button', text:{ type:'plain_text', text:'📹 Teams',          emoji:true }, value:'Teams mein problem hai call drop ho raha hai', action_id:'home_quick_13' },
+                  { type:'button', text:{ type:'plain_text', text:'🖥️ Zoom Problem',   emoji:true }, value:'Zoom kaam nahi kar raha', action_id:'home_quick_27' },
+                  { type:'button', text:{ type:'plain_text', text:'📄 Word/Excel',     emoji:true }, value:'Microsoft Word ya Excel nahi khul raha', action_id:'home_quick_23' },
+                  { type:'button', text:{ type:'plain_text', text:'🌐 Browser Crash',  emoji:true }, value:'Browser slow hai ya crash ho raha hai', action_id:'home_quick_31' },
+                  { type:'button', text:{ type:'plain_text', text:'🔄 Windows Update', emoji:true }, value:'Windows update mein problem hai', action_id:'home_quick_24' }
+                ]},
+                { type:'actions', elements:[
+                  { type:'button', text:{ type:'plain_text', text:'🔐 Software Install', emoji:true }, value:'Naya software install karna hai', action_id:'home_quick_25' },
+                  { type:'button', text:{ type:'plain_text', text:'📋 Copy Paste Nahi',  emoji:true }, value:'Copy paste kaam nahi kar raha', action_id:'home_quick_34' },
+                  { type:'button', text:{ type:'plain_text', text:'🕐 Date/Time Wrong',  emoji:true }, value:'Laptop ki date ya time galat dikh rahi hai', action_id:'home_quick_35' }
+                ]},
+                { type:'divider' },
+
+                // ── 🔐 Account / Security / Storage ──────────────────────
+                { type:'section', text:{ type:'mrkdwn', text:'*🔐 Account / Security / Storage*' }},
+                { type:'actions', elements:[
+                  { type:'button', text:{ type:'plain_text', text:'🔑 Password Reset', emoji:true }, value:'Password bhool gaya reset karna hai', action_id:'home_quick_14' },
+                  { type:'button', text:{ type:'plain_text', text:'💾 Storage Full',   emoji:true }, value:'Laptop ki storage full ho gayi C drive full hai', action_id:'home_quick_18' },
+                  { type:'button', text:{ type:'plain_text', text:'🦠 Virus/Slow PC',  emoji:true }, value:'Laptop mein virus lag gaya', action_id:'home_quick_19' },
+                  { type:'button', text:{ type:'plain_text', text:'🔗 Shared Drive',   emoji:true }, value:'Shared drive ya network folder access nahi ho raha', action_id:'home_quick_36' }
+                ]},
+                { type:'divider' },
+
+                // ── 🔄 Replacement ────────────────────────────────────────
+                { type:'section', text:{ type:'mrkdwn', text:'*🔄 Replacement / Upgrade*' }},
+                { type:'actions', elements:[
+                  { type:'button', text:{ type:'plain_text', text:'🔄 Laptop Replace', emoji:true }, value:'Laptop exchange ya replace karna hai purana kharab ho gaya', action_id:'home_quick_37', style:'danger' }
+                ]}
               ]
             });
             return;
