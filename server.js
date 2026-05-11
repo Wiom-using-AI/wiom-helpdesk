@@ -936,13 +936,7 @@ app.listen(PORT, async () => {
               blocks: [
                 // ── Welcome Header ─────────────────────────────────────────
                 { type:'header', text:{ type:'plain_text', text:'🛠️ WIOM IT Helpdesk', emoji:true }},
-                { type:'section', text:{ type:'mrkdwn', text:
-                  `*Hello ${firstName}!* 👋 WIOM IT Helpdesk mein aapka swagat hai.` +
-                  (emp?.laptop ? `\n\n💻 *Aapka Laptop:* ${emp.laptop}${emp?.laptopSN ? ` · SN: \`${emp.laptopSN}\`` : ''}` : '') +
-                  (emp?.department ? `\n🏢 *Department:* ${emp.department}${emp?.floor ? ` · ${emp.floor}` : ''}` : '') +
-                  `\n\n*Neeche se apni problem select karo — ya seedha type karo:*`
-                }},
-                { type:'context', elements:[{ type:'mrkdwn', text:`_"meri tickets" — apne tickets dekho  ·  "reset" — nayi baat shuru karo  ·  \`/ticket\` — seedha ticket banao_` }]},
+                { type:'section', text:{ type:'mrkdwn', text:`*Hello ${firstName}!* 👋  Apni problem select karo:` }},
                 { type:'divider' },
 
                 // ── 💻 Laptop Hardware ─────────────────────────────────────
@@ -1022,6 +1016,26 @@ app.listen(PORT, async () => {
               ]
             });
             return;
+          }
+
+          // ── Laptop info query ─────────────────────────────────────────────
+          const isLaptopQuery = /laptop|model|serial|s\/n|sn|serial no|asset|device/i.test(text.trim());
+          if (isLaptopQuery) {
+            const empRec = await Employee.findOne({ slackUserId: userId });
+            const model  = empRec?.laptop   || emp.laptop   || null;
+            const sn     = empRec?.laptopSN || emp.laptopSN || null;
+            if (model || sn) {
+              await say({
+                text: `💻 Aapka Laptop: ${model||'—'} | SN: ${sn||'—'}`,
+                blocks: [
+                  { type:'section', fields:[
+                    { type:'mrkdwn', text:`*💻 Laptop Model:*\n${model||'—'}` },
+                    { type:'mrkdwn', text:`*🔢 Serial No:*\n\`${sn||'—'}\`` }
+                  ]}
+                ]
+              });
+              return;
+            }
           }
 
           // ── Pending ticket confirmation check ─────────────────────────────
