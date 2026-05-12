@@ -72,25 +72,86 @@ Lenovo: Lenovo Vantage → Run Diagnostics
 Dell: Dell SupportAssist → Run Diagnostics
 HP: HP Support Assistant → Run Diagnostics
 
-━━━ QUICK FIXES ━━━
-Laptop slow: Ctrl+Shift+Esc → Task Manager → CPU sort → End Task heavy apps
-Frozen/Hang: Power button 10sec → restart
-Black screen: Fn+F5 or Fn+F8 → if no change, power 10sec restart
-Fan noise: Ctrl+Shift+Esc → Task Manager → end heavy apps → restart
-Sleep nahi uth raha: Power button 10sec hold → on karo → Settings → Power & Sleep → Sleep: Never
-Boot error: Power off → power on → F8 → Safe Mode → Startup Repair
-USB nahi dikh raha: Doosra port try karo → Win+R → devmgmt.msc → USB → Scan hardware changes
-HDMI nahi chal raha: Win+P → Duplicate ya Extend → if nahi, cable check karo, restart karo
-SD card nahi dikh raha: Card nikal ke dubara lagao → File Explorer check karo
-Caps Lock atka: Caps Lock key press karo → ya keyboard unplug/replug karo
-Update ke baad slow: Ctrl+Shift+Esc → Windows Update delivery optimization → End Task
-WiFi drop: Taskbar WiFi → right-click name → Forget → reconnect
-WiFi password: spartans500 (both floors — Ground & First)
-Outlook: Ctrl+Shift+Esc → End Outlook → Win+R → outlook /safe → Enter
-Teams: Win+R → %appdata%\\Microsoft\\Teams → Enter → Ctrl+A → Delete → use teams.microsoft.com
-Chrome slow: 3-dot → Extensions → disable all → Clear browsing data → All time
-Camera/Mic: Settings → Privacy → Camera or Microphone → ON
-Liquid damage/Paani gira: IMMEDIATELY power off → battery nikal → ticket raise karo — IT call: 9654244281
+━━━ KNOWLEDGE BASE — ACCURATE STEPS FOR ALL PROBLEMS ━━━
+
+💻 LAPTOP HARDWARE:
+Slow: Ctrl+Shift+Esc → CPU sort → End Task heavy apps → restart
+Won't turn on: Hold power 30sec → release → wait 10sec → press power. No result = ticket
+Blue screen: Note error code → restart. Repeats 3x = ticket
+Overheating: End heavy apps → place on hard flat surface → clean vents. Extreme heat = ticket
+Battery not charging: Replug charger firmly → try another socket. Still no = ticket (charger replace)
+Black screen: Fn+F5 or Fn+F8 (brightness) → power 10sec restart → connect external monitor to test
+Keyboard not working: Restart → Win+R → osk (on-screen keyboard to use temporarily). Persists = ticket
+Mouse/Touchpad: Fn + touchpad key → Settings → Bluetooth & devices → Touchpad → ON → restart
+Charger not working: Try different socket → check cable for damage. No charging LED = ticket
+Freezing/Hanging: Wait 2min → Ctrl+Alt+Del → End Not Responding tasks → power 10sec if stuck
+Sudden shutdown: Check vents not blocked → Settings → Power → never sleep/hibernate. Repeats = ticket
+Stuck in restart loop: Power off → hold F8 on boot → Safe Mode → Startup Repair. Can't enter = ticket
+Fan loud noise: End CPU-heavy apps → place on hard surface. Grinding/rattling sound = ticket
+Screen flickering: Right-click desktop → Display settings → check refresh rate → Device Manager → Display → Update driver
+Bluetooth: Settings → Bluetooth → OFF → ON → Device Manager → Bluetooth → Enable → restart
+USB not working: Try another port → Win+R → devmgmt.msc → USB controllers → Scan hardware changes
+Won't wake from sleep: Power button 10sec → restart. Fix: Settings → Power & Sleep → Sleep: Never
+Boot error: Power off → F8/F11 on boot → Startup Repair. No option shown = ticket immediately
+Touchscreen: Settings → Bluetooth & devices → Touch ON → Device Manager → HID touch → Enable → restart
+HDMI: Win+P → Duplicate/Extend → try different cable → restart with monitor connected
+SD card: Remove → reinsert → check File Explorer. Still not = devmgmt.msc → Memory → Scan
+Fingerprint: Settings → Accounts → Sign-in options → Fingerprint → Remove → Setup again. Fails = ticket
+Liquid/Water damage: IMMEDIATELY power off → DO NOT turn on → remove charger → call IT: 9654244281
+Slow after update: Ctrl+Shift+Esc → end "Delivery Optimization" → Settings → Update → Pause updates → restart
+Caps Lock/keys stuck: Press Caps Lock once → restart. Physically stuck key = ticket (keyboard replace)
+
+🌐 NETWORK/INTERNET:
+WiFi not working: Taskbar WiFi → toggle off/on → Win+R → ncpa.cpl → WiFi → Disable → Enable
+Slow internet: Move closer to router → forget network → reconnect. Office WiFi password: spartans500
+WiFi password: spartans500 (Ground Floor & First Floor — same password)
+Hotspot: Turn phone hotspot off → on → forget on laptop → reconnect → ensure mobile data is on
+LAN/Ethernet: Unplug cable → replug firmly → ncpa.cpl → Ethernet → Disable → Enable → try new cable
+VPN: Raise ticket — IT sets up VPN, no DIY
+Website blocked: Try different browser → if office policy block → raise ticket
+WiFi disconnecting: Device Manager → Network adapters → WiFi → Properties → Power Management → uncheck "Allow PC to turn off this device"
+Emails not loading: Check internet → Win+R → outlook /safe → if browser: try outlook.office365.com
+
+🎤 AUDIO/VIDEO/DISPLAY:
+No sound: Right-click speaker icon → Sound settings → Output → select correct device → check not muted
+Speaker issue: Check volume not 0% → check nothing plugged in audio jack → restart
+Mic not working: Settings → Privacy → Microphone → ON → Sound settings → Input → select mic → test in Teams: Settings → Devices
+Camera not working: Settings → Privacy → Camera → ON → Device Manager → Cameras → Enable → restart
+External monitor: Win+P → Duplicate/Extend → check HDMI/VGA cable → restart with monitor plugged in
+Headphone: Unplug → replug firmly → Sound settings → Output → select Headphones
+Projector: Win+P → Duplicate → check cable → restart laptop with projector connected
+Wrong resolution: Right-click desktop → Display settings → Resolution → select "Recommended" → Apply
+Video call lag: Close unused apps → check internet speed → Teams: Settings → Devices → lower video quality
+
+💿 SOFTWARE/APPS:
+Teams issue: System tray → quit Teams → Win+R → %appdata%\Microsoft\Teams → Ctrl+A → Delete → use teams.microsoft.com
+Zoom: Close → reopen → check internet → web fallback: zoom.us/wc/join
+Word/Excel: Win+R → winword /safe or excel /safe → Enter. License error = ticket
+Browser slow/crash: Extensions → disable all → Clear data → All time → try different browser
+Windows update stuck: Settings → Update → Retry → Win+R → services.msc → Windows Update → Restart service
+Software install: Raise ticket — IT permission required, no self-install allowed
+Copy paste: Ctrl+Shift+Esc → find rdpclip.exe → End Task → Win+R → rdpclip → Enter. Simple fix = restart
+Wrong date/time: Right-click clock → Adjust date/time → Set automatically ON → Time zone: India Standard Time
+Outlook: Ctrl+Shift+Esc → End Outlook → Win+R → outlook /safe → Enter. License error = ticket
+OneDrive sync: System tray → OneDrive → Pause → Resume → right-click → Settings → check signed in
+PDF not opening: Right-click → Open with → Microsoft Edge or Adobe Reader. Not installed = ticket
+App crashing: Restart laptop → if specific app repeats: raise ticket (reinstall needed)
+Printer: Settings → Bluetooth & devices → Printers → right-click → Set as default → Print test page → restart printer
+
+🔐 ACCOUNT/SECURITY/STORAGE:
+Password reset: Raise ticket ONLY — IT resets, no self-service
+Storage full: Win+R → cleanmgr → C: → Clean system files → check Recycle Bin + Temp. Also: Win+R → %temp% → Ctrl+A → Delete
+Virus/Malware: Windows Security → Virus scan → Quick Scan → disconnect internet if serious → raise ticket
+Shared drive: Raise ticket — IT grants access, no DIY
+Account locked: Raise ticket — IT unlocks, no DIY
+2FA/OTP: Check phone signal → check spam/junk folder → wait 2min → retry. Still no = ticket
+Antivirus alert: Do NOT click Allow/Ignore → screenshot alert → raise ticket immediately
+OneDrive full: Delete unnecessary files from OneDrive folder. Need more space = ticket
+Email password: Raise ticket — IT resets email passwords only
+
+🔄 REPLACEMENT:
+All replacement requests (laptop, mouse, keyboard, monitor) = Raise ticket only. IT team processes requests.
+
 Emergency: Call 9654244281 (9AM–7PM)`;
 
 
@@ -118,7 +179,7 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
       ...history
     ],
     temperature: 0.1,
-    max_tokens : 600
+    max_tokens : 500
   });
 
   const raw = completion.choices[0]?.message?.content?.trim() || '';
