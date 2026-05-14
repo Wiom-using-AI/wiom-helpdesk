@@ -3,7 +3,7 @@ const jwt      = require('jsonwebtoken');
 const Admin    = require('../models/Admin');
 const Employee = require('../models/Employee');
 
-const sign = (payload, expiresIn = '8h') =>
+const sign = (payload, expiresIn = '24h') =>
   jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
 
 // ── POST /api/auth/admin-login ────────────────────────────────────────────────

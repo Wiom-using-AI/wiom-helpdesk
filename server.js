@@ -1078,6 +1078,48 @@ app.listen(PORT, async () => {
             }
           }
 
+          // ── "Ticket bana do" — instant creation ──────────────────────────
+          const isTicketNow = /ticket\s*(bana\s*do|banao|raise\s*karo|create|chahiye|do|bana|raise)/i.test(text.trim())
+                           || /^(ticket|raise ticket|create ticket|bana do ticket)$/i.test(text.trim());
+          if (isTicketNow) {
+            const pending = pendingTickets.get(userId);
+            if (pending) {
+              // Pending context exists → create immediately, no Ha/Nahi needed
+              pendingTickets.delete(userId);
+              const result = await createTicketSlack(pending);
+              if (result?._duplicate) {
+                await say({ text: `⚠️ ${result.message}` });
+              } else if (result) {
+                const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+                await say({
+                  text: `🎫 Ticket ${result.ticketId} ban gaya!`,
+                  blocks: [
+                    { type:'header', text:{ type:'plain_text', text:'✅ Ticket Created!', emoji:true }},
+                    { type:'section', fields:[
+                      { type:'mrkdwn', text:`*🎫 Ticket ID:*\n\`${result.ticketId}\`` },
+                      { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority:*\n${result.priority}` },
+                      { type:'mrkdwn', text:`*📂 Category:*\n${result.category||'Other'}` },
+                      { type:'mrkdwn', text:`*⏳ Status:*\nOpen` }
+                    ]},
+                    { type:'section', text:{ type:'mrkdwn', text:`*📝 Problem:*\n${(result.description||'').substring(0,100)}` }},
+                    { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya 🙏 | Status: *meri tickets* likh ke check karo` }]}
+                  ]
+                });
+                await notifyAdmin(client, result, emp);
+              }
+            } else {
+              // No context → ask for problem description
+              await say({
+                text: '🎫 Ticket banane ke liye `/ticket` command use karo — seedha modal khulega!',
+                blocks: [
+                  { type:'section', text:{ type:'mrkdwn', text:`*🎫 Ticket Banana Hai?*\n\nDo tarike hain:\n\n*1.* \`/ticket\` type karo → form bhar do → turant ticket ban jayega ✅\n*2.* Apni problem batao → AI steps dega → phir ticket automatically suggest karega 🤖` }},
+                  { type:'context', elements:[{ type:'mrkdwn', text:`_Urgent hai? Call karo: *9654244281*_` }]}
+                ]
+              });
+            }
+            return;
+          }
+
           // ── Pending ticket confirmation check ─────────────────────────────
           const pending = pendingTickets.get(userId);
           if (pending) {
@@ -1098,7 +1140,7 @@ app.listen(PORT, async () => {
                       { type:'mrkdwn', text:`*🎫 Ticket Bana!*\n\`${result.ticketId}\`` },
                       { type:'mrkdwn', text:`*${priEmoji[result.priority]||'🟡'} Priority*\n${result.priority}` }
                     ]},
-                    { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya 🙏 | Ticket track karne ke liye type karein: *meri tickets*` }]}
+                    { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya 🙏` }]}
                   ]
                 });
                 await notifyAdmin(client, result, emp);

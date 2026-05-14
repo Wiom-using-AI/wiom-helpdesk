@@ -757,6 +757,12 @@ function doLogout() {
 // ── API CALLS ──────────────────────────────────────────────────────────────
 async function apiGet(path) {
   const res = await fetch(`${API}${path}`, { headers: { 'Authorization': `Bearer ${token}` } });
+  if (res.status === 401) {
+    doLogout();
+    alert('⚠️ Session expire ho gayi! Please dobara login karein.');
+    throw new Error('Session expired');
+  }
+  if (!res.ok) throw new Error(`API error ${res.status}`);
   return res.json();
 }
 
@@ -833,15 +839,17 @@ function renderRecentTickets() {
 async function loadAllTickets() {
   try {
     document.getElementById('allTicketsBody').innerHTML = '<tr class="empty-row"><td colspan="8">Loading...</td></tr>';
-    const data = await apiGet('/api/tickets?limit=200');
-    const fresh = data.tickets || data || [];
+    const data = await apiGet('/api/tickets?limit=500');
+    const fresh = Array.isArray(data.tickets) ? data.tickets : (Array.isArray(data) ? data : []);
     checkNewTickets(fresh);
     allTickets = fresh;
     renderAllTickets();
     renderRecentTickets();
     updateStats();
   } catch(e) {
-    document.getElementById('allTicketsBody').innerHTML = '<tr class="empty-row"><td colspan="8">❌ Load failed. Refresh karo.</td></tr>';
+    if (e.message !== 'Session expired') {
+      document.getElementById('allTicketsBody').innerHTML = `<tr class="empty-row"><td colspan="8">❌ Tickets load nahi hue — page refresh karo ya dobara login karo.</td></tr>`;
+    }
   }
 }
 
