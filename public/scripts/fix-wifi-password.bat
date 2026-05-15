@@ -9,26 +9,24 @@ echo  ============================================
 echo.
 echo  WIOM Office WiFi Networks:
 echo  ==========================================
-echo    Network 1: spartans500
-echo    Password : spartans500
-echo    Works on : Ground Floor AND First Floor
+echo    Network : spartans500
+echo    Password: spartans500
 echo  ------------------------------------------
-echo    Network 2: wiom office 5g test
-echo    Password : spartans500
-echo    Works on : 5GHz band (faster speed)
+echo    Network : wiom office 5g test
+echo    Password: spartans500
+echo  ------------------------------------------
+echo    Network : Wiomnet (saket office)
+echo    Password: Password@12345
 echo  ==========================================
 echo.
-echo  [Auto] Saved WiFi passwords check kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "netsh wlan show profiles | Select-String 'All User Profile' | ForEach-Object { $n=($_ -replace '.*: ','').Trim(); $p=(netsh wlan show profile name=$n key=clear 2>$null | Select-String 'Key Content') -replace '.*: ',''; if($p){Write-Host ('    Network: '+$n+' | Password: '+$p.Trim())} }"
-echo.
 echo  [Auto] Ab WiFi se connect kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$n1=(netsh wlan show profiles|Select-String 'spartans500'); $n2=(netsh wlan show profiles|Select-String 'wiom office 5g test'); if($n2){netsh wlan connect name='wiom office 5g test' 2>$null; Write-Host '    wiom office 5g test se connect kiya!'}elseif($n1){netsh wlan connect name='spartans500' 2>$null; Write-Host '    spartans500 se connect kiya!'}else{Write-Host '    Koi saved WiFi nahi mili - manually connect karo'}"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$networks=@('wiom office 5g test','spartans500','Wiomnet'); $profiles=(netsh wlan show profiles); $connected=$false; foreach($n in $networks){if($profiles -match [regex]::Escape($n)){netsh wlan connect name=$n 2>$null|Out-Null; Write-Host ('    ' + $n + ' se connect kiya!'); $connected=$true; break}}; if(-not $connected){Write-Host '    Koi office WiFi saved nahi hai - manually connect karo'}"
 echo.
 echo  ============================================
 echo    Manual steps (agar auto nahi hua):
 echo    1. Taskbar WiFi icon click karo
-echo    2. "wiom office 5g test" ya "spartans500" select karo
-echo    3. Password: spartans500
+echo    2. Upar wali list mein se apna network select karo
+echo    3. Password type karo (upar dekho)
 echo    4. Connect click karo
 echo.
 echo    Ab bhi nahi hua:
