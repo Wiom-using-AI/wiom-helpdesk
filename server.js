@@ -12,9 +12,11 @@ const aiRoutes       = require('./routes/ai');
 const employeeRoutes = require('./routes/employees');
 const adminRoutes    = require('./routes/admin');
 const kbRoutes       = require('./routes/kb');
+const agentRoutes    = require('./routes/agent');
 const slaService     = require('./services/sla');
 const Ticket         = require('./models/Ticket');
 const Conversation   = require('./models/Conversation');
+const FixJob         = require('./models/FixJob');
 
 // ── FIX: Global crash guards — Slack Socket Mode disconnect nahi crash karein ─
 process.on('uncaughtException', (err) => {
@@ -91,6 +93,7 @@ app.use('/api/ai',        aiRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/admin',     adminRoutes);
 app.use('/api/kb',        kbRoutes);
+app.use('/api/agent',     agentRoutes);
 
 // ── WhatsApp Webhook (Twilio) ──────────────────────────────────────────────────
 app.post('/api/whatsapp/incoming', async (req, res) => {
@@ -455,6 +458,23 @@ app.listen(PORT, async () => {
           ]
         }
       ];
+
+      // ── Auto-Fix mapping: which buttons can be auto-fixed on laptop ──────
+      const AUTO_FIX_MAP = {
+        'home_quick_1' : { fixType: ['kill_heavy', 'clean_temp'], label: '💻 Laptop Speed Fix'      },
+        'home_quick_21': { fixType: ['kill_heavy'],               label: '💻 Freezing Fix'           },
+        'home_quick_71': { fixType: ['kill_heavy', 'clean_temp'], label: '💻 Speed Boost Fix'        },
+        'home_quick_11': { fixType: ['fix_wifi'],                 label: '📶 WiFi Reset'             },
+        'home_quick_44': { fixType: ['fix_wifi'],                 label: '📶 WiFi Reconnect Fix'     },
+        'home_quick_29': { fixType: ['fix_wifi'],                 label: '📶 Internet Speed Fix'     },
+        'home_quick_13': { fixType: ['fix_teams'],                label: '📹 Teams Fix'              },
+        'home_quick_50': { fixType: ['fix_outlook'],              label: '📧 Outlook Fix'            },
+        'home_quick_34': { fixType: ['fix_clipboard'],            label: '📋 Copy-Paste Fix'         },
+        'home_quick_9' : { fixType: ['fix_sound'],               label: '🔊 Sound Fix'              },
+        'home_quick_28': { fixType: ['fix_sound'],               label: '🔊 Speaker Fix'            },
+        'home_quick_35': { fixType: ['fix_datetime'],            label: '🕐 Date/Time Fix'          },
+        'home_quick_18': { fixType: ['clean_disk', 'clean_temp'], label: '💾 Storage Cleanup'        },
+      };
 
       // ── Build Home Tab blocks (with collapsible categories) ───────────────
       const buildHomeBlocks = (emp, myTickets, expandedSet) => {
@@ -959,24 +979,127 @@ app.listen(PORT, async () => {
       homeQuickActions.forEach(actionId => {
         slackApp.action(actionId, async ({ body, ack, client }) => {
           await ack();
-          const userId  = body.user.id;
-          const problem = body.actions[0].value;
+          const userId   = body.user.id;
+          const problem  = body.actions[0].value;
           try {
-            // Trigger same flow as DM
-            const fakeReq = { body: { Body: problem, From: `slack:${userId}` } };
-            const emp = await Employee.findOne({ slackUserId: userId });
-            const empInfo = { empId: emp?.empId || userId, empName: emp?.name || 'Employee', source:'slack', laptop: emp?.laptop, laptopSN: emp?.laptopSN, dept: emp?.department, floor: emp?.floor };
+            const emp     = await Employee.findOne({ slackUserId: userId });
+            const empInfo = {
+              empId  : emp?.empId    || userId,
+              empName: emp?.name     || 'Employee',
+              source : 'slack',
+              laptop : emp?.laptop,
+              laptopSN: emp?.laptopSN,
+              dept   : emp?.department,
+              floor  : emp?.floor
+            };
             const claudeSvc = require('./services/claude');
             const { reply } = await claudeSvc.chat([{ role:'user', content: problem }], empInfo);
-            await client.chat.postMessage({
-              channel: userId,
-              text   : reply,
-              blocks : [{ type:'section', text:{ type:'mrkdwn', text: reply }}]
-            });
+            const formattedReply = formatForSlack(reply);
+
+            const blocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}];
+
+            // ── Auto-Fix button (if this problem is auto-fixable AND agent is registered) ──
+            const fixConfig = AUTO_FIX_MAP[actionId];
+            if (fixConfig && emp?.laptopSN && emp?.agentRegistered) {
+              const isOnline = emp.agentLastSeen && (Date.now() - new Date(emp.agentLastSeen)) < 120000;
+              if (isOnline) {
+                const fixValue = `${fixConfig.fixType.join(',')}|${fixConfig.label}|${emp.laptopSN}`;
+                blocks.push({ type: 'divider' });
+                blocks.push({
+                  type: 'section',
+                  text: { type: 'mrkdwn', text: `_🤖 *Auto-Fix available!* IT Agent aapke laptop par ready hai._` }
+                });
+                blocks.push({
+                  type: 'actions',
+                  elements: [
+                    {
+                      type     : 'button',
+                      text     : { type: 'plain_text', text: `⚡ Auto-Fix Karo — ${fixConfig.label}`, emoji: true },
+                      style    : 'primary',
+                      action_id: 'autofix_request',
+                      value    : fixValue,
+                      confirm  : {
+                        title  : { type: 'plain_text', text: 'Auto-Fix Confirm?' },
+                        text   : { type: 'mrkdwn', text: `*${fixConfig.label}* automatically run hogi aapke laptop par.\n\n30 seconds mein result milega! 🔧` },
+                        confirm: { type: 'plain_text', text: 'Haan, Fix Karo!' },
+                        deny   : { type: 'plain_text', text: 'Nahi' }
+                      }
+                    }
+                  ]
+                });
+              }
+            }
+
+            await client.chat.postMessage({ channel: userId, text: reply, blocks });
           } catch (err) {
             console.error('Home quick action error:', err.message);
           }
         });
+      });
+
+      // ── Auto-Fix request handler ──────────────────────────────────────────
+      slackApp.action('autofix_request', async ({ body, ack, client }) => {
+        await ack();
+        const userId = body.user.id;
+        const value  = body.actions[0].value;  // "fix_teams,fix_outlook|📧 Teams Fix|SN123"
+
+        try {
+          const [typesPart, label, laptopSN] = value.split('|');
+          const fixType = typesPart.split(',').filter(Boolean);
+
+          if (!laptopSN || !fixType.length) {
+            await client.chat.postMessage({
+              channel: userId,
+              text   : '❌ Auto-fix config mein kuch issue hai. Manually steps try karo.'
+            });
+            return;
+          }
+
+          const emp = await Employee.findOne({ slackUserId: userId });
+          if (!emp) {
+            await client.chat.postMessage({
+              channel: userId,
+              text   : '❌ Employee record nahi mila. IT ko contact karo: 9654244281'
+            });
+            return;
+          }
+
+          // Create FixJob in DB
+          const job = await FixJob.create({
+            empId      : emp.empId,
+            empName    : emp.name,
+            laptopSN,
+            fixType,
+            fixLabel   : label || 'Auto Fix',
+            status     : 'pending',
+            slackUserId: userId
+          });
+
+          console.log(`⚡ Auto-fix job created: ${job._id} → ${fixType.join(',')} for ${emp.empId} (SN:${laptopSN})`);
+
+          await client.chat.postMessage({
+            channel: userId,
+            text   : `⚡ ${label} shuru ho rahi hai...`,
+            blocks : [
+              { type: 'header', text: { type: 'plain_text', text: '⚡ Auto-Fix Shuru!', emoji: true }},
+              { type: 'section', text: { type: 'mrkdwn', text:
+                `*${label}* aapke laptop par automatically run ho rahi hai! 🔧\n\n` +
+                `_Aapko kuch nahi karna — laptop par IT Agent kaam kar raha hai..._\n\n` +
+                `⏳ *~30 seconds mein result milega!*`
+              }},
+              { type: 'context', elements: [{ type: 'mrkdwn', text: `_Job ID: \`${job._id}\` | Laptop: \`${laptopSN}\`_` }]}
+            ]
+          });
+
+        } catch (err) {
+          console.error('autofix_request error:', err.message);
+          try {
+            await client.chat.postMessage({
+              channel: userId,
+              text   : '❌ Auto-fix shuru nahi ho saka. Manual steps try karo ya ticket raise karo.'
+            });
+          } catch {}
+        }
       });
 
       // ── DM Handler ────────────────────────────────────────────────────────

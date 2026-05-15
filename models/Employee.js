@@ -23,6 +23,11 @@ const employeeSchema = new mongoose.Schema({
   slackHandle: { type: String },
   isActive   : { type: Boolean, default: true },
 
+  // ── Auto-Fix Agent ────────────────────────────────────────────────────────────
+  agentRegistered : { type: Boolean, default: false },
+  agentVersion    : { type: String },
+  agentLastSeen   : { type: Date },
+
   // ── Stats ─────────────────────────────────────────────────────────────────────
   totalTickets    : { type: Number, default: 0 },
   resolvedByAI    : { type: Number, default: 0 },
