@@ -1377,10 +1377,40 @@ app.listen(PORT, async () => {
 
             await client.chat.postMessage({ channel: userId, text: reply, blocks });
           } catch (err) {
-            console.error('Home quick action error:', err.message);
+            console.error('Home quick action error:', err.message, err.stack);
+            // Always send fallback — user should never see silence
+            try {
+              const scriptConfig = SCRIPT_MAP[actionId];
+              const fallbackBlocks = [
+                { type: 'section', text: { type: 'mrkdwn', text: `*Aapki problem note kar li: "${problem?.slice(0,80)}"*\n\nAI abhi available nahi hai, lekin neeche script se try karo ya DM mein type karo! 🔧` }}
+              ];
+              if (scriptConfig) {
+                const scriptUrl = `${PORTAL}/scripts/${scriptConfig.file}`;
+                fallbackBlocks.push({ type: 'divider' });
+                fallbackBlocks.push({
+                  type: 'actions',
+                  elements: [{
+                    type: 'button',
+                    text: { type: 'plain_text', text: `⬇️ ${scriptConfig.label} — Auto Script`, emoji: true },
+                    style: 'primary',
+                    url: scriptUrl,
+                    action_id: `dl_fallback_${actionId}`
+                  }]
+                });
+              }
+              fallbackBlocks.push({ type: 'section', text: { type: 'mrkdwn', text: '_Ya DM mein apni problem type karo — AI wahan bhi help karega!_ 💬' }});
+              await client.chat.postMessage({ channel: userId, text: 'Aapki problem note kar li! Script download karo ya DM mein type karo.', blocks: fallbackBlocks });
+            } catch (msgErr) {
+              console.error('Fallback message failed too:', msgErr.message);
+            }
           }
         });
       });
+
+      // ── Download script button clicks — just ack, URL opens in browser ──
+      slackApp.action(/^dl_/, async ({ ack }) => { await ack(); });
+      // ── Warranty / diagnostic / support link buttons — just ack ──────────
+      slackApp.action(/^(warranty_|apple_support_|diag_dl_)/, async ({ ack }) => { await ack(); });
 
       // ── Auto-Fix request handler ──────────────────────────────────────────
       slackApp.action('autofix_request', async ({ body, ack, client }) => {

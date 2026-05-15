@@ -308,7 +308,13 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
       raw = await callGroq(systemPrompt, history);
       console.log('⚠️  Fell back to Groq after Claude error');
     } catch (fallbackErr) {
-      throw fallbackErr;
+      console.error('Both AI providers failed:', fallbackErr.message);
+      // Never throw — return a safe static fallback reply
+      return {
+        reply           : 'Kuch technical issue aa gaya 😔 Thodi der mein dobara try karein.\nYa DM mein problem type karo — main wahan bhi help karunga! 💬\nUrgent hai toh: *ticket bana do* type karo 🎫',
+        shouldCreateTicket: false,
+        ticketData      : null
+      };
     }
   }
 
