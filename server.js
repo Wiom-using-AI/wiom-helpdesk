@@ -1261,8 +1261,11 @@ app.listen(PORT, async () => {
           // ── Pending ticket confirmation check ─────────────────────────────
           const pending = pendingTickets.get(userId);
           if (pending) {
-            const isYes = /^(ha|haan|haa|yes|bilkul|ok|theek hai|ticket|bana do|create|kar do|ho jaye)/i.test(text.trim());
-            const isNo  = /^(nahi|na|no|nope|mat|band karo|chodo|rehne do)/i.test(text.trim());
+            // IMPORTANT: Must be exact short responses — "NAHI HUAA" must NOT trigger isNo
+            // "nahi huaa", "nahi chala", "kaam nahi kiya" = failed attempt → goes to AI
+            // "nahi", "na", "no" alone = user declining ticket → isNo
+            const isYes = /^(ha|haan|haa|han|yes|bilkul|ok|bana do|create|kar do|ho jaye)\s*[!।.,]?\s*$/i.test(text.trim());
+            const isNo  = /^(nahi|na|no|nope|mat|chodo|rehne do|band karo)\s*[!।.,]?\s*$/i.test(text.trim());
 
             if (isYes) {
               pendingTickets.delete(userId);
