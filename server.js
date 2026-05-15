@@ -327,6 +327,70 @@ app.listen(PORT, async () => {
       const pendingTickets  = new Map(); // slackUserId -> ticketData
       const expandedHomeMap = new Map(); // slackUserId -> Set<categoryKey>
 
+      // ── Brand detection helpers ───────────────────────────────────────────
+      const detectBrand = (laptopName) => {
+        if (!laptopName) return 'unknown';
+        const n = laptopName.toLowerCase();
+        if (n.includes('macbook') || n.includes('apple') || n.includes('mac pro') || n.includes('mac mini') || n.includes('m4') || n.includes('m5')) return 'apple';
+        if (n.includes('hp') || n.includes('elitebook') || n.includes('probook') || n.includes('envy') || n.includes('pavilion') || n.includes('omen') || n.includes('zbook')) return 'hp';
+        if (n.includes('dell') || n.includes('latitude') || n.includes('inspiron') || n.includes('xps') || n.includes('precision') || n.includes('vostro') || n.includes('alienware')) return 'dell';
+        if (n.includes('lenovo') || n.includes('thinkpad') || n.includes('ideapad') || n.includes('yoga') || n.includes('legion')) return 'lenovo';
+        if (n.includes('asus') || n.includes('vivobook') || n.includes('zenbook') || n.includes('rog')) return 'asus';
+        if (n.includes('acer') || n.includes('aspire') || n.includes('swift') || n.includes('nitro')) return 'acer';
+        return 'unknown';
+      };
+
+      const getBrandInfo = (brand, sn) => {
+        const enc = encodeURIComponent(sn || '');
+        switch (brand) {
+          case 'apple':
+            return {
+              brandLabel : '🍎 Apple MacBook',
+              warrantyUrl: `https://checkcoverage.apple.com/?sn=${enc}`,
+              diagScript : null,   // Mac can't run .bat
+              diagLabel  : null,
+              appleMode  : true,
+              supportUrl : 'https://getsupport.apple.com'
+            };
+          case 'hp':
+            return {
+              brandLabel : '🖥️ HP',
+              warrantyUrl: `https://support.hp.com/us-en/checkwarranty`,
+              diagScript : 'fix-diagnostic-hp.bat',
+              diagLabel  : '🔍 HP Hardware Diagnostic Script',
+              appleMode  : false,
+              supportUrl : 'https://support.hp.com'
+            };
+          case 'dell':
+            return {
+              brandLabel : '🖥️ Dell',
+              warrantyUrl: `https://www.dell.com/support/home/?s=BSD&ServiceTag=${enc}`,
+              diagScript : 'fix-diagnostic-dell.bat',
+              diagLabel  : '🔍 Dell SupportAssist Script',
+              appleMode  : false,
+              supportUrl : 'https://www.dell.com/support'
+            };
+          case 'lenovo':
+            return {
+              brandLabel : '🖥️ Lenovo',
+              warrantyUrl: `https://pcsupport.lenovo.com/us/en/warranty-lookup`,
+              diagScript : 'fix-diagnostic-lenovo.bat',
+              diagLabel  : '🔍 Lenovo Vantage Diagnostic Script',
+              appleMode  : false,
+              supportUrl : 'https://support.lenovo.com'
+            };
+          default:
+            return {
+              brandLabel : '💻 Laptop',
+              warrantyUrl: null,
+              diagScript : null,
+              diagLabel  : null,
+              appleMode  : false,
+              supportUrl : null
+            };
+        }
+      };
+
       // ── Category definitions ──────────────────────────────────────────────
       const CATEGORIES = [
         {
@@ -379,7 +443,6 @@ app.listen(PORT, async () => {
               { text:'📡 Mobile Hotspot Issue',        value:'Mobile hotspot not connecting to laptop',                                    id:'home_quick_26' },
             ],
             [
-              { text:'🔒 VPN Not Connecting',          value:'VPN not connecting or VPN giving error',                                     id:'home_quick_42' },
               { text:'🚫 Website Blocked / Not Opening',value:'Website not opening showing blocked or access denied',                      id:'home_quick_43' },
               { text:'📶 WiFi Keeps Disconnecting',    value:'WiFi keeps disconnecting again and again dropping connection',               id:'home_quick_44' },
               { text:'📧 Emails Not Loading',          value:'Email inbox not loading emails not coming or not sending',                   id:'home_quick_45' }
@@ -1035,6 +1098,131 @@ app.listen(PORT, async () => {
         });
       });
 
+      // ── Hardware Replacement / Emergency special IDs ─────────────────────
+      const HARDWARE_SPECIAL_IDS = new Set(['home_quick_37','home_quick_60','home_quick_61','home_quick_62','home_quick_70']);
+
+      const buildHardwareBlocks = (actionId, emp) => {
+        const isLiquid     = actionId === 'home_quick_70';
+        const isLaptopRep  = actionId === 'home_quick_37';
+        const isMouseRep   = actionId === 'home_quick_60';
+        const isKeyboardRep= actionId === 'home_quick_61';
+        const isMonitorRep = actionId === 'home_quick_62';
+
+        const brand     = detectBrand(emp?.laptop);
+        const brandInfo = getBrandInfo(brand, emp?.laptopSN);
+        const model     = emp?.laptop   || 'Unknown';
+        const sn        = emp?.laptopSN || 'Unknown';
+        const blocks    = [];
+
+        // ── Emergency alert (liquid damage) ────────────────────────────────
+        if (isLiquid) {
+          blocks.push({
+            type: 'section',
+            text: { type: 'mrkdwn', text:
+              '🚨 *EMERGENCY — Turant yeh karo:*\n' +
+              '1. *TURANT laptop band karo* — Power button 10 sec hold karo\n' +
+              '2. Charger aur USB sab nikaalo\n' +
+              '3. Laptop *ulta rakh do* (keyboard neeche)\n' +
+              '4. *MAT chalaao* — circuit damage hoga\n' +
+              '5. IT ko call karo: *9654244281*'
+            }
+          });
+          blocks.push({ type: 'divider' });
+        }
+
+        // ── Peripheral replacements (mouse/keyboard/monitor) ───────────────
+        if (isMouseRep || isKeyboardRep || isMonitorRep) {
+          const item = isMouseRep ? '🖱️ Mouse' : isKeyboardRep ? '⌨️ Keyboard' : '🖥️ Monitor';
+          blocks.push({
+            type: 'section',
+            text: { type: 'mrkdwn', text: `*${item} Replacement Request*\n\nIT team ko request bhej di jayegi. 1 working day mein replacement milegi.\n\nIT: *9654244281* (9AM–7PM)` }
+          });
+          return blocks;
+        }
+
+        // ── Laptop info block (for laptop replacement + liquid damage) ─────
+        blocks.push({
+          type: 'section',
+          fields: [
+            { type: 'mrkdwn', text: `*💻 Aapka Laptop:*\n${model}` },
+            { type: 'mrkdwn', text: `*🔢 Serial No:*\n\`${sn}\`` },
+            { type: 'mrkdwn', text: `*🏷️ Brand:*\n${brandInfo.brandLabel}` },
+            { type: 'mrkdwn', text: `*📍 Floor:*\n${emp?.floor || '—'}` }
+          ]
+        });
+        blocks.push({ type: 'divider' });
+
+        // ── Apple MacBook — separate section ──────────────────────────────
+        if (brandInfo.appleMode) {
+          blocks.push({
+            type: 'section',
+            text: { type: 'mrkdwn', text: '*🍎 Apple MacBook — Warranty Check:*\nAapka serial number se Apple coverage check karo:' }
+          });
+          blocks.push({
+            type: 'actions',
+            elements: [{ type:'button', text:{ type:'plain_text', text:'🔗 Apple Coverage Check', emoji:true }, url: brandInfo.warrantyUrl, action_id:`warranty_apple_${actionId}` }]
+          });
+          blocks.push({ type: 'divider' });
+          blocks.push({
+            type: 'section',
+            text: { type: 'mrkdwn', text:
+              '*🔍 Apple Diagnostics (Built-in — Free):*\n' +
+              '1. MacBook *band karo*\n' +
+              '2. Power button dabaao aur *hold karo* (startup options aane tak)\n' +
+              '3. Screen par options aate hi *D key* dabaao\n' +
+              '4. Diagnostics automatically start hogi ✅\n' +
+              '_Result screen par dikhega — IT ko photo bhejo_'
+            }
+          });
+          blocks.push({
+            type: 'actions',
+            elements: [{ type:'button', text:{ type:'plain_text', text:'🍎 Apple Support', emoji:true }, url: brandInfo.supportUrl, action_id:`apple_support_${actionId}` }]
+          });
+        } else {
+          // ── Non-Apple: Warranty + Diagnostic Script ──────────────────────
+          if (brandInfo.warrantyUrl) {
+            blocks.push({
+              type: 'section',
+              text: { type: 'mrkdwn', text: `*🛡️ Warranty Check (${brandInfo.brandLabel}):*\nAapka serial number \`${sn}\` se warranty status check karo:` }
+            });
+            blocks.push({
+              type: 'actions',
+              elements: [{ type:'button', text:{ type:'plain_text', text:`🔗 ${brandInfo.brandLabel} Warranty Check`, emoji:true }, url: brandInfo.warrantyUrl, action_id:`warranty_${brand}_${actionId}` }]
+            });
+            blocks.push({ type: 'divider' });
+          }
+          if (brandInfo.diagScript) {
+            blocks.push({
+              type: 'section',
+              text: { type: 'mrkdwn', text: `*🔍 Hardware Diagnostic (Auto-Run):*\nYe script download karo → double-click karo → automatically diagnostic tool chalega aur report dikhayega:` }
+            });
+            blocks.push({
+              type: 'actions',
+              elements: [{
+                type:'button', text:{ type:'plain_text', text:`⬇️ ${brandInfo.diagLabel}`, emoji:true },
+                style:'primary',
+                url: `${PORTAL}/scripts/${brandInfo.diagScript}`,
+                action_id: `diag_dl_${actionId}`
+              }]
+            });
+            blocks.push({ type: 'divider' });
+          }
+        }
+
+        // ── Ticket raise instruction (always at bottom) ────────────────────
+        blocks.push({
+          type: 'section',
+          text: { type: 'mrkdwn', text:
+            (isLiquid
+              ? '⚠️ *IT team ko turant ticket raise ho rahi hai...*\n_Aap unhe call bhi karo: 9654244281_'
+              : '*📋 Replacement ticket IT team ko jayega.*\n_1 working day mein respond karenge._\n_IT: 9654244281 (9AM–7PM)_'
+            )
+          }
+        });
+
+        return blocks;
+      };
+
       // ── Quick Action buttons from Home tab ────────────────────────────────
       const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_quick_38','home_quick_39','home_quick_40','home_quick_41','home_quick_42','home_quick_43','home_quick_44','home_quick_45','home_quick_46','home_quick_47','home_quick_48','home_quick_49','home_quick_50','home_quick_51','home_quick_52','home_quick_53','home_quick_54','home_quick_55','home_quick_56','home_quick_57','home_quick_58','home_quick_59','home_quick_60','home_quick_61','home_quick_62','home_quick_63','home_quick_64','home_quick_65','home_quick_66','home_quick_67','home_quick_68','home_quick_69','home_quick_70','home_quick_71','home_quick_72','home_sos'];
       homeQuickActions.forEach(actionId => {
@@ -1053,6 +1241,34 @@ app.listen(PORT, async () => {
               dept   : emp?.department,
               floor  : emp?.floor
             };
+
+            // ── Hardware Replacement / Emergency — special flow ────────────
+            if (HARDWARE_SPECIAL_IDS.has(actionId)) {
+              const hwBlocks = buildHardwareBlocks(actionId, emp);
+              await client.chat.postMessage({ channel: userId, text: '🔧 Hardware Request', blocks: hwBlocks });
+
+              // Auto-create Critical ticket for liquid damage
+              if (actionId === 'home_quick_70' && emp?.empId) {
+                try {
+                  const Ticket = require('./models/Ticket');
+                  await Ticket.create({
+                    empId      : emp.empId,
+                    empName    : emp.name,
+                    slackUserId: userId,
+                    issue      : `🚨 EMERGENCY: Liquid/Water Damage — ${emp.laptop || 'Laptop'} (S/N: ${emp.laptopSN || 'Unknown'})`,
+                    category   : 'Hardware',
+                    priority   : 'Critical',
+                    status     : 'Open',
+                    source     : 'slack',
+                    floor      : emp.floor,
+                    department : emp.department
+                  });
+                } catch (ticketErr) {
+                  console.error('Liquid damage ticket error:', ticketErr.message);
+                }
+              }
+              return;
+            }
 
             // ── Start a fresh conversation session and SAVE it ────────────
             // This ensures that when user says "nahi huaa", the DM handler
