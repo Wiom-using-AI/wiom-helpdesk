@@ -1,10 +1,7 @@
 ﻿@echo off
 net session >nul 2>&1
 if %errorLevel% == 0 goto :wiom_main
-echo Set oShell = CreateObject("Shell.Application") > "%TEMP%\wiom_elev.vbs"
-echo oShell.ShellExecute "%~f0", "", "", "runas", 1 >> "%TEMP%\wiom_elev.vbs"
-cscript //nologo "%TEMP%\wiom_elev.vbs"
-del "%TEMP%\wiom_elev.vbs" >nul 2>&1
+runas /user:.\wiom /savecred "%~f0"
 exit /b
 :wiom_main
 title WIOM IT Helpdesk - Storage Cleanup
