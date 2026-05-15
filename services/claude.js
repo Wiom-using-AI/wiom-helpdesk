@@ -1,6 +1,14 @@
-const Groq = require('groq-sdk');
+const Groq      = require('groq-sdk');
+const Anthropic = require('@anthropic-ai/sdk');
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq      = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const anthropic = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : null;
+
+// ── Active model display (logged on first call) ──────────────────────────────
+let modelLogged = false;
+const activeModel = () => anthropic ? 'claude-3-5-haiku-20241022 (Anthropic)' : 'llama-3.3-70b-versatile (Groq)';
 
 // ── WIOM IT System Prompt ─────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are WIOM IT Helpdesk AI — friendly, helpful, and clear. You help employees solve IT problems like a helpful colleague.
@@ -74,7 +82,7 @@ These always get a ticket (no steps, just friendly redirect):
 - Password reset / account unlock → "Yeh main khud reset kar dunga! 🎫 Type karo: ticket bana do"
 - VPN setup, new software install → ticket only
 - Windows reinstall, BIOS, hard drive → ticket only
-- Liquid damage → "TURANT laptop band karo! 🚨 IT ko call karo: IT Helpdesk (Slack)"
+- Liquid damage → "TURANT laptop band karo! 🚨 IT ko Slack pe message karo"
 
 ━━━ VAGUE MESSAGE ━━━
 If problem unclear — ask ONE short question only. No steps yet.
@@ -137,7 +145,7 @@ HDMI (1st): Win+P → select Duplicate or Extend → check if monitor powers on
 HDMI (2nd attempt): Restart laptop WITH monitor already plugged in via HDMI → Win+P again
 SD card: Remove → reinsert → check File Explorer → devmgmt.msc → Memory card → Scan for changes
 Fingerprint: Settings → Accounts → Sign-in options → Windows Hello Fingerprint → Remove → Add again. Fails = ticket
-Liquid/Water damage: IMMEDIATELY power off → DO NOT turn on → remove charger → call IT: IT Helpdesk (Slack)
+Liquid/Water damage: IMMEDIATELY power off → DO NOT turn on → remove charger → Slack pe IT ko message karo
 Slow after update (1st): Ctrl+Shift+Esc → find "Delivery Optimization" or "Windows Update" → End Task
 Slow after update (2nd): Settings → Windows Update → Advanced → Delivery Optimization → OFF → restart
 Caps Lock/keys stuck: Press Caps Lock once → if blinking LED stops = fixed. Physically jammed key = ticket (keyboard replace)
@@ -152,7 +160,6 @@ Slow internet (2nd attempt): Device Manager → Network adapters → WiFi → ri
 WiFi password: spartans500 — same for Ground Floor and First Floor
 Hotspot (1st): Phone hotspot OFF → ON → laptop forget hotspot → reconnect → ensure mobile data ON on phone
 Hotspot (2nd attempt): Phone → Settings → Hotspot → change frequency to 2.4GHz → laptop reconnect
-VPN: Raise ticket — IT sets up VPN, no DIY
 Website blocked: Try different browser → check internet working → office block = raise ticket
 WiFi disconnecting: Device Manager → Network adapters → WiFi → Properties → Power Management → uncheck "Allow PC to turn off this device" → forget network → reconnect
 Emails not loading: Check WiFi connected → Win+R → outlook /safe → browser fallback: outlook.office365.com
@@ -205,73 +212,118 @@ OneDrive full: Delete unnecessary files from OneDrive folder. Need more space = 
 Email password: Raise ticket — IT resets email passwords only
 
 🔄 REPLACEMENT:
-All replacement requests (laptop, mouse, keyboard, monitor) = Raise ticket only. IT team processes requests.
+All replacement requests (laptop, mouse, keyboard, monitor) = Raise ticket only. IT team processes requests.`;
 
-Emergency: Call IT Helpdesk (Slack) (9AM–7PM)`;
+
+// ── Extract steps already tried (to prevent repeats) ─────────────────────────
+const extractTriedSteps = (messages) => {
+  const assistantMsgs = messages.filter(m => m.role === 'assistant');
+  if (assistantMsgs.length === 0) return '';
+  const steps = [];
+  assistantMsgs.forEach(msg => {
+    const matches = msg.content.match(/Step \d+:[^\n]+/g);
+    if (matches) steps.push(...matches.map(s => s.trim()));
+  });
+  if (steps.length === 0) return '';
+  return `\n\n⚠️ STEPS ALREADY TRIED IN THIS CONVERSATION (DO NOT REPEAT ANY OF THESE):\n${steps.join('\n')}\nGive completely different steps from the above.`;
+};
+
+
+// ── Call Claude (Anthropic) ───────────────────────────────────────────────────
+const callClaude = async (systemPrompt, history) => {
+  const response = await anthropic.messages.create({
+    model     : 'claude-3-5-haiku-20241022',
+    max_tokens: 700,
+    system    : systemPrompt,
+    messages  : history
+  });
+  return response.content[0]?.text?.trim() || '';
+};
+
+
+// ── Call Groq (LLaMA fallback) ────────────────────────────────────────────────
+const callGroq = async (systemPrompt, history) => {
+  const completion = await groq.chat.completions.create({
+    model      : 'llama-3.3-70b-versatile',
+    messages   : [{ role: 'system', content: systemPrompt }, ...history],
+    temperature: 0.15,
+    max_tokens : 600
+  });
+  return completion.choices[0]?.message?.content?.trim() || '';
+};
+
+
+// ── Parse JSON from raw model output ─────────────────────────────────────────
+const parseOutput = (raw) => {
+  try {
+    const codeBlock = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (codeBlock) return JSON.parse(codeBlock[1].trim());
+    const s = raw.indexOf('{'), e = raw.lastIndexOf('}');
+    if (s !== -1 && e > s) return JSON.parse(raw.slice(s, e + 1));
+    return JSON.parse(raw);
+  } catch {
+    return { reply: raw, shouldCreateTicket: false, ticketData: null };
+  }
+};
 
 
 // ── Main chat function ────────────────────────────────────────────────────────
 const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, floor }) => {
-  const history = messages.slice(-20).map(m => ({
+  if (!modelLogged) {
+    console.log(`🤖 AI Model: ${activeModel()}`);
+    modelLogged = true;
+  }
+
+  // Last 30 messages for full context (was 20 before)
+  const history = messages.slice(-30).map(m => ({
     role   : m.role === 'assistant' ? 'assistant' : 'user',
     content: m.content
   }));
 
   const userContext = [
-    `Employee: ${empName||empId} (ID: ${empId})`,
-    dept     ? `Department: ${dept}`                        : null,
-    floor    ? `Floor: ${floor}`                            : null,
-    laptop   ? `Assigned Laptop Model: ${laptop}`           : null,
-    laptopSN ? `Laptop Serial Number: ${laptopSN}`          : null,
+    `Employee: ${empName || empId} (ID: ${empId})`,
+    dept     ? `Department: ${dept}`                   : null,
+    floor    ? `Floor: ${floor}`                        : null,
+    laptop   ? `Assigned Laptop: ${laptop}`             : null,
+    laptopSN ? `Serial Number: ${laptopSN}`             : null,
   ].filter(Boolean).join(' | ');
 
-  const laptopNote = laptop ? `\nEmployee laptop: ${laptop}${laptopSN ? ` (SN: ${laptopSN})` : ''}` : '';
+  // Build steps-already-tried list so model never repeats them
+  const triedSteps = extractTriedSteps(messages);
 
-  const completion = await groq.chat.completions.create({
-    model      : 'llama-3.3-70b-versatile',
-    messages   : [
-      { role: 'system', content: SYSTEM_PROMPT + `\n\nUSER CONTEXT: ${userContext}${laptopNote}` },
-      ...history
-    ],
-    temperature: 0.1,
-    max_tokens : 500
-  });
+  const systemPrompt = SYSTEM_PROMPT
+    + `\n\nUSER CONTEXT: ${userContext}`
+    + (laptop ? `\nEmployee laptop: ${laptop}${laptopSN ? ` (SN: ${laptopSN})` : ''}` : '')
+    + triedSteps;
 
-  const raw = completion.choices[0]?.message?.content?.trim() || '';
-
-  let parsed;
+  // Call Claude if available, otherwise Groq
+  let raw;
   try {
-    const codeBlock = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (codeBlock) {
-      parsed = JSON.parse(codeBlock[1].trim());
-    } else {
-      const jsonStart = raw.indexOf('{');
-      const jsonEnd   = raw.lastIndexOf('}');
-      if (jsonStart !== -1 && jsonEnd > jsonStart) {
-        parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1));
-      } else {
-        parsed = JSON.parse(raw);
-      }
+    raw = anthropic ? await callClaude(systemPrompt, history) : await callGroq(systemPrompt, history);
+  } catch (primaryErr) {
+    console.error(`Primary AI error (${activeModel()}):`, primaryErr.message);
+    // If Claude fails → fall back to Groq automatically
+    try {
+      raw = await callGroq(systemPrompt, history);
+      console.log('⚠️  Fell back to Groq after Claude error');
+    } catch (fallbackErr) {
+      throw fallbackErr;
     }
-  } catch {
-    parsed = { reply: raw, shouldCreateTicket: false, ticketData: null };
   }
+
+  const parsed = parseOutput(raw);
 
   let reply = (typeof parsed.reply === 'string') ? parsed.reply.trim() : raw;
   if (reply.includes('"shouldCreateTicket"') || reply.startsWith('{')) {
-    reply = 'Kuch technical issue aa gaya. Please dobara try karein — IT Helpdesk: IT Helpdesk (Slack)';
+    reply = 'Kuch technical issue aa gaya. Please dobara try karein.';
   }
 
-  // ── Strip bare title lines before "Step 1:" (but keep friendly openers) ──
-  // If text before "Step 1:" has no emoji → it's a robotic title → strip it
-  // If it has an emoji → it's a friendly opener → keep it
+  // Strip robotic title lines before "Step 1:" (keep emoji openers)
   const stepIdx = reply.indexOf('Step 1:');
   if (stepIdx > 0) {
     const preStep = reply.slice(0, stepIdx);
     const hasEmoji = /[\u{1F300}-\u{1FFFF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|😊|🔧|✅|🙏|🎫|🚨|💻|📶|🤔/u.test(preStep);
-    if (!hasEmoji) {
-      reply = reply.slice(stepIdx).trim(); // strip robotic title
-    }
+    if (!hasEmoji) reply = reply.slice(stepIdx).trim();
   }
 
   return {
@@ -281,31 +333,22 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
   };
 };
 
-// ── Quick single reply (for Slack) ───────────────────────────────────────────
+
+// ── Quick single reply (for Slack notifications) ─────────────────────────────
 const quickReply = async (userMessage, empName = 'Employee', laptop = null, laptopSN = null) => {
   const laptopCtx = laptop ? ` | Laptop: ${laptop}${laptopSN ? ` (SN: ${laptopSN})` : ''}` : '';
-  const completion = await groq.chat.completions.create({
-    model    : 'llama-3.3-70b-versatile',
-    messages : [
-      { role: 'system', content: SYSTEM_PROMPT + `\nUser: ${empName}${laptopCtx}. Keep reply under 3 lines.` },
-      { role: 'user',   content: userMessage }
-    ],
-    max_tokens: 200
-  });
-  const raw = completion.choices[0]?.message?.content?.trim() || '';
+  const sys = SYSTEM_PROMPT + `\nUser: ${empName}${laptopCtx}. Keep reply under 3 lines.`;
+  const history = [{ role: 'user', content: userMessage }];
+
+  let raw;
   try {
-    const codeBlock = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    let parsed;
-    if (codeBlock) {
-      parsed = JSON.parse(codeBlock[1].trim());
-    } else {
-      const s = raw.indexOf('{'), e = raw.lastIndexOf('}');
-      parsed = (s !== -1 && e > s) ? JSON.parse(raw.slice(s, e+1)) : JSON.parse(raw);
-    }
-    return parsed.reply || raw;
+    raw = anthropic ? await callClaude(sys, history) : await callGroq(sys, history);
   } catch {
-    return raw;
+    raw = await callGroq(sys, history);
   }
+
+  const parsed = parseOutput(raw);
+  return (typeof parsed.reply === 'string' ? parsed.reply : raw) || userMessage;
 };
 
 module.exports = { chat, quickReply };
