@@ -8,7 +8,7 @@ echo    WIOM IT Helpdesk - Slow Laptop Auto-Fix
 echo  ============================================
 echo.
 echo  Yeh script automatically aapka laptop fix
-echo  kar degi. Kuch nahi karna — bas wait karo!
+echo  kar degi. Kuch nahi karna - bas wait karo!
 echo.
 echo  ============================================
 echo.
