@@ -13,15 +13,13 @@ const activeModel = () => anthropic ? 'claude-3-5-haiku-20241022 (Anthropic)' : 
 // ── WIOM IT System Prompt ─────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are WIOM IT Helpdesk AI — friendly, helpful, and clear. You help employees solve IT problems like a helpful colleague.
 
-CRITICAL — OUTPUT ONLY THIS JSON, NOTHING ELSE:
-{"reply":"your message here","shouldCreateTicket":false,"ticketData":null}
-
 ━━━ REPLY FORMAT (follow exactly) ━━━
 Line 1 : ONE short friendly line with emoji. Example: "Koi baat nahi! 😊 Yeh try karo:"
 Lines 2-4: Numbered steps — Step 1, Step 2, Step 3 (max 3 steps)
 Last line: ONE short warm closing. Example: "Kaam aa jaye toh batao! 🙏"
 
 Total reply: MAX 5 lines. Steps must be action-only (what to click/press).
+Output ONLY the reply text — no JSON, no markdown code blocks, just the reply.
 
 ━━━ TONE ━━━
 - Friendly and warm — like a helpful IT colleague, not a robot.
@@ -230,27 +228,77 @@ const extractTriedSteps = (messages) => {
 };
 
 
+// ── Static KB Fallback (when both AI providers fail) ─────────────────────────
+const getKBFallback = (problem) => {
+  const p = problem.toLowerCase();
+  if (p.includes('slow') || p.includes('hang') || p.includes('freez'))
+    return `Laptop slow/hang fix karo! 🔧\nStep 1: Ctrl+Shift+Esc → CPU column sort karo → heavy app Right-click → End Task.\nStep 2: Win+R → type temp → Ctrl+A → Delete karo.\nStep 3: Laptop restart karo.\nScript button neeche hai — ek click mein automatic fix! ⬇️`;
+  if (p.includes('wifi') || p.includes('internet') || p.includes('network'))
+    return `WiFi fix karo! 📶\nStep 1: Taskbar WiFi click → OFF karo → ON karo.\nStep 2: Network: spartans500 | Password: spartans500\nStep 3: Kaam nahi hua toh laptop restart karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('sound') || p.includes('audio') || p.includes('speaker') || p.includes('headphone'))
+    return `Sound fix karo! 🔊\nStep 1: Taskbar speaker icon Right-click → Sound settings.\nStep 2: Output device → sahi device select karo.\nStep 3: Volume 0% nahi honi chahiye — check karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('blue screen') || p.includes('bsod'))
+    return `Blue Screen fix karo! 💙\nStep 1: Error code note karo jo screen par tha.\nStep 2: Laptop restart karo — akbar mein theek ho jata hai.\nStep 3: 3 baar se zyada hua toh ticket raise karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('battery') || p.includes('charg'))
+    return `Battery fix karo! 🔋\nStep 1: Charger dono taraf firmly lagao.\nStep 2: Alag power socket try karo.\nStep 3: Laptop band karo → charger lagao → 30 sec wait → on karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('black screen') || p.includes('no display'))
+    return `Black screen fix karo! 🖥️\nStep 1: Fn+F5 ya Fn+F8 (brightness keys) dabao.\nStep 2: Koi change nahi → power button 10sec hold → restart.\nStep 3: Baad mein bhi kuch nahi → ticket raise karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('keyboard') || p.includes('keys'))
+    return `Keyboard fix karo! ⌨️\nStep 1: Laptop restart karo.\nStep 2: Win+R → osk → on-screen keyboard se kaam chalao.\nStep 3: Device Manager → Keyboards → Update driver.\nScript button neeche hai! ⬇️`;
+  if (p.includes('touchpad') || p.includes('mouse'))
+    return `Touchpad fix karo! 🖱️\nStep 1: Fn + touchpad key (lock icon wali) dabao.\nStep 2: Settings → Bluetooth & devices → Touchpad → ON.\nStep 3: Laptop restart karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('printer'))
+    return `Printer fix karo! 🖨️\nStep 1: Settings → Bluetooth & devices → Printers → right-click → Set as default.\nStep 2: Win+R → services.msc → Print Spooler → Restart.\nStep 3: Dubara print karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('teams'))
+    return `Teams fix karo! 📹\nStep 1: System tray → Teams icon right-click → Quit → reopen.\nStep 2: Win+R → %appdata%\\Microsoft\\Teams → Cache folder delete karo.\nStep 3: teams.microsoft.com browser mein kholo (web fallback).\nScript button neeche hai! ⬇️`;
+  if (p.includes('zoom'))
+    return `Zoom fix karo! 🎥\nStep 1: Zoom band karo → dobara kholo.\nStep 2: Internet check karo → zoom.us/wc/join browser mein try karo.\nStep 3: Zoom Settings → Audio/Video → sahi device select karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('outlook') || p.includes('email'))
+    return `Outlook fix karo! 📧\nStep 1: Ctrl+Shift+Esc → Outlook process end karo.\nStep 2: Win+R → outlook /safe → Enter.\nStep 3: outlook.office365.com browser mein try karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('password') || p.includes('locked') || p.includes('login'))
+    return `Password reset ke liye IT se contact karo! 🔐\nYeh self-service nahi hai — IT ke paas jaana hoga.\nType karo: *ticket bana do* → IT turant help karega! 🎫`;
+  if (p.includes('bluetooth'))
+    return `Bluetooth fix karo! 🔵\nStep 1: Settings → Bluetooth → toggle OFF → ON karo.\nStep 2: Device dobara pair karo.\nStep 3: Device Manager → Bluetooth → Disable → Enable.\nScript button neeche hai! ⬇️`;
+  if (p.includes('camera') || p.includes('webcam'))
+    return `Camera fix karo! 📷\nStep 1: Settings → Privacy → Camera → ON karo.\nStep 2: Device Manager → Cameras → right-click → Enable.\nStep 3: Laptop restart karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('mic') || p.includes('microphone'))
+    return `Microphone fix karo! 🎤\nStep 1: Settings → Privacy → Microphone → ON karo.\nStep 2: Sound settings → Input → sahi mic select karo.\nStep 3: Teams: Settings → Devices → mic test karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('usb') || p.includes('pendrive'))
+    return `USB fix karo! 🔌\nStep 1: Alag USB port mein try karo.\nStep 2: Device Manager → Universal Serial Bus → Uninstall → Scan for hardware changes.\nStep 3: Laptop restart karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('storage') || p.includes('disk full'))
+    return `Storage cleanup karo! 💾\nStep 1: Win+R → cleanmgr → C: → Clean system files.\nStep 2: Win+R → %temp% → Ctrl+A → Delete.\nStep 3: Recycle Bin empty karo.\nScript button neeche hai! ⬇️`;
+  if (p.includes('virus') || p.includes('malware') || p.includes('antivirus'))
+    return `Virus scan karo! 🦠\nStep 1: Windows Security kholo → Virus & threat protection.\nStep 2: Quick Scan karo → wait karo.\nStep 3: Serious lag raha → ticket raise karo: type karo *ticket bana do* 🎫\nScript button neeche hai! ⬇️`;
+  // Generic fallback
+  return `Aapki problem note kar li! 🔧\nStep 1: Pehle laptop restart karo — bahut problems resolve ho jaati hain.\nStep 2: Neeche script button hai — ek click mein automatic fix try karo! ⬇️\nStep 3: Kaam nahi hua → DM mein detail mein type karo — main help karunga! 💬`;
+};
+
 // ── Call Claude (Anthropic) ───────────────────────────────────────────────────
 const callClaude = async (systemPrompt, history) => {
+  if (!anthropic) throw new Error('Anthropic client not initialized');
   const response = await anthropic.messages.create({
-    model     : 'claude-3-5-haiku-20241022',
-    max_tokens: 700,
+    model     : 'claude-3-haiku-20240307',   // stable model
+    max_tokens: 600,
     system    : systemPrompt,
     messages  : history
   });
-  return response.content[0]?.text?.trim() || '';
+  const text = response.content?.[0]?.text?.trim();
+  if (!text) throw new Error('Empty response from Claude');
+  return text;
 };
 
 
 // ── Call Groq (LLaMA fallback) ────────────────────────────────────────────────
 const callGroq = async (systemPrompt, history) => {
   const completion = await groq.chat.completions.create({
-    model      : 'llama-3.3-70b-versatile',
+    model      : 'llama-3.1-8b-instant',    // fast + always available on Groq
     messages   : [{ role: 'system', content: systemPrompt }, ...history],
-    temperature: 0.15,
-    max_tokens : 600
+    temperature: 0.2,
+    max_tokens : 500
   });
-  return completion.choices[0]?.message?.content?.trim() || '';
+  const text = completion.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error('Empty response from Groq');
+  return text;
 };
 
 
@@ -297,32 +345,38 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     + (laptop ? `\nEmployee laptop: ${laptop}${laptopSN ? ` (SN: ${laptopSN})` : ''}` : '')
     + triedSteps;
 
-  // Call Claude if available, otherwise Groq
+  // Call Claude first, fall back to Groq, then static KB
   let raw;
   try {
-    raw = anthropic ? await callClaude(systemPrompt, history) : await callGroq(systemPrompt, history);
-  } catch (primaryErr) {
-    console.error(`Primary AI error (${activeModel()}):`, primaryErr.message);
-    // If Claude fails → fall back to Groq automatically
+    raw = await callClaude(systemPrompt, history);
+    console.log('✅ Claude responded OK');
+  } catch (claudeErr) {
+    console.error('❌ Claude failed:', claudeErr.message);
     try {
       raw = await callGroq(systemPrompt, history);
-      console.log('⚠️  Fell back to Groq after Claude error');
-    } catch (fallbackErr) {
-      console.error('Both AI providers failed:', fallbackErr.message);
-      // Never throw — return a safe static fallback reply
-      return {
-        reply           : 'Kuch technical issue aa gaya 😔 Thodi der mein dobara try karein.\nYa DM mein problem type karo — main wahan bhi help karunga! 💬\nUrgent hai toh: *ticket bana do* type karo 🎫',
-        shouldCreateTicket: false,
-        ticketData      : null
-      };
+      console.log('✅ Groq fallback responded OK');
+    } catch (groqErr) {
+      console.error('❌ Groq also failed:', groqErr.message);
+      // Static KB fallback — look up problem in last user message
+      const lastMsg = history.filter(m => m.role === 'user').pop()?.content || '';
+      raw = getKBFallback(lastMsg);
+      console.log('⚠️  Using static KB fallback');
     }
   }
 
-  const parsed = parseOutput(raw);
+  // raw is now plain text (no JSON parsing needed)
+  let reply = (raw || '').trim();
 
-  let reply = (typeof parsed.reply === 'string') ? parsed.reply.trim() : raw;
-  if (reply.includes('"shouldCreateTicket"') || reply.startsWith('{')) {
-    reply = 'Kuch technical issue aa gaya. Please dobara try karein.';
+  // Safety: if somehow JSON slipped through, extract reply field or use raw
+  if (reply.startsWith('{') || reply.includes('"shouldCreateTicket"')) {
+    try {
+      const s = reply.indexOf('"reply"');
+      if (s !== -1) {
+        const parsed = JSON.parse(reply.slice(reply.indexOf('{')));
+        reply = parsed.reply || reply;
+      }
+    } catch { /* ignore */ }
+    if (reply.startsWith('{')) reply = getKBFallback(history.filter(m=>m.role==='user').pop()?.content||'');
   }
 
   // Strip robotic title lines before "Step 1:" (keep emoji openers)
@@ -333,10 +387,13 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     if (!hasEmoji) reply = reply.slice(stepIdx).trim();
   }
 
+  // Check if ticket needed (simple keyword check on raw text)
+  const shouldCreateTicket = /ticket\s*(bana|raise|create|chahiye)/i.test(reply) && reply.includes('ticket');
+
   return {
-    reply             : reply || 'Kuch issue aa gaya. Please dobara try karein.',
-    shouldCreateTicket: !!parsed.shouldCreateTicket,
-    ticketData        : parsed.ticketData || null
+    reply             : reply || getKBFallback('generic'),
+    shouldCreateTicket: shouldCreateTicket,
+    ticketData        : null
   };
 };
 
