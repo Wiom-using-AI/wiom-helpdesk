@@ -205,6 +205,137 @@ const fixes = {
     };
   },
 
+  // Fix Bluetooth — disable/enable adapter
+  fix_bluetooth: async () => {
+    await runPS(`Stop-Service -Name 'bthserv' -Force -ErrorAction SilentlyContinue`);
+    await sleep(2000);
+    await runPS(`Start-Service -Name 'bthserv' -ErrorAction SilentlyContinue`);
+    const adapter = await runPS(`Get-PnpDevice | Where-Object { $_.Class -eq 'Bluetooth' } | Select-Object -First 1 | ForEach-Object { Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Start-Sleep 2; Enable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Write-Output $_.FriendlyName }`);
+    return { ok: true, result: `Bluetooth service restart ho gaya! ✅ Ab Settings → Bluetooth → toggle ON karo aur device search karo.`, summary: 'Restarted Bluetooth service + adapter' };
+  },
+
+  // Fix Touchpad — enable via registry + restart HID
+  fix_touchpad: async () => {
+    await runPS(`Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad' -Name 'Enabled' -Value 1 -ErrorAction SilentlyContinue`);
+    const hid = await runPS(`Get-PnpDevice | Where-Object { ($_.Class -eq 'Mouse' -or $_.FriendlyName -match 'Touchpad|TrackPad|Synaptics|ELAN') -and $_.Status -ne 'OK' } | ForEach-Object { Enable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Write-Output $_.FriendlyName }`);
+    await runPS(`Restart-Service -Name 'TabletInputService' -Force -ErrorAction SilentlyContinue`);
+    return { ok: true, result: `Touchpad enable ho gaya! ✅ Kaam nahi kiya toh Fn + touchpad key dabao (lock icon wali).`, summary: 'Enabled touchpad via registry + HID reset' };
+  },
+
+  // Fix Microphone — set privacy + restart audio
+  fix_mic: async () => {
+    await runPS(`Set-ItemProperty -Path 'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\microphone' -Name 'Value' -Value 'Allow' -ErrorAction SilentlyContinue`);
+    await runPS(`Restart-Service -Name 'AudioSrv' -Force -ErrorAction SilentlyContinue`);
+    await runPS(`Restart-Service -Name 'AudioEndpointBuilder' -Force -ErrorAction SilentlyContinue`);
+    const mic = await runPS(`(Get-CimInstance Win32_SoundDevice | Where-Object { $_.Name -match 'Microphone|Mic|Array' } | Select-Object -First 1).Name`);
+    return { ok: true, result: `Microphone privacy allow + audio service restart ho gaya! ✅ Mic: ${mic.output || 'detected'}. Teams mein Settings → Devices → mic select karo.`, summary: 'Set mic privacy to Allow, restarted audio' };
+  },
+
+  // Fix Camera — set privacy + enable driver
+  fix_camera: async () => {
+    await runPS(`Set-ItemProperty -Path 'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\webcam' -Name 'Value' -Value 'Allow' -ErrorAction SilentlyContinue`);
+    await runPS(`Get-PnpDevice | Where-Object { $_.Class -eq 'Camera' -or $_.Class -eq 'Image' } | ForEach-Object { Enable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction SilentlyContinue }`);
+    const cam = await runPS(`(Get-PnpDevice | Where-Object { $_.Class -eq 'Camera' } | Select-Object -First 1).FriendlyName`);
+    return { ok: true, result: `Camera privacy allow + driver enable ho gaya! ✅ Camera: ${cam.output || 'detected'}. Teams/Zoom mein Settings → camera select karo.`, summary: 'Set camera privacy to Allow, enabled camera driver' };
+  },
+
+  // Fix Printer — restart spooler + clear queue
+  fix_printer: async () => {
+    await runPS(`Stop-Service -Name 'Spooler' -Force -ErrorAction SilentlyContinue`);
+    await runPS(`Remove-Item 'C:\\Windows\\System32\\spool\\PRINTERS\\*' -Force -ErrorAction SilentlyContinue`);
+    await sleep(2000);
+    await runPS(`Start-Service -Name 'Spooler' -ErrorAction SilentlyContinue`);
+    const printers = await runPS(`(Get-Printer -ErrorAction SilentlyContinue | Select-Object -First 3 | ForEach-Object { $_.Name }) -join ', '`);
+    return { ok: true, result: `Print Spooler restart + queue clear ho gaya! ✅ Printers: ${printers.output || 'check Settings'}. Ab print try karo.`, summary: 'Restarted Print Spooler, cleared queue' };
+  },
+
+  // Fix Browser — kill + clear cache + flush DNS
+  fix_browser: async () => {
+    await runPS(`Stop-Process -Name 'chrome','msedge','firefox','brave' -Force -ErrorAction SilentlyContinue`);
+    await sleep(1500);
+    await runPS(`Remove-Item ([Environment]::GetFolderPath('LocalApplicationData') + '\\Google\\Chrome\\User Data\\Default\\Cache\\*') -Recurse -Force -ErrorAction SilentlyContinue`);
+    await runPS(`Remove-Item ([Environment]::GetFolderPath('LocalApplicationData') + '\\Microsoft\\Edge\\User Data\\Default\\Cache\\*') -Recurse -Force -ErrorAction SilentlyContinue`);
+    await runPS(`ipconfig /flushdns | Out-Null`);
+    return { ok: true, result: `Browser cache clear + DNS flush ho gaya! ✅ Browser dobara kholo — fast aur fresh hoga.`, summary: 'Killed browsers, cleared cache, flushed DNS' };
+  },
+
+  // Fix Overheating — kill heavy apps + set balanced power
+  fix_overheating: async () => {
+    const safe = `'svchost','System','Idle','Registry','smss','csrss','wininit','services','lsass','winlogon','dwm','explorer'`;
+    const kill = await runPS(`$c=0; Get-Process | Where-Object { $_.Name -notin @(${safe}) -and $_.CPU -gt 20 } | Sort-Object CPU -Descending | Select-Object -First 5 | ForEach-Object { try { Stop-Process -Id $_.Id -Force; $c++ } catch {} }; Write-Output "$c apps closed"`);
+    await runPS(`powercfg /setactive SCHEME_BALANCED; powercfg /change processor-throttle-ac 75`);
+    const cpu = await runPS(`(Get-CimInstance Win32_Processor).LoadPercentage`);
+    return { ok: true, result: `${kill.output}. Power plan Balanced set ho gaya! ✅ CPU load ab: ${cpu.output || '?'}%. Laptop hard flat surface par rakhao.`, summary: 'Killed heavy apps, set Balanced power plan' };
+  },
+
+  // Fix USB — restart USB controllers
+  fix_usb: async () => {
+    await runPS(`Get-PnpDevice | Where-Object { $_.Class -eq 'USB' -and $_.Status -ne 'OK' } | ForEach-Object { Enable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction SilentlyContinue }`);
+    await runPS(`pnputil /scan-devices 2>$null`);
+    const usb = await runPS(`(Get-PnpDevice | Where-Object { $_.Class -eq 'USB' } | Measure-Object).Count`);
+    return { ok: true, result: `USB controllers reset + hardware scan complete! ✅ ${usb.output || '?'} USB devices detected. Pendrive/device dobara lagao.`, summary: 'Reset USB controllers, ran hardware scan' };
+  },
+
+  // Fix Sleep/Wake — disable sleep timeouts
+  fix_sleep: async () => {
+    await runPS(`powercfg /change standby-timeout-ac 0; powercfg /change standby-timeout-dc 0; powercfg /change hibernate-timeout-ac 0`);
+    await runPS(`powercfg /change monitor-timeout-ac 15`);
+    await runPS(`Disable-WindowsOptionalFeature -Online -FeatureName 'HibernateBoot' -NoRestart -ErrorAction SilentlyContinue`);
+    return { ok: true, result: `Sleep timeout disable ho gaya! ✅ Laptop ab sleep mein nahi jayega. Wake karne ke liye Power button ya Enter dabao.`, summary: 'Disabled sleep and hibernate timeouts' };
+  },
+
+  // Fix Zoom — kill + clear cache
+  fix_zoom: async () => {
+    await runPS(`Stop-Process -Name 'Zoom','CptHost','zCrashReport' -Force -ErrorAction SilentlyContinue`);
+    await sleep(2000);
+    await runPS(`Remove-Item ([Environment]::GetFolderPath('AppData') + '\\Zoom\\data\\*') -Recurse -Force -ErrorAction SilentlyContinue`);
+    await runPS(`Remove-Item ([Environment]::GetFolderPath('AppData') + '\\Zoom\\logs\\*') -Recurse -Force -ErrorAction SilentlyContinue`);
+    return { ok: true, result: `Zoom cache clear ho gaya! ✅ Ab Zoom dobara open karo — fresh start milega.`, summary: 'Killed Zoom, cleared cache and logs' };
+  },
+
+  // Fix OneDrive — restart service
+  fix_onedrive: async () => {
+    await runPS(`Stop-Process -Name 'OneDrive' -Force -ErrorAction SilentlyContinue`);
+    await sleep(3000);
+    const paths = [
+      `$env:LOCALAPPDATA + '\\Microsoft\\OneDrive\\OneDrive.exe'`,
+      `'C:\\Program Files\\Microsoft OneDrive\\OneDrive.exe'`
+    ];
+    let started = false;
+    for (const p of [`"$env:LOCALAPPDATA\\Microsoft\\OneDrive\\OneDrive.exe"`, `"C:\\Program Files\\Microsoft OneDrive\\OneDrive.exe"`]) {
+      const check = await runPS(`Test-Path ${p}`);
+      if (check.output?.trim().toLowerCase() === 'true') {
+        await runPS(`Start-Process ${p}`);
+        started = true;
+        break;
+      }
+    }
+    return { ok: true, result: started ? `OneDrive restart ho gaya! ✅ Taskbar mein cloud icon check karo — sync resume ho jayega.` : `OneDrive restart attempt kiya. Taskbar cloud icon check karo.`, summary: 'Restarted OneDrive sync service' };
+  },
+
+  // Fix Keyboard — restart keyboard driver
+  fix_keyboard: async () => {
+    await runPS(`Set-ItemProperty -Path 'HKCU:\\Control Panel\\Accessibility\\StickyKeys' -Name 'Flags' -Value '506' -ErrorAction SilentlyContinue`);
+    await runPS(`Set-ItemProperty -Path 'HKCU:\\Control Panel\\Accessibility\\Keyboard Response' -Name 'Flags' -Value '122' -ErrorAction SilentlyContinue`);
+    const kbd = await runPS(`Get-PnpDevice | Where-Object { $_.Class -eq 'Keyboard' } | Select-Object -First 1 | ForEach-Object { Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Start-Sleep 2; Enable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Write-Output $_.FriendlyName }`);
+    return { ok: true, result: `Keyboard driver reset + StickyKeys off ho gaya! ✅ ${kbd.output || 'Keyboard'} reset hua. Ab try karo.`, summary: 'Reset keyboard driver, disabled StickyKeys' };
+  },
+
+  // Fix Screen Flicker — restart display driver
+  fix_screen_flicker: async () => {
+    const gpu = await runPS(`(Get-CimInstance Win32_VideoController | Select-Object -First 1).Name`);
+    await runPS(`Get-PnpDevice | Where-Object { $_.Class -eq 'Display' } | ForEach-Object { Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Start-Sleep 2; Enable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction SilentlyContinue }`);
+    return { ok: true, result: `Display driver reset ho gaya! ✅ GPU: ${gpu.output || 'detected'}. Display Settings → refresh rate "Recommended" check karo.`, summary: 'Reset display adapter driver' };
+  },
+
+  // Fix Virus Scan — start Windows Defender quick scan
+  fix_virus_scan: async () => {
+    await runPS(`Update-MpSignature -ErrorAction SilentlyContinue`);
+    await runPS(`Start-MpScan -ScanType QuickScan -ErrorAction SilentlyContinue`);
+    const status = await runPS(`$s=Get-MpComputerStatus -ErrorAction SilentlyContinue; if($s){ Write-Output "Definitions: $($s.AntivirusSignatureLastUpdated.ToString('dd MMM'))" }else{ Write-Output 'Scan started' }`);
+    return { ok: true, result: `Windows Defender scan start ho gaya! ✅ ${status.output}. Background mein chal raha hai — 5-10 min mein complete hoga.`, summary: 'Started Windows Defender quick scan + updated definitions' };
+  },
+
   // Open Lenovo Vantage diagnostics
   run_lenovo_diag: async () => {
     const paths = [

@@ -524,19 +524,48 @@ app.listen(PORT, async () => {
 
       // ── Auto-Fix mapping: which buttons can be auto-fixed on laptop ──────
       const AUTO_FIX_MAP = {
+        // ── Performance ────────────────────────────────────────────────────────
         'home_quick_1' : { fixType: ['kill_heavy', 'clean_temp'], label: '💻 Laptop Speed Fix'      },
         'home_quick_21': { fixType: ['kill_heavy'],               label: '💻 Freezing Fix'           },
-        'home_quick_71': { fixType: ['kill_heavy', 'clean_temp'], label: '💻 Speed Boost Fix'        },
+        'home_quick_71': { fixType: ['kill_heavy', 'clean_temp'], label: '🐌 Post-Update Fix'        },
+        'home_quick_4' : { fixType: ['fix_overheating'],          label: '🌡️ Overheating Fix'        },
+        'home_quick_38': { fixType: ['fix_overheating'],          label: '💨 Fan/Heat Fix'           },
+        // ── Network ────────────────────────────────────────────────────────────
         'home_quick_11': { fixType: ['fix_wifi'],                 label: '📶 WiFi Reset'             },
         'home_quick_44': { fixType: ['fix_wifi'],                 label: '📶 WiFi Reconnect Fix'     },
         'home_quick_29': { fixType: ['fix_wifi'],                 label: '📶 Internet Speed Fix'     },
-        'home_quick_13': { fixType: ['fix_teams'],                label: '📹 Teams Fix'              },
-        'home_quick_50': { fixType: ['fix_outlook'],              label: '📧 Outlook Fix'            },
-        'home_quick_34': { fixType: ['fix_clipboard'],            label: '📋 Copy-Paste Fix'         },
+        // ── Audio & Display ────────────────────────────────────────────────────
         'home_quick_9' : { fixType: ['fix_sound'],                label: '🔊 Sound Fix'             },
         'home_quick_28': { fixType: ['fix_sound'],                label: '🔊 Speaker Fix'            },
+        'home_quick_46': { fixType: ['fix_sound'],                label: '🎧 Headphone Fix'          },
+        'home_quick_39': { fixType: ['fix_screen_flicker'],       label: '📺 Screen Flicker Fix'     },
+        // ── Input Devices ──────────────────────────────────────────────────────
+        'home_quick_7' : { fixType: ['fix_keyboard'],             label: '⌨️ Keyboard Fix'           },
+        'home_quick_72': { fixType: ['fix_keyboard'],             label: '🔡 Caps Lock Fix'          },
+        'home_quick_8' : { fixType: ['fix_touchpad'],             label: '🖱️ Touchpad Fix'           },
+        'home_quick_40': { fixType: ['fix_bluetooth'],            label: '🔵 Bluetooth Fix'          },
+        'home_quick_63': { fixType: ['fix_usb'],                  label: '🔌 USB Fix'                },
+        // ── Camera & Mic ───────────────────────────────────────────────────────
+        'home_quick_16': { fixType: ['fix_mic'],                  label: '🎤 Microphone Fix'         },
+        'home_quick_20': { fixType: ['fix_camera'],               label: '📷 Camera Fix'             },
+        // ── Software ───────────────────────────────────────────────────────────
+        'home_quick_13': { fixType: ['fix_teams'],                label: '📹 Teams Fix'              },
+        'home_quick_27': { fixType: ['fix_zoom'],                 label: '🖥️ Zoom Fix'               },
+        'home_quick_31': { fixType: ['fix_browser'],              label: '🌐 Browser Fix'            },
+        'home_quick_53': { fixType: ['fix_browser'],              label: '💥 App Crash Fix'          },
+        'home_quick_50': { fixType: ['fix_outlook'],              label: '📧 Outlook Fix'            },
+        'home_quick_51': { fixType: ['fix_onedrive'],             label: '☁️ OneDrive Fix'           },
+        'home_quick_58': { fixType: ['fix_onedrive'],             label: '☁️ OneDrive Storage Fix'   },
+        'home_quick_54': { fixType: ['fix_printer'],              label: '🖨️ Printer Fix'            },
+        // ── Productivity ───────────────────────────────────────────────────────
+        'home_quick_34': { fixType: ['fix_clipboard'],            label: '📋 Copy-Paste Fix'         },
         'home_quick_35': { fixType: ['fix_datetime'],             label: '🕐 Date/Time Fix'         },
+        'home_quick_30': { fixType: ['fix_sleep'],                label: '⚡ Shutdown Fix'           },
+        'home_quick_64': { fixType: ['fix_sleep'],                label: '😴 Sleep Fix'              },
+        // ── Security & Storage ─────────────────────────────────────────────────
         'home_quick_18': { fixType: ['clean_disk', 'clean_temp'], label: '💾 Storage Cleanup'        },
+        'home_quick_19': { fixType: ['fix_virus_scan'],           label: '🦠 Virus Scan'             },
+        'home_quick_57': { fixType: ['fix_virus_scan'],           label: '🛡️ Antivirus Fix'          },
       };
 
       // ── Download Script mapping: 1-click .bat scripts hosted on server ───
@@ -598,6 +627,13 @@ app.listen(PORT, async () => {
         'home_quick_19': { file: 'fix-virus-scan.bat',      label: '🦠 Virus Scan'             },
         'home_quick_57': { file: 'fix-virus-scan.bat',      label: '🛡️ Antivirus Fix'          },
         'home_quick_58': { file: 'fix-onedrive.bat',        label: '☁️ OneDrive Storage Fix'   },
+        // ── Power & Boot ─────────────────────────────────────────────────────
+        'home_quick_2' : { file: 'fix-wont-turn-on.bat',   label: '🔴 Won\'t Turn On Fix'     },
+        'home_quick_5' : { file: 'fix-battery.bat',         label: '🔋 Battery Fix'            },
+        'home_quick_10': { file: 'fix-battery.bat',         label: '🔌 Charging Fix'           },
+        // ── WiFi Password & Website ───────────────────────────────────────────
+        'home_quick_32': { file: 'fix-wifi-password.bat',   label: '🔑 WiFi Password Fix'      },
+        'home_quick_43': { file: 'fix-website-blocked.bat', label: '🌐 Website Fix'            },
       };
 
       // ── Build Home Tab blocks (with collapsible categories) ───────────────
