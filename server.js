@@ -1283,24 +1283,45 @@ app.listen(PORT, async () => {
               const hwBlocks = buildHardwareBlocks(actionId, emp);
               await client.chat.postMessage({ channel: userId, text: '🔧 Hardware Request', blocks: hwBlocks });
 
-              // Auto-create Critical ticket for liquid damage
-              if (actionId === 'home_quick_70' && emp?.empId) {
+              // Auto-create ticket for peripheral replacements and liquid damage
+              const isLiquid2    = actionId === 'home_quick_70';
+              const isMouseRep2  = actionId === 'home_quick_60';
+              const isKeyRep2    = actionId === 'home_quick_61';
+              const isMonRep2    = actionId === 'home_quick_62';
+
+              if ((isLiquid2 || isMouseRep2 || isKeyRep2 || isMonRep2) && emp?.empId) {
                 try {
-                  const Ticket = require('./models/Ticket');
-                  await Ticket.create({
-                    empId      : emp.empId,
-                    empName    : emp.name,
-                    slackUserId: userId,
-                    issue      : `🚨 EMERGENCY: Liquid/Water Damage — ${emp.laptop || 'Laptop'} (S/N: ${emp.laptopSN || 'Unknown'})`,
-                    category   : 'Hardware',
-                    priority   : 'Critical',
-                    status     : 'Open',
-                    source     : 'slack',
-                    floor      : emp.floor,
-                    department : emp.department
+                  const itemLabel = isLiquid2 ? 'Liquid/Water Damage' : isMouseRep2 ? 'Mouse Replacement' : isKeyRep2 ? 'Keyboard Replacement' : 'Monitor Replacement';
+                  const priority2 = isLiquid2 ? 'Critical' : 'Medium';
+                  const issue2    = isLiquid2
+                    ? `EMERGENCY: Liquid/Water Damage — ${emp.laptop || 'Laptop'} (S/N: ${emp.laptopSN || 'Unknown'})`
+                    : `${itemLabel} Request — ${emp.empName} (Floor: ${emp.floor || 'Unknown'})`;
+
+                  const result = await createTicketSlack({
+                    empId: emp.empId, empName: emp.empName, empEmail: emp.email,
+                    empDept: emp.dept, empFloor: emp.floor,
+                    laptop: emp.laptop, laptopSN: emp.laptopSN,
+                    description: issue2, category: 'Hardware', priority: priority2,
+                    source: 'slack', slackUserId: userId
                   });
+
+                  if (result && !result._duplicate) {
+                    const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+                    await client.chat.postMessage({
+                      channel: userId,
+                      text: `Ticket ${result.ticketId} create ho gaya!`,
+                      blocks: [
+                        { type:'section', fields:[
+                          { type:'mrkdwn', text:`*🎫 Ticket Raised:*\n\`${result.ticketId}\`` },
+                          { type:'mrkdwn', text:`*${priEmoji[priority2]||'🟡'} Priority:*\n${priority2}` }
+                        ]},
+                        { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko request bhej di gayi — 1 working day mein respond karenge 🙏` }]}
+                      ]
+                    });
+                    await notifyAdmin(client, result, emp);
+                  }
                 } catch (ticketErr) {
-                  console.error('Liquid damage ticket error:', ticketErr.message);
+                  console.error('Peripheral replacement ticket error:', ticketErr.message);
                 }
               }
               return;
