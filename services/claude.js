@@ -77,7 +77,7 @@ Say warmly: "Koi baat nahi! 😊 Yeh thoda complex lag raha hai. Ticket raise ka
 
 ━━━ TICKET ONLY — NO DIY ━━━
 These always get a ticket (no steps, just friendly redirect):
-- Password reset / account unlock → "Yeh main khud reset kar dunga! 🎫 Type karo: ticket bana do"
+- Google account password reset → Give these steps: 1. Go to myaccount.google.com 2. Click Security tab 3. Under "How you sign in to Google" click Password 4. Enter current password or verify via prompt/fingerprint 5. Set new password. If not working → ticket only
 - VPN setup, new software install → ticket only
 - Windows reinstall, BIOS, hard drive → ticket only
 - Liquid damage → "TURANT laptop band karo! 🚨 IT ko Slack pe message karo"
@@ -201,7 +201,8 @@ Printer (1st attempt): Settings → Bluetooth & devices → Printers → right-c
 Printer (2nd attempt): Restart print spooler: Win+R → services.msc → Print Spooler → Restart → retry printing
 
 🔐 ACCOUNT/SECURITY/STORAGE:
-Password reset: Raise ticket ONLY — IT resets, no self-service
+Google account password reset: Give steps — 1. myaccount.google.com 2. Security tab 3. Click Password under "How you sign in to Google" 4. Enter current password or verify via fingerprint/prompt 5. Set new password. If still not working = ticket
+Windows/laptop login password: Raise ticket ONLY — IT resets
 Storage full: Win+R → cleanmgr → C: → Clean system files → check Recycle Bin + Temp. Also: Win+R → %temp% → Ctrl+A → Delete
 Virus/Malware: Windows Security → Virus scan → Quick Scan → disconnect internet if serious → raise ticket
 Shared drive: Raise ticket — IT grants access, no DIY
@@ -257,7 +258,7 @@ const getKBFallback = (problem) => {
   if (p.includes('outlook') || p.includes('email'))
     return `Outlook fix karo! 📧\nStep 1: Ctrl+Shift+Esc → Outlook process end karo.\nStep 2: Win+R → outlook /safe → Enter.\nStep 3: outlook.office365.com browser mein try karo.\nScript button neeche hai! ⬇️`;
   if (p.includes('password') || p.includes('locked') || p.includes('login'))
-    return `Password reset ke liye IT se contact karo! 🔐\nYeh self-service nahi hai — IT ke paas jaana hoga.\nType karo: *ticket bana do* → IT turant help karega! 🎫`;
+    return `Google account password reset karo! 🔐\nStep 1: myaccount.google.com pe jaao\nStep 2: Security tab click karo\nStep 3: "How you sign in to Google" mein Password click karo\nStep 4: Current password enter karo (ya fingerprint/prompt se verify karo)\nStep 5: Naya password set karo\n\nAgar nahi hua: ticket bana do — IT help karega 🎫`;
   if (p.includes('bluetooth'))
     return `Bluetooth fix karo! 🔵\nStep 1: Settings → Bluetooth → toggle OFF → ON karo.\nStep 2: Device dobara pair karo.\nStep 3: Device Manager → Bluetooth → Disable → Enable.\nScript button neeche hai! ⬇️`;
   if (p.includes('camera') || p.includes('webcam'))
