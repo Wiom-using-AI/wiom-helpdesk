@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Overheating Fix
 color 0C
 cls
@@ -25,7 +20,7 @@ echo  ============================================
 echo    DONE! Laptop ab thanda hona chahiye.
 echo.
 echo    Important: Laptop hard flat surface par
-echo    rakho — bed/sofa par nahi!
+echo    rakho - bed/sofa par nahi!
 echo  ============================================
 echo.
 pause

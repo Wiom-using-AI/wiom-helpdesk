@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Camera Fix
 color 0D
 cls
@@ -16,7 +11,7 @@ echo  [1/3]  Camera privacy permission ON kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Set-ItemProperty -Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam' -Name 'Value' -Value 'Allow' -ErrorAction SilentlyContinue; Write-Host '    Camera privacy: Allowed'"
 echo.
 echo  [2/3]  Camera driver check kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$cam=Get-PnpDevice|Where-Object{$_.Class -eq 'Camera' -or $_.FriendlyName -match 'camera|webcam'}|Select-Object -First 1; if($cam){if($cam.Status -ne 'OK'){Enable-PnpDevice -InstanceId $cam.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Write-Host '    Camera enabled:' $cam.FriendlyName}else{Write-Host '    Camera OK:' $cam.FriendlyName}}else{Write-Host '    Camera device not found — may need driver'}"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$cam=Get-PnpDevice|Where-Object{$_.Class -eq 'Camera' -or $_.FriendlyName -match 'camera|webcam'}|Select-Object -First 1; if($cam){if($cam.Status -ne 'OK'){Enable-PnpDevice -InstanceId $cam.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Write-Host '    Camera enabled:' $cam.FriendlyName}else{Write-Host '    Camera OK:' $cam.FriendlyName}}else{Write-Host '    Camera device not found - may need driver'}"
 echo.
 echo  [3/3]  Windows Camera app khol rahe hain (test)...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Start-Process 'microsoft.windows.camera:'; Write-Host '    Camera app opened for test'"

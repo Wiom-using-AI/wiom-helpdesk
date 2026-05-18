@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Browser Fix
 color 09
 cls
@@ -19,7 +14,7 @@ echo  [2/3]  Chrome/Edge temp files clear kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$paths=@([Environment]::GetFolderPath('LocalApplicationData')+'\Google\Chrome\User Data\Default\Cache',[Environment]::GetFolderPath('LocalApplicationData')+'\Microsoft\Edge\User Data\Default\Cache'); $freed=0; foreach($p in $paths){if(Test-Path $p){$size=(Get-ChildItem $p -Recurse -ErrorAction SilentlyContinue|Measure-Object Length -Sum).Sum; Get-ChildItem $p -ErrorAction SilentlyContinue|Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; $freed+=$size}}; Write-Host '    Cache cleared:' ([Math]::Round($freed/1MB,1)) 'MB freed'"
 echo.
 echo  [3/3]  DNS flush kar rahe hain (sites load hone ke liye)...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "ipconfig /flushdns | Out-Null; Write-Host '    DNS cache flushed — websites fresh load honge'"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "ipconfig /flushdns | Out-Null; Write-Host '    DNS cache flushed - websites fresh load honge'"
 echo.
 echo  ============================================
 echo    DONE! Browser fix kiya.

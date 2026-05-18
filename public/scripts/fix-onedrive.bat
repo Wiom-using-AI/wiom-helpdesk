@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - OneDrive Fix
 color 09
 cls
@@ -16,7 +11,7 @@ echo  [1/3]  OneDrive restart kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$od=Get-Process -Name 'OneDrive' -ErrorAction SilentlyContinue; if($od){Stop-Process -Name 'OneDrive' -Force -ErrorAction SilentlyContinue; Write-Host '    OneDrive stopped'; Start-Sleep -Seconds 3}else{Write-Host '    OneDrive was not running'}; $oneDrivePath=[Environment]::GetFolderPath('LocalApplicationData')+'\Microsoft\OneDrive\OneDrive.exe'; if(Test-Path $oneDrivePath){Start-Process $oneDrivePath; Write-Host '    OneDrive restarted'}else{Write-Host '    Starting from default path...'; Start-Process 'OneDrive.exe' -ErrorAction SilentlyContinue}"
 echo.
 echo  [2/3]  OneDrive sync status check kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 3; $od=Get-Process -Name 'OneDrive' -ErrorAction SilentlyContinue; if($od){Write-Host '    OneDrive is running — sync should resume'}else{Write-Host '    OneDrive restart mein time lag raha hai...'}"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 3; $od=Get-Process -Name 'OneDrive' -ErrorAction SilentlyContinue; if($od){Write-Host '    OneDrive is running - sync should resume'}else{Write-Host '    OneDrive restart mein time lag raha hai...'}"
 echo.
 echo  [3/3]  OneDrive storage status check kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$oneDriveFolder=[Environment]::GetFolderPath('UserProfile')+'\OneDrive'; if(Test-Path $oneDriveFolder){$size=(Get-ChildItem $oneDriveFolder -Recurse -ErrorAction SilentlyContinue|Measure-Object Length -Sum).Sum; Write-Host '    Local OneDrive folder size:' ([Math]::Round($size/1GB,2)) 'GB'}else{Write-Host '    OneDrive folder not found'}; Start-Process 'ms-settings:storagesense'; Write-Host '    Storage settings opened'"

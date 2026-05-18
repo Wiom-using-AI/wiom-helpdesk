@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - SD Card Fix
 color 0E
 cls
@@ -13,7 +8,7 @@ echo    WIOM IT Helpdesk - SD Card Auto-Fix
 echo  ============================================
 echo.
 echo  [1/3]  SD Card detect kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$sd=Get-Disk|Where-Object{$_.BusType -eq 'SD'}; if($sd){Write-Host '    SD Card found:' $sd.FriendlyName $sd.Size/1GB 'GB'}else{Write-Host '    SD Card not detected — check physical card'}"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$sd=Get-Disk|Where-Object{$_.BusType -eq 'SD'}; if($sd){Write-Host '    SD Card found:' $sd.FriendlyName $sd.Size/1GB 'GB'}else{Write-Host '    SD Card not detected - check physical card'}"
 echo.
 echo  [2/3]  Hardware scan kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "pnputil /scan-devices 2>$null; Write-Host '    Hardware scan complete'"

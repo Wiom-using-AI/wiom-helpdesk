@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Virus Scan / Antivirus Fix
 color 0C
 cls
@@ -19,7 +14,7 @@ echo  [2/3]  Windows Defender definitions update kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Update-MpSignature -ErrorAction SilentlyContinue; $mp=Get-MpComputerStatus -ErrorAction SilentlyContinue; if($mp){Write-Host '    Antivirus enabled:' $mp.AntivirusEnabled; Write-Host '    Last scan:' $mp.QuickScanEndTime; Write-Host '    Definitions:' $mp.AntivirusSignatureLastUpdated}else{Write-Host '    Windows Defender status check failed'}"
 echo.
 echo  [3/3]  Suspicious startup entries check kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$safe=@('OneDrive','Teams','Discord','Slack','Zoom','Skype'); $all=Get-CimInstance -ClassName Win32_StartupCommand -ErrorAction SilentlyContinue; $susp=$all|Where-Object{$_.Name -notin $safe -and $_.Location -match 'HKCU|AppData'}; Write-Host '    Startup entries:' $all.Count 'found,'; if($susp.Count -gt 3){Write-Host '    '$susp.Count 'unknown startup apps detected — review manually'}else{Write-Host '    Startup looks clean'}"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$safe=@('OneDrive','Teams','Discord','Slack','Zoom','Skype'); $all=Get-CimInstance -ClassName Win32_StartupCommand -ErrorAction SilentlyContinue; $susp=$all|Where-Object{$_.Name -notin $safe -and $_.Location -match 'HKCU|AppData'}; Write-Host '    Startup entries:' $all.Count 'found,'; if($susp.Count -gt 3){Write-Host '    '$susp.Count 'unknown startup apps detected - review manually'}else{Write-Host '    Startup looks clean'}"
 echo.
 echo  ============================================
 echo    DONE! Virus scan started.
@@ -32,7 +27,7 @@ echo    Suspicious activity agar dikh rahi hai:
 echo    - Pop-ups aane lage hain
 echo    - Browser home page change ho gayi
 echo    - Unknown apps install hue hain
-echo    IMMEDIATELY ticket raise karo — laptop band karo!
+echo    IMMEDIATELY ticket raise karo - laptop band karo!
 echo  ============================================
 echo.
 pause

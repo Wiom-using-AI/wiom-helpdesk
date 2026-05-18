@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Word / Excel Fix
 color 09
 cls
@@ -19,7 +14,7 @@ echo  [2/3]  Office temp files clear kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$paths=@([Environment]::GetFolderPath('LocalApplicationData')+'\Microsoft\Office\16.0\OfficeFileCache',[Environment]::GetFolderPath('Temp')); $freed=0; foreach($p in $paths){if(Test-Path $p){$size=(Get-ChildItem $p -Recurse -ErrorAction SilentlyContinue -Filter '*.tmp'|Measure-Object Length -Sum).Sum; Get-ChildItem $p -Filter '*.tmp' -ErrorAction SilentlyContinue|Remove-Item -Force -ErrorAction SilentlyContinue; $freed+=$size}}; Write-Host '    Office temp files cleared:' ([Math]::Round($freed/1MB,1)) 'MB'"
 echo.
 echo  [3/3]  Office repair option check kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$office=Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* -ErrorAction SilentlyContinue|Where-Object{$_.DisplayName -match 'Microsoft Office|Microsoft 365'}|Select-Object -First 1; if($office){Write-Host '    Office found:' $office.DisplayName; Write-Host '    Version:' $office.DisplayVersion}else{Write-Host '    Microsoft Office not found — may not be installed'}"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$office=Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* -ErrorAction SilentlyContinue|Where-Object{$_.DisplayName -match 'Microsoft Office|Microsoft 365'}|Select-Object -First 1; if($office){Write-Host '    Office found:' $office.DisplayName; Write-Host '    Version:' $office.DisplayVersion}else{Write-Host '    Microsoft Office not found - may not be installed'}"
 echo.
 echo  ============================================
 echo    DONE! Office processes restart kiye.

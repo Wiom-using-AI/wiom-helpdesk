@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Blue Screen / Boot Error Fix
 color 0C
 cls
@@ -16,7 +11,7 @@ echo  [1/3]  Recent crash logs check kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$events=Get-EventLog -LogName System -EntryType Error -Newest 5 -ErrorAction SilentlyContinue; $events|ForEach-Object{Write-Host '   ' $_.TimeGenerated.ToString('dd/MM HH:mm') '-' $_.Message.Substring(0,[Math]::Min(70,$_.Message.Length))}"
 echo.
 echo  [2/3]  System file check kar rahe hain (SFC)...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Write-Host '    Running sfc /scannow... (1-2 min lagega)'; $result=sfc /verifyonly 2>&1; if($result -match 'found') { Write-Host '    Corrupted files found — run: sfc /scannow as Admin' } else { Write-Host '    System files OK' }"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Write-Host '    Running sfc /scannow... (1-2 min lagega)'; $result=sfc /verifyonly 2>&1; if($result -match 'found') { Write-Host '    Corrupted files found - run: sfc /scannow as Admin' } else { Write-Host '    System files OK' }"
 echo.
 echo  [3/3]  Startup apps clean kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$safe=@('svchost','System','Idle','Registry','smss','csrss','wininit','services','lsass','winlogon','dwm'); $c=0; Get-Process|Where-Object{$_.Name -notin $safe -and $_.CPU -gt 30}|Sort-Object CPU -Descending|Select-Object -First 2|ForEach-Object{try{Stop-Process -Id $_.Id -Force;$c++}catch{}}; Write-Host '   '$c 'heavy apps closed'"

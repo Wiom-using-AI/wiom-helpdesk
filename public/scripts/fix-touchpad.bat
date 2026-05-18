@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Touchpad Fix
 color 0B
 cls
@@ -19,7 +14,7 @@ echo  [2/3]  Touchpad driver reset kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$tp=Get-PnpDevice|Where-Object{$_.FriendlyName -match 'touchpad|precision|synaptics|elan' -and $_.Class -eq 'Mouse'}|Select-Object -First 1; if($tp){Disable-PnpDevice -InstanceId $tp.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Start-Sleep 2; Enable-PnpDevice -InstanceId $tp.InstanceId -Confirm:$false -ErrorAction SilentlyContinue; Write-Host '    Touchpad driver reset: '$tp.FriendlyName}else{Write-Host '    Touchpad device: checking manually'}"
 echo.
 echo  [3/3]  Settings open kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Start-Process 'ms-settings:devices-touchpad'; Write-Host '    Touchpad Settings opened — check ON switch'"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Start-Process 'ms-settings:devices-touchpad'; Write-Host '    Touchpad Settings opened - check ON switch'"
 echo.
 echo  ============================================
 echo    DONE! Touchpad settings khuli hain.

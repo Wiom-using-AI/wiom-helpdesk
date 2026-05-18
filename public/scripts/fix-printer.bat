@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Printer Fix
 color 09
 cls
@@ -16,7 +11,7 @@ echo  [1/3]  Print spooler restart kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Stop-Service -Name 'Spooler' -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; Get-ChildItem 'C:\Windows\System32\spool\PRINTERS' -ErrorAction SilentlyContinue|Remove-Item -Force -ErrorAction SilentlyContinue; Start-Service -Name 'Spooler' -ErrorAction SilentlyContinue; Write-Host '    Print Spooler restarted + queue cleared'"
 echo.
 echo  [2/3]  Connected printers check kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$printers=Get-Printer -ErrorAction SilentlyContinue; if($printers){$printers|ForEach-Object{Write-Host '    Printer:' $_.Name '| Status:' $_.PrinterStatus}}else{Write-Host '    No printers found — add printer from Settings'}"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$printers=Get-Printer -ErrorAction SilentlyContinue; if($printers){$printers|ForEach-Object{Write-Host '    Printer:' $_.Name '| Status:' $_.PrinterStatus}}else{Write-Host '    No printers found - add printer from Settings'}"
 echo.
 echo  [3/3]  Printer settings khol rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "Start-Process 'ms-settings:printers'; Write-Host '    Printer Settings opened'"

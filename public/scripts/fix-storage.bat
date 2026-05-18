@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Storage Cleanup
 color 0A
 cls
@@ -13,7 +8,7 @@ echo    WIOM IT Helpdesk - Storage Auto-Cleanup
 echo  ============================================
 echo.
 echo  Laptop ki storage clean kar rahe hain...
-echo  Kuch nahi karna — bas wait karo!
+echo  Kuch nahi karna - bas wait karo!
 echo.
 echo  ============================================
 echo.

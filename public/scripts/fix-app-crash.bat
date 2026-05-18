@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - App Crash Fix
 color 0C
 cls
@@ -30,7 +25,7 @@ echo       (Right-click -> Run as administrator)
 echo    2. App repair karo:
 echo       Settings -> Apps -> [App name] -> Modify/Repair
 echo    3. App reinstall karo (IT se permission leke)
-echo    4. Windows update karo — bug fixes aate hain
+echo    4. Windows update karo - bug fixes aate hain
 echo.
 echo    Agar specific app baar baar crash ho:
 echo  ============================================

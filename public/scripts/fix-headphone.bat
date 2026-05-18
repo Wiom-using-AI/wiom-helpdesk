@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Headphone Fix
 color 0B
 cls
@@ -28,7 +23,7 @@ echo    Steps try karo:
 echo    1. Headphone nikaalo aur dobara lagao
 echo    2. Sound Settings mein Output device check karo
 echo       "Headphones" ya "Speakers" select karo
-echo    3. Volume check karo — mute toh nahi?
+echo    3. Volume check karo - mute toh nahi?
 echo    4. Taskbar speaker icon par right-click ->
 echo       Sound Settings -> Output device change karo
 echo.

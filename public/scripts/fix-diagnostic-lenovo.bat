@@ -1,9 +1,4 @@
-﻿@echo off
-net session >nul 2>&1
-if %errorLevel% == 0 goto :wiom_main
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$p=ConvertTo-SecureString 'Wiom@1234' -AsPlainText -Force;$c=New-Object PSCredential('.\wiom',$p);Start-Process 'cmd.exe' -Credential $c -ArgumentList ('/c '+[char]34+'%~f0'+[char]34) -WindowStyle Normal -Wait"
-exit /b
-:wiom_main
+@echo off
 title WIOM IT Helpdesk - Lenovo Hardware Diagnostic
 color 09
 cls
@@ -13,7 +8,7 @@ echo    WIOM IT Helpdesk - Lenovo Hardware Diagnostic
 echo  ============================================
 echo.
 echo  [1/3]  Lenovo Vantage check/open kar rahe hain...
-powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$lv=Get-Process -Name 'LenovoVantage','Vantage' -ErrorAction SilentlyContinue; if($lv){Write-Host '    Lenovo Vantage already running'}else{try{Start-Process 'lenovovantage:'; Write-Host '    Lenovo Vantage opened via URI'}catch{$paths=@('C:\Program Files (x86)\Lenovo\VantageService\LenovoVantage.exe','C:\Program Files\Lenovo\VantageService\LenovoVantage.exe'); $found=$false; foreach($p in $paths){if(Test-Path $p){Start-Process $p; $found=$true; Write-Host '    Lenovo Vantage opened'; break}}; if(-not $found){Write-Host '    Lenovo Vantage nahi mila — Microsoft Store se install karo'; Start-Process 'ms-windows-store://pdp/?productid=9WZDNCRFJ4MV'; Write-Host '    Microsoft Store opened for Lenovo Vantage'}}}"
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$lv=Get-Process -Name 'LenovoVantage','Vantage' -ErrorAction SilentlyContinue; if($lv){Write-Host '    Lenovo Vantage already running'}else{try{Start-Process 'lenovovantage:'; Write-Host '    Lenovo Vantage opened via URI'}catch{$paths=@('C:\Program Files (x86)\Lenovo\VantageService\LenovoVantage.exe','C:\Program Files\Lenovo\VantageService\LenovoVantage.exe'); $found=$false; foreach($p in $paths){if(Test-Path $p){Start-Process $p; $found=$true; Write-Host '    Lenovo Vantage opened'; break}}; if(-not $found){Write-Host '    Lenovo Vantage nahi mila - Microsoft Store se install karo'; Start-Process 'ms-windows-store://pdp/?productid=9WZDNCRFJ4MV'; Write-Host '    Microsoft Store opened for Lenovo Vantage'}}}"
 echo.
 echo  [2/3]  Lenovo Diagnostics tool check kar rahe hain...
 powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command "$diag=@('C:\Program Files (x86)\Lenovo\Lenovo Diagnostics\ldiagn.exe','C:\Program Files\Lenovo\Lenovo Diagnostics\ldiagn.exe'); $found=$false; foreach($p in $diag){if(Test-Path $p){Start-Process $p; $found=$true; Write-Host '    Lenovo Diagnostics opened'; break}}; if(-not $found){Write-Host '    Lenovo Diagnostics: Vantage app mein hai (Hardware Settings -> Diagnostics)'}"
