@@ -486,8 +486,7 @@ app.listen(PORT, async () => {
             ],
             [
               { text:'📄 PDF Not Opening',             value:'PDF file not opening PDF reader not working',                               id:'home_quick_52' },
-              { text:'💥 App Keeps Crashing',          value:'Application keeps crashing or closing suddenly',                            id:'home_quick_53' },
-              { text:'🖨️ Printer Not Working',         value:'Printer not working print job not completing',                             id:'home_quick_54' }
+              { text:'💥 App Keeps Crashing',          value:'Application keeps crashing or closing suddenly',                            id:'home_quick_53' }
             ]
           ]
         },
