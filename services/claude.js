@@ -46,6 +46,11 @@ Output ONLY the reply text — no JSON, no markdown code blocks, just the reply.
 ❌ "Laptop ki samasya ka samadhan" — BANNED, never write problem name as heading
 ❌ "Yeh steps follow karein:" — BANNED, just give the steps
 ❌ Any line that just restates the user's problem — BANNED
+❌ "Ticket raised successfully" — BANNED. You cannot create tickets. Only the system can.
+❌ "Ticket submitted/created/raised" — BANNED. Never pretend to create a ticket.
+❌ Showing fake Ticket IDs like "WIOM-TKT-XXXX" — BANNED. You don't know the ticket ID.
+❌ "Steps tried:" section in ticket message — BANNED. Just ask for "ha" confirmation.
+❌ "IT Team will contact you soon" after ticket — BANNED. System sends this automatically.
 
 ━━━ "NAHI HUAA" RULE — MOST IMPORTANT ━━━
 When user says ANY of these: "nahi huaa", "nahi hua", "nahi chala", "kaam nahi kiya", "still not working", "nahi ho raha", "NAHI HUAA", "problem abhi bhi hai":
@@ -91,10 +96,15 @@ If problem unclear — ask ONE short question only. No steps yet.
 Hindi: "Exactly kya ho raha hai — [option A] ya [option B]?"
 English: "What exactly is happening — [option A] or [option B]?"
 
-━━━ TICKET RULE ━━━
-Try solving first. After 2 failed attempts ask: "Ticket raise karein? Ha/Nahi"
-Ticket only when user confirms. Format: {"category":"Software","priority":"Medium","description":"brief issue","steps":["tried step"]}
-Priority: Critical=floor down, High=can't work, Medium=partial, Low=minor.
+━━━ TICKET RULE — CRITICAL ━━━
+NEVER say "Ticket raised successfully", "Ticket created", "Ticket submitted", or show fake Ticket IDs.
+NEVER pretend to create a ticket. You CANNOT create tickets — only the SYSTEM can.
+
+After 2 failed attempts, say EXACTLY this (nothing more):
+"Koi baat nahi! 😊 IT team ko ticket bhejte hain. Type karo: *ha* ✅"
+
+When user types *ha* — the SYSTEM creates the ticket automatically. You just ask for confirmation.
+Priority: Critical=work stopped, High=can't work, Medium=partial work, Low=minor.
 
 ━━━ ALWAYS TICKET — NO DIY ━━━
 Never give self-fix steps for:
@@ -415,12 +425,24 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     if (!hasEmoji) reply = reply.slice(stepIdx).trim();
   }
 
-  // Check if ticket needed (simple keyword check on raw text)
-  const shouldCreateTicket = /ticket\s*(bana|raise|create|chahiye)/i.test(reply) && reply.includes('ticket');
+  // Check if ticket needed — detect when AI suggests raising a ticket
+  // Match: "ticket bhejte hain", "ha type karo", "ticket raise karein", etc.
+  const shouldCreateTicket = reply.includes('ticket') && (
+    /ticket\s*(bana|raise|create|chahiye|bhejte)/i.test(reply) ||
+    /type\s*karo[:\s]*\*?ha\*?/i.test(reply) ||
+    /ticket\s*(raise\s*karein|banana|karein)/i.test(reply)
+  );
+
+  // Safety: If AI hallucinated "raised successfully" — strip it and set shouldCreateTicket
+  const isHallucinated = /ticket\s*(raised|created|submitted)\s*successfully/i.test(reply);
+  if (isHallucinated) {
+    // Replace with proper confirmation prompt
+    reply = 'Koi baat nahi! 😊 IT team ko ticket bhejte hain. Type karo: *ha* ✅';
+  }
 
   return {
     reply             : reply || getKBFallback('generic'),
-    shouldCreateTicket: shouldCreateTicket,
+    shouldCreateTicket: shouldCreateTicket || isHallucinated,
     ticketData        : null
   };
 };
