@@ -1222,8 +1222,9 @@ app.listen(PORT, async () => {
       homeQuickActions.forEach(actionId => {
         slackApp.action(actionId, async ({ body, ack, client }) => {
           await ack();
-          const userId   = body.user.id;
-          const problem  = body.actions[0].value;
+          const userId    = body.user.id;
+          const problem   = body.actions[0].value;
+          const triggerId = body.trigger_id;
           try {
             const emp     = await Employee.findOne({ slackUserId: userId });
             const empInfo = {
@@ -1236,39 +1237,51 @@ app.listen(PORT, async () => {
               floor  : emp?.floor
             };
 
-            // ── Email Password Reset — fixed steps ────────────────────────
+            // ── Email Password Reset — modal ────────────────────────────────
             if (actionId === 'home_quick_59') {
-              await client.chat.postMessage({
-                channel: userId,
-                text: 'Email Password Reset',
-                blocks: [
-                  { type: 'section', text: { type: 'mrkdwn', text:
-                    '*📧 Email / Google Account Password Reset*\n\n' +
-                    '*Yeh steps follow karo:*\n' +
-                    '1. *Google Account page* pe jaao: myaccount.google.com\n' +
-                    '2. *Security* tab click karo\n' +
-                    '3. *"How you sign in to Google"* section mein *Password* click karo\n' +
-                    '4. Current password enter karo _(ya fingerprint / screen prompt se verify karo)_\n' +
-                    '5. Naya password set karo\n\n' +
-                    '_Agar nahi hua to ticket banao — IT help karega_ 🎫'
-                  }},
-                  { type: 'actions', elements: [{
-                    type: 'button',
-                    text: { type: 'plain_text', text: '🎫 Ticket Banao', emoji: true },
-                    style: 'danger',
-                    action_id: 'raise_ticket_email_pwd',
-                    value: 'email_password_reset'
-                  }]}
-                ]
+              await client.views.open({
+                trigger_id: triggerId,
+                view: {
+                  type: 'modal',
+                  title: { type: 'plain_text', text: '📧 Password Reset', emoji: true },
+                  close: { type: 'plain_text', text: 'Wapas Jaao', emoji: true },
+                  blocks: [
+                    { type: 'section', text: { type: 'mrkdwn', text:
+                      '*📧 Email / Google Account Password Reset*\n\n' +
+                      '*Yeh steps follow karo:*\n' +
+                      '1. *Google Account page* pe jaao: myaccount.google.com\n' +
+                      '2. *Security* tab click karo\n' +
+                      '3. *"How you sign in to Google"* mein *Password* click karo\n' +
+                      '4. Current password enter karo _(ya fingerprint / prompt se verify karo)_\n' +
+                      '5. Naya password set karo\n\n' +
+                      '_Agar nahi hua to neeche ticket banao_ 🎫'
+                    }},
+                    { type: 'divider' },
+                    { type: 'actions', elements: [{
+                      type: 'button',
+                      text: { type: 'plain_text', text: '🎫 Ticket Banao — IT Help Chahiye', emoji: true },
+                      style: 'danger',
+                      action_id: 'raise_ticket_email_pwd',
+                      value: 'email_password_reset'
+                    }]}
+                  ]
+                }
               });
               return;
             }
 
-            // ── Hardware Replacement / Emergency — special flow ────────────
+            // ── Hardware Replacement / Emergency — modal ────────────────────
             if (HARDWARE_SPECIAL_IDS.has(actionId)) {
               const hwBlocks = buildHardwareBlocks(actionId, emp);
-              await client.chat.postMessage({ channel: userId, text: '🔧 Hardware Request', blocks: hwBlocks });
-
+              await client.views.open({
+                trigger_id: triggerId,
+                view: {
+                  type: 'modal',
+                  title: { type: 'plain_text', text: '🔧 Hardware Request', emoji: true },
+                  close: { type: 'plain_text', text: 'Wapas Jaao', emoji: true },
+                  blocks: hwBlocks
+                }
+              });
               // Auto-create ticket ONLY for liquid damage emergency
               if (actionId === 'home_quick_70' && emp?.empId) {
                 try {
@@ -1288,102 +1301,107 @@ app.listen(PORT, async () => {
               return;
             }
 
-            // ── Start a fresh conversation session and SAVE it ────────────
-            // This ensures that when user says "nahi huaa", the DM handler
-            // loads this session and Claude sees full history → no repeats.
+            // ── Open loading modal immediately (trigger_id valid only 3 sec) ──
+            const loadingView = await client.views.open({
+              trigger_id: triggerId,
+              view: {
+                type: 'modal',
+                title: { type: 'plain_text', text: '🛠️ IT Help', emoji: true },
+                close: { type: 'plain_text', text: 'Wapas Jaao', emoji: true },
+                blocks: [
+                  { type: 'section', text: { type: 'mrkdwn', text: '🤖 _Soch raha hoon... ek second!_\n_Aapki problem analyze ho rahi hai..._' }}
+                ]
+              }
+            });
+
+            // ── Get AI response ─────────────────────────────────────────────
             await Conversation.updateMany(
               { slackUserId: userId, source: 'slack', resolved: false },
               { resolved: true }
             );
             const conv = await getSlackSession(userId, empInfo);
             conv.messages.push({ role: 'user', content: problem });
-
             const claudeSvc = require('./services/claude');
             const { reply } = await claudeSvc.chat(conv.messages, empInfo);
-
-            // Save both the user message and AI reply to MongoDB
             conv.messages.push({ role: 'assistant', content: reply });
             await conv.save();
             const formattedReply = formatForSlack(reply);
 
-            const blocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}];
+            // ── Build response blocks for modal ─────────────────────────────
+            const modalBlocks = [
+              { type: 'section', text: { type: 'mrkdwn', text: formattedReply }}
+            ];
 
-            // ── One-Click Download Script (always shown for fixable problems) ──
             const scriptConfig = SCRIPT_MAP[actionId];
             if (scriptConfig) {
               const scriptUrl = `${PORTAL}/scripts/${scriptConfig.file}`;
-              blocks.push({ type: 'divider' });
-              blocks.push({
-                type: 'section',
-                text: { type: 'mrkdwn', text: `*⚡ Ya ek click mein automatic fix karo:*\n_IT ka safe script hai — download karo, double-click karo, kaam ho jayega!_` }
-              });
-              blocks.push({
+              modalBlocks.push({ type: 'divider' });
+              modalBlocks.push({ type: 'section', text: { type: 'mrkdwn', text: '*⚡ Ya ek click mein automatic fix karo:*\n_Download karo, double-click karo, kaam ho jayega!_' }});
+              modalBlocks.push({
                 type: 'actions',
-                elements: [
-                  {
-                    type     : 'button',
-                    text     : { type: 'plain_text', text: `⬇️ ${scriptConfig.label} — Auto Script`, emoji: true },
-                    style    : 'primary',
-                    url      : scriptUrl,
-                    action_id: `dl_${actionId}`
-                  }
-                ]
+                elements: [{
+                  type: 'button',
+                  text: { type: 'plain_text', text: `⬇️ ${scriptConfig.label} — Auto Script`, emoji: true },
+                  style: 'primary',
+                  url: scriptUrl,
+                  action_id: `dl_${actionId}`
+                }]
               });
             }
 
-            // ── Agent Auto-Fix button (only if agent registered + online) ────
             const fixConfig = AUTO_FIX_MAP[actionId];
             if (fixConfig && emp?.laptopSN && emp?.agentRegistered) {
               const isOnline = emp.agentLastSeen && (Date.now() - new Date(emp.agentLastSeen)) < 120000;
               if (isOnline) {
                 const fixValue = `${fixConfig.fixType.join(',')}|${fixConfig.label}|${emp.laptopSN}`;
-                blocks.push({
+                modalBlocks.push({
                   type: 'actions',
-                  elements: [
-                    {
-                      type     : 'button',
-                      text     : { type: 'plain_text', text: `⚡ IT Agent se Auto-Fix (Background)`, emoji: true },
-                      action_id: 'autofix_request',
-                      value    : fixValue,
-                      confirm  : {
-                        title  : { type: 'plain_text', text: 'Auto-Fix Confirm?' },
-                        text   : { type: 'mrkdwn', text: `*${fixConfig.label}* automatically run hogi aapke laptop par silently.\n30 seconds mein result milega! 🔧` },
-                        confirm: { type: 'plain_text', text: 'Haan, Fix Karo!' },
-                        deny   : { type: 'plain_text', text: 'Nahi' }
-                      }
+                  elements: [{
+                    type: 'button',
+                    text: { type: 'plain_text', text: '⚡ IT Agent se Auto-Fix', emoji: true },
+                    action_id: 'autofix_request',
+                    value: fixValue,
+                    confirm: {
+                      title: { type: 'plain_text', text: 'Auto-Fix Confirm?' },
+                      text: { type: 'mrkdwn', text: `*${fixConfig.label}* automatically run hogi aapke laptop par.\n30 seconds mein result milega! 🔧` },
+                      confirm: { type: 'plain_text', text: 'Haan, Fix Karo!' },
+                      deny: { type: 'plain_text', text: 'Nahi' }
                     }
-                  ]
+                  }]
                 });
               }
             }
 
-            await client.chat.postMessage({ channel: userId, text: reply, blocks });
+            modalBlocks.push({ type: 'divider' });
+            modalBlocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: '_Nahi hua? DM mein apni problem type karo — AI follow-up karega 💬_' }]});
+
+            // ── Update modal with actual response ───────────────────────────
+            await client.views.update({
+              view_id: loadingView.view.id,
+              view: {
+                type: 'modal',
+                title: { type: 'plain_text', text: '🛠️ IT Help', emoji: true },
+                close: { type: 'plain_text', text: 'Wapas Jaao', emoji: true },
+                blocks: modalBlocks
+              }
+            });
+
           } catch (err) {
             console.error('Home quick action error:', err.message, err.stack);
-            // Always send fallback — user should never see silence
             try {
               const scriptConfig = SCRIPT_MAP[actionId];
               const fallbackBlocks = [
-                { type: 'section', text: { type: 'mrkdwn', text: `*Aapki problem note kar li: "${problem?.slice(0,80)}"*\n\nAI abhi available nahi hai, lekin neeche script se try karo ya DM mein type karo! 🔧` }}
+                { type: 'section', text: { type: 'mrkdwn', text: `*Aapki problem note kar li!*\n\nAI abhi available nahi — script se try karo ya DM mein type karo 🔧` }}
               ];
               if (scriptConfig) {
                 const scriptUrl = `${PORTAL}/scripts/${scriptConfig.file}`;
                 fallbackBlocks.push({ type: 'divider' });
-                fallbackBlocks.push({
-                  type: 'actions',
-                  elements: [{
-                    type: 'button',
-                    text: { type: 'plain_text', text: `⬇️ ${scriptConfig.label} — Auto Script`, emoji: true },
-                    style: 'primary',
-                    url: scriptUrl,
-                    action_id: `dl_fallback_${actionId}`
-                  }]
-                });
+                fallbackBlocks.push({ type: 'actions', elements: [{ type: 'button', text: { type: 'plain_text', text: `⬇️ ${scriptConfig.label} — Auto Script`, emoji: true }, style: 'primary', url: scriptUrl, action_id: `dl_fallback_${actionId}` }] });
               }
-              fallbackBlocks.push({ type: 'section', text: { type: 'mrkdwn', text: '_Ya DM mein apni problem type karo — AI wahan bhi help karega!_ 💬' }});
-              await client.chat.postMessage({ channel: userId, text: 'Aapki problem note kar li! Script download karo ya DM mein type karo.', blocks: fallbackBlocks });
+              fallbackBlocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: '_Ya DM mein apni problem type karo — AI wahan bhi help karega 💬_' }]});
+              await client.chat.postMessage({ channel: userId, text: 'Aapki problem note kar li!', blocks: fallbackBlocks });
             } catch (msgErr) {
-              console.error('Fallback message failed too:', msgErr.message);
+              console.error('Fallback message failed:', msgErr.message);
             }
           }
         });
