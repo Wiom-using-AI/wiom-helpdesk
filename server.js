@@ -394,117 +394,86 @@ app.listen(PORT, async () => {
       // ── Category definitions ──────────────────────────────────────────────
       const CATEGORIES = [
         {
-          key: 'laptop', label: '💻 Laptop — Hardware',
+          key: 'laptop', label: '💻 Laptop & Display',
           rows: [
             [
-              { text:'💻 Laptop Very Slow',          value:'My laptop is very slow, what should I do',                                    id:'home_quick_1'  },
-              { text:'💻 Laptop Won\'t Turn On',      value:'My laptop is not turning on at all',                                          id:'home_quick_2'  },
-              { text:'💙 Blue Screen Error',          value:'Getting blue screen of death BSOD error',                                     id:'home_quick_3'  },
-              { text:'🌡️ Laptop Overheating',         value:'My laptop is overheating getting very hot',                                   id:'home_quick_4'  },
-              { text:'🔋 Battery Not Charging',       value:'Laptop battery drains quickly or not charging at all',                        id:'home_quick_5'  }
+              { text:'💻 Laptop Very Slow',         value:'My laptop is very slow what should I do',                                   id:'home_quick_1'  },
+              { text:'💻 Won\'t Turn On',            value:'My laptop is not turning on at all',                                        id:'home_quick_2'  },
+              { text:'💙 Blue Screen Error',         value:'Getting blue screen of death BSOD error',                                   id:'home_quick_3'  },
+              { text:'🌡️ Overheating',              value:'My laptop is overheating getting very hot',                                  id:'home_quick_4'  },
+              { text:'🔋 Battery Not Charging',      value:'Laptop battery drains quickly or not charging at all',                      id:'home_quick_5'  }
             ],
             [
-              { text:'🖥️ Screen Black / No Display',  value:'Laptop screen is black cannot see anything',                                 id:'home_quick_6'  },
-              { text:'⌨️ Keyboard Not Working',        value:'Laptop keyboard not working some keys not responding',                       id:'home_quick_7'  },
-              { text:'🖱️ Mouse / Touchpad Issue',      value:'Mouse or touchpad is not working not responding',                            id:'home_quick_8'  },
-              { text:'🔌 Charger Not Working',         value:'Laptop charger not working laptop not charging',                             id:'home_quick_10' },
-              { text:'❄️ Laptop Freezing / Hanging',   value:'Laptop is hanging freezing not responding at all',                           id:'home_quick_21' }
+              { text:'🖥️ Screen Black',             value:'Laptop screen is black cannot see anything',                                id:'home_quick_6'  },
+              { text:'⌨️ Keyboard Not Working',      value:'Laptop keyboard not working some keys not responding',                      id:'home_quick_7'  },
+              { text:'🖱️ Touchpad Issue',            value:'Mouse or touchpad is not working not responding',                          id:'home_quick_8'  },
+              { text:'❄️ Freezing / Hanging',        value:'Laptop is hanging freezing not responding at all',                          id:'home_quick_21' },
+              { text:'⚡ Sudden Shutdown',           value:'Laptop shuts down suddenly without any warning',                            id:'home_quick_30' }
             ],
             [
-              { text:'⚡ Sudden Shutdown',             value:'Laptop shuts down suddenly without any warning',                             id:'home_quick_30' },
-              { text:'🔁 Stuck in Restart Loop',       value:'Laptop is stuck in restart loop keeps restarting again and again',           id:'home_quick_33' },
-              { text:'💨 Fan Making Loud Noise',       value:'Laptop fan is making very loud noise constantly',                            id:'home_quick_38' },
-              { text:'📺 Screen Flickering',           value:'Laptop screen is flickering blinking or flashing',                          id:'home_quick_39' },
-              { text:'🔵 Bluetooth Not Working',       value:'Laptop bluetooth not working cannot connect any device',                     id:'home_quick_40' }
+              { text:'🔊 No Sound / Audio',          value:'No sound coming from laptop speakers audio not working',                   id:'home_quick_9'  },
+              { text:'🎤 Microphone Not Working',    value:'Microphone not working voice not going in Teams or calls',                  id:'home_quick_16' },
+              { text:'📷 Camera Not Working',        value:'Laptop camera not working in Teams Zoom or Meet',                          id:'home_quick_20' },
+              { text:'🎧 Headphone Not Working',     value:'Headphone or earphone not connecting or no sound',                         id:'home_quick_46' },
+              { text:'🖥️ External Monitor',          value:'External monitor not detected screen not showing on it',                   id:'home_quick_17' }
             ],
             [
-              { text:'🔌 USB Port Not Working',        value:'USB port not working pendrive or device not detected',                       id:'home_quick_63' },
-              { text:'😴 Won\'t Wake from Sleep',      value:'Laptop not waking up from sleep or hibernate screen stays black',            id:'home_quick_64' },
-              { text:'🚫 Boot Error / Won\'t Start',   value:'Laptop not starting getting boot error Windows not loading',                 id:'home_quick_65' },
-              { text:'👆 Touchscreen Not Working',     value:'Laptop touchscreen not working touch not responding at all',                 id:'home_quick_66' },
-              { text:'🖥️ HDMI / External Display',     value:'HDMI cable not working external monitor or TV not connecting',              id:'home_quick_67' }
+              { text:'📺 Screen Flickering',         value:'Laptop screen is flickering blinking or flashing',                         id:'home_quick_39' },
+              { text:'🔵 Bluetooth Not Working',     value:'Laptop bluetooth not working cannot connect any device',                    id:'home_quick_40' },
+              { text:'🔌 USB Not Working',           value:'USB port not working pendrive or device not detected',                     id:'home_quick_63' },
+              { text:'😴 Won\'t Wake from Sleep',    value:'Laptop not waking up from sleep screen stays black',                       id:'home_quick_64' },
+              { text:'💨 Fan Loud Noise',            value:'Laptop fan is making very loud noise constantly',                          id:'home_quick_38' }
             ],
             [
-              { text:'💳 SD Card Not Detected',        value:'SD card or memory card not being detected in laptop',                        id:'home_quick_68' },
-              { text:'🔐 Fingerprint Not Working',     value:'Fingerprint reader not working cannot login with fingerprint',               id:'home_quick_69' },
-              { text:'💧 Liquid / Water Damage',       value:'Liquid or water spilled on laptop needs immediate attention',                id:'home_quick_70', style:'danger' },
-              { text:'🐌 Slow After Windows Update',   value:'Laptop became very slow after a Windows update',                            id:'home_quick_71' },
-              { text:'🔡 Caps Lock / Keys Stuck',      value:'Caps Lock always stays on or keyboard keys are stuck',                      id:'home_quick_72' }
+              { text:'💧 Liquid Damage',             value:'Liquid or water spilled on laptop needs immediate attention',               id:'home_quick_70', style:'danger' },
+              { text:'🔁 Stuck Restarting',          value:'Laptop is stuck in restart loop keeps restarting again and again',          id:'home_quick_33', style:'danger' },
+              { text:'🚫 Boot Error',                value:'Laptop not starting getting boot error Windows not loading',               id:'home_quick_65', style:'danger' },
+              { text:'🔡 Caps Lock Stuck',           value:'Caps Lock always stays on or keyboard keys are stuck',                     id:'home_quick_72' },
+              { text:'🐌 Slow After Update',         value:'Laptop became very slow after a Windows update',                           id:'home_quick_71' }
             ]
           ]
         },
         {
-          key: 'network', label: '🌐 Network / Internet',
+          key: 'network', label: '🌐 Network & Internet',
           rows: [
             [
-              { text:'📶 WiFi Not Working',            value:'WiFi not working no internet connection',                                    id:'home_quick_11' },
-              { text:'🐢 Internet Very Slow',          value:'Internet speed is very slow browsing not working properly',                  id:'home_quick_29' },
-              { text:'🔑 WiFi Password',               value:'Need WiFi password or forgot WiFi password',                                 id:'home_quick_32' },
-              { text:'📡 Mobile Hotspot Issue',        value:'Mobile hotspot not connecting to laptop',                                    id:'home_quick_26' },
-            ],
-            [
-              { text:'🚫 Website Blocked / Not Opening',value:'Website not opening showing blocked or access denied',                      id:'home_quick_43' },
-              { text:'📶 WiFi Keeps Disconnecting',    value:'WiFi keeps disconnecting again and again dropping connection',               id:'home_quick_44' },
-              { text:'📧 Emails Not Loading',          value:'Email inbox not loading emails not coming or not sending',                   id:'home_quick_45' }
+              { text:'📶 WiFi Not Working',          value:'WiFi not working no internet connection',                                   id:'home_quick_11' },
+              { text:'🐢 Internet Very Slow',        value:'Internet speed is very slow browsing not working properly',                 id:'home_quick_29' },
+              { text:'🔑 WiFi Password',             value:'Need WiFi password or forgot WiFi password',                               id:'home_quick_32' },
+              { text:'🚫 Website Not Opening',       value:'Website not opening showing blocked or access denied',                     id:'home_quick_43' },
+              { text:'📶 WiFi Disconnecting',        value:'WiFi keeps disconnecting again and again dropping connection',              id:'home_quick_44' }
             ]
           ]
         },
         {
-          key: 'audio', label: '🎤 Audio / Video / Display',
+          key: 'software', label: '💿 Software, Apps & Account',
           rows: [
             [
-              { text:'🔊 No Sound / Audio',            value:'No sound coming from laptop speakers audio not working',                    id:'home_quick_9'  },
-              { text:'🔇 Speaker Not Working',         value:'Laptop speaker not working no audio output at all',                         id:'home_quick_28' },
-              { text:'🎤 Microphone Not Working',      value:'Microphone not working voice not going in Teams or calls',                   id:'home_quick_16' },
-              { text:'📷 Camera Not Working',          value:'Laptop camera not working in Teams Zoom or Meet',                           id:'home_quick_20' },
-              { text:'🖥️ External Monitor Not Working',value:'External monitor not detected screen not showing on it',                    id:'home_quick_17' }
+              { text:'📹 Teams Not Working',         value:'Microsoft Teams not working call dropping or not opening',                  id:'home_quick_13' },
+              { text:'🖥️ Zoom Not Working',          value:'Zoom not working cannot join meeting or Zoom crashing',                    id:'home_quick_27' },
+              { text:'📧 Outlook Not Working',       value:'Outlook not opening or cannot send receive emails',                        id:'home_quick_50' },
+              { text:'🌐 Browser Slow / Crashing',   value:'Browser is slow crashing or freezing Chrome Firefox Edge',                 id:'home_quick_31' },
+              { text:'📄 Word / Excel Not Opening',  value:'Microsoft Word or Excel not opening showing error',                        id:'home_quick_23' }
             ],
             [
-              { text:'🎧 Headphone Not Working',       value:'Headphone or earphone not connecting or no sound in headphone',             id:'home_quick_46' },
-              { text:'📽️ Projector Not Connecting',    value:'Laptop not connecting to projector presentation not showing',               id:'home_quick_47' },
-              { text:'🖥️ Wrong Screen Resolution',     value:'Screen resolution is wrong everything looks too big or too small',          id:'home_quick_48' },
-              { text:'📹 Video Call Quality Issue',    value:'Video call not working properly video lagging or freezing',                  id:'home_quick_49' }
-            ]
-          ]
-        },
-        {
-          key: 'software', label: '💿 Software / Apps',
-          rows: [
-            [
-              { text:'📹 Microsoft Teams Issue',       value:'Microsoft Teams not working call dropping or not opening',                   id:'home_quick_13' },
-              { text:'🖥️ Zoom Not Working',            value:'Zoom not working cannot join meeting or Zoom crashing',                     id:'home_quick_27' },
-              { text:'📄 Word / Excel Not Opening',    value:'Microsoft Word or Excel not opening showing error',                         id:'home_quick_23' },
-              { text:'🌐 Browser Crashing / Slow',     value:'Browser is slow crashing or freezing Chrome Firefox Edge',                  id:'home_quick_31' },
-              { text:'🔄 Windows Update Problem',      value:'Windows update not installing stuck or causing issues',                     id:'home_quick_24' }
+              { text:'☁️ OneDrive Not Syncing',      value:'OneDrive not syncing files not going to cloud',                            id:'home_quick_51' },
+              { text:'🔄 Windows Update Problem',    value:'Windows update not installing stuck or causing issues',                    id:'home_quick_24' },
+              { text:'📄 PDF Not Opening',           value:'PDF file not opening PDF reader not working',                              id:'home_quick_52' },
+              { text:'💥 App Keeps Crashing',        value:'Application keeps crashing or closing suddenly',                           id:'home_quick_53' },
+              { text:'📋 Copy Paste Not Working',    value:'Copy paste not working Ctrl+C Ctrl+V not responding',                     id:'home_quick_34' }
             ],
             [
-              { text:'🔐 Software Installation',       value:'Need to install new software need IT permission',                           id:'home_quick_25' },
-              { text:'📋 Copy Paste Not Working',      value:'Copy paste not working Ctrl+C Ctrl+V not responding',                       id:'home_quick_34' },
-              { text:'🕐 Wrong Date / Time',           value:'Laptop showing wrong date or time needs to be corrected',                   id:'home_quick_35' },
-              { text:'📧 Outlook Not Working',         value:'Outlook not opening or cannot send receive emails',                         id:'home_quick_50' },
-              { text:'☁️ OneDrive Not Syncing',        value:'OneDrive not syncing files not going to cloud',                             id:'home_quick_51' }
+              { text:'🔑 Password Reset',            value:'Forgot password need to reset it',                                         id:'home_quick_14' },
+              { text:'📧 Email Password Reset',      value:'Forgot email account password need to reset it',                           id:'home_quick_59' },
+              { text:'💾 Storage / Disk Full',       value:'Laptop storage full C drive is full cannot save files',                    id:'home_quick_18' },
+              { text:'🦠 Virus Suspected',           value:'Laptop may have virus showing ads or behaving strangely',                  id:'home_quick_19' },
+              { text:'🔒 Account Locked',            value:'Account is locked cannot login to Windows or any account',                 id:'home_quick_55' }
             ],
             [
-              { text:'📄 PDF Not Opening',             value:'PDF file not opening PDF reader not working',                               id:'home_quick_52' },
-              { text:'💥 App Keeps Crashing',          value:'Application keeps crashing or closing suddenly',                            id:'home_quick_53' }
-            ]
-          ]
-        },
-        {
-          key: 'account', label: '🔐 Account / Security / Storage',
-          rows: [
-            [
-              { text:'🔑 Password Reset',              value:'Forgot password need to reset it',                                          id:'home_quick_14' },
-              { text:'💾 Storage / Disk Full',         value:'Laptop storage full C drive is full cannot save files',                     id:'home_quick_18' },
-              { text:'🦠 Virus / Malware Suspected',   value:'Laptop may have virus showing ads or behaving strangely',                   id:'home_quick_19' },
-              { text:'🔗 Shared Drive Access Issue',   value:'Cannot access shared drive or network folder',                              id:'home_quick_36' },
-              { text:'🔒 Account Locked / Login Issue',value:'Account is locked cannot login to Windows or any account',                  id:'home_quick_55' }
-            ],
-            [
-              { text:'📱 2FA / OTP Not Received',      value:'Two factor authentication OTP not coming cannot login',                     id:'home_quick_56' },
-              { text:'🛡️ Antivirus Alert / Warning',   value:'Antivirus showing alert or has blocked something',                         id:'home_quick_57' },
-              { text:'☁️ OneDrive Storage Full',       value:'OneDrive storage is full files not syncing',                               id:'home_quick_58' },
-              { text:'📧 Email Password Reset',        value:'Forgot email account password need to reset it',                           id:'home_quick_59' }
+              { text:'📱 2FA / OTP Issue',           value:'Two factor authentication OTP not coming cannot login',                    id:'home_quick_56' },
+              { text:'🛡️ Antivirus Alert',           value:'Antivirus showing alert or has blocked something',                        id:'home_quick_57' },
+              { text:'☁️ OneDrive Storage Full',     value:'OneDrive storage is full files not syncing',                               id:'home_quick_58' },
+              { text:'🕐 Wrong Date / Time',         value:'Laptop showing wrong date or time needs to be corrected',                  id:'home_quick_35' }
             ]
           ]
         },
@@ -512,10 +481,10 @@ app.listen(PORT, async () => {
           key: 'replacement', label: '🔄 Replacement / Upgrade',
           rows: [
             [
-              { text:'🔄 Laptop Replacement Request',  value:'Laptop needs replacement old one is damaged or not working',  id:'home_quick_37', style:'danger' },
-              { text:'🖱️ Mouse Replacement Request',   value:'Mouse is damaged need a replacement',                        id:'home_quick_60' },
-              { text:'⌨️ Keyboard Replacement Request', value:'Keyboard is damaged need a replacement',                     id:'home_quick_61' },
-              { text:'🖥️ New Monitor Request',         value:'Need a new monitor or monitor replacement',                  id:'home_quick_62' }
+              { text:'🔄 Laptop Replacement',        value:'Laptop needs replacement old one is damaged or not working',               id:'home_quick_37', style:'danger' },
+              { text:'🖱️ Mouse Replacement',         value:'Mouse is damaged need a replacement',                                      id:'home_quick_60' },
+              { text:'⌨️ Keyboard Replacement',      value:'Keyboard is damaged need a replacement',                                   id:'home_quick_61' },
+              { text:'🖥️ New Monitor Request',       value:'Need a new monitor or monitor replacement',                               id:'home_quick_62' }
             ]
           ]
         }
@@ -641,36 +610,74 @@ app.listen(PORT, async () => {
         const laptop   = emp?.laptop    || null;
         const laptopSN = emp?.laptopSN  || null;
         const dept     = emp?.department || null;
-        const floor    = emp?.floor     || null;
         const openCnt  = myTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length;
 
         const statEmoji = { 'Open':'🟡', 'In Progress':'🔵', 'Resolved':'✅', 'Closed':'⚫' };
         const priEmoji2 = { 'Critical':'🔴', 'High':'🟠', 'Medium':'🟡', 'Low':'🟢' };
 
+        // Time-based greeting
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+
         const blocks = [
           { type:'header', text:{ type:'plain_text', text:'🛠️ WIOM IT Helpdesk', emoji:true }},
-          { type:'section', text:{ type:'mrkdwn', text:`*Namaste ${name}!* 👋\nKoi bhi IT problem ho — neeche category dabao. AI turant jawab dega! 🤖\n_Tip: \`/ticket\` type karo seedha ticket banane ke liye_` }},
+
+          // Greeting + tip
+          { type:'section', text:{ type:'mrkdwn', text:
+            `*${greeting}, ${name}! 👋*\nKoi bhi IT problem ho — neeche se category select karo ya *DM mein seedha type karo* apni problem.\n_Ticket banane ke liye: \`/ticket\` type karo_`
+          }},
+
+          // Employee info + ticket status
           ...(emp ? [{
             type:'section', fields:[
               { type:'mrkdwn', text:`🪪 *Emp ID:* \`${emp.empId}\`` },
               { type:'mrkdwn', text:`🏢 *Dept:* ${dept||'—'}` },
               { type:'mrkdwn', text:`💻 *Laptop:* ${laptop||'—'}` },
-              { type:'mrkdwn', text:`🔢 *Serial No:* \`${laptopSN||'—'}\`` },
-              { type:'mrkdwn', text:`🎫 *Open Tickets:* ${openCnt > 0 ? `*${openCnt}*` : '✅ None'}` }
+              { type:'mrkdwn', text:`🔢 *S/N:* \`${laptopSN||'—'}\`` },
+              { type:'mrkdwn', text: openCnt > 0
+                ? `🎫 *Open Tickets:* *${openCnt} open* ⚠️`
+                : `🎫 *Tickets:* ✅ Koi open ticket nahi` }
             ]
           }] : []),
+
           { type:'divider' },
-          { type:'section', text:{ type:'mrkdwn', text:'*🎫 Mera Last Ticket*' }},
-          ...(myTickets.length === 0
-            ? [{ type:'section', text:{ type:'mrkdwn', text:'✅ Koi ticket nahi — sab theek chal raha hai!' }}]
-            : [{ type:'section', text:{ type:'mrkdwn', text:
-                `${statEmoji[myTickets[0].status]||'🟡'} *${myTickets[0].ticketId}* — ${(myTickets[0].description||'').substring(0,50)}${(myTickets[0].description||'').length>50?'...':''}\n` +
-                `${priEmoji2[myTickets[0].priority]||'🟡'} ${myTickets[0].priority} · ${myTickets[0].category||'Other'} · _${Math.floor((Date.now()-new Date(myTickets[0].createdAt))/3600000)}h ago_` +
-                (myTickets[0].resolution ? `\n✅ *Resolved:* ${myTickets[0].resolution.substring(0,60)}` : '')
-              }}]
-          ),
+
+          // Last ticket status
+          ...(myTickets.length > 0 ? [
+            { type:'section', text:{ type:'mrkdwn', text:
+              `*📋 Last Ticket:* ${statEmoji[myTickets[0].status]||'🟡'} \`${myTickets[0].ticketId}\` — ${(myTickets[0].description||'').substring(0,50)}...\n` +
+              `${priEmoji2[myTickets[0].priority]||'🟡'} ${myTickets[0].priority} · ${myTickets[0].category||'Other'} · _${Math.floor((Date.now()-new Date(myTickets[0].createdAt))/3600000)}h ago_` +
+              (myTickets[0].resolution ? `\n✅ *Resolved:* ${myTickets[0].resolution.substring(0,60)}` : '')
+            }}
+          ] : []),
+
           { type:'divider' },
-          { type:'section', text:{ type:'mrkdwn', text:'*⚡ Quick Self-Service — category click karo to expand:*' }}
+
+          // Most Used - always visible
+          { type:'section', text:{ type:'mrkdwn', text:'*⚡ Sabse Zyada Use Hone Wale — Turant Click Karo:*' }},
+          {
+            type: 'actions',
+            elements: [
+              { type:'button', text:{ type:'plain_text', text:'📶 WiFi Problem', emoji:true },        value:'WiFi not working no internet connection',                    action_id:'home_quick_11', style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'💻 Laptop Slow', emoji:true },          value:'My laptop is very slow what should I do',                   action_id:'home_quick_1',  style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'📹 Teams Issue', emoji:true },          value:'Microsoft Teams not working call dropping or not opening',  action_id:'home_quick_13', style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'📧 Outlook Problem', emoji:true },      value:'Outlook not opening or cannot send receive emails',         action_id:'home_quick_50', style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'🔑 WiFi Password', emoji:true },        value:'Need WiFi password or forgot WiFi password',               action_id:'home_quick_32' }
+            ]
+          },
+          {
+            type: 'actions',
+            elements: [
+              { type:'button', text:{ type:'plain_text', text:'🔋 Battery Issue', emoji:true },        value:'Laptop battery drains quickly or not charging at all',      action_id:'home_quick_5'  },
+              { type:'button', text:{ type:'plain_text', text:'🔑 Password Reset', emoji:true },       value:'Forgot password need to reset it',                         action_id:'home_quick_14' },
+              { type:'button', text:{ type:'plain_text', text:'💾 Storage Full', emoji:true },         value:'Laptop storage full C drive is full cannot save files',     action_id:'home_quick_18' },
+              { type:'button', text:{ type:'plain_text', text:'📷 Camera Problem', emoji:true },       value:'Laptop camera not working in Teams Zoom or Meet',          action_id:'home_quick_20' },
+              { type:'button', text:{ type:'plain_text', text:'🎤 Mic Not Working', emoji:true },      value:'Microphone not working voice not going in Teams or calls',  action_id:'home_quick_16' }
+            ]
+          },
+
+          { type:'divider' },
+          { type:'section', text:{ type:'mrkdwn', text:'*📂 Sab Problems — Category click karo to expand:*\n_Ya seedha DM mein apni problem type karo — AI help karega!_ 💬' }}
         ];
 
         for (const cat of CATEGORIES) {
@@ -698,9 +705,20 @@ app.listen(PORT, async () => {
                 }))
               });
             }
-            blocks.push({ type: 'divider' });
           }
         }
+
+        // SOS at bottom
+        blocks.push({ type:'divider' });
+        blocks.push({
+          type:'actions',
+          elements:[{
+            type:'button', style:'danger',
+            text:{ type:'plain_text', text:'🆘 IT Emergency / SOS', emoji:true },
+            action_id:'home_sos', value:'sos'
+          }]
+        });
+
         return blocks;
       };
 
