@@ -619,9 +619,10 @@ app.listen(PORT, async () => {
         const statEmoji = { 'Open':'🟡', 'In Progress':'🔵', 'Resolved':'✅', 'Closed':'⚫' };
         const priEmoji2 = { 'Critical':'🔴', 'High':'🟠', 'Medium':'🟡', 'Low':'🟢' };
 
-        // Time-based greeting
-        const hour = new Date().getHours();
-        const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+        // Time-based greeting — IST (UTC+5:30)
+        const _now = new Date();
+        const istHour = Math.floor((_now.getUTCHours() * 60 + _now.getUTCMinutes() + 330) / 60) % 24;
+        const greeting = istHour < 12 ? 'Good Morning' : istHour < 17 ? 'Good Afternoon' : 'Good Evening';
 
         const blocks = [
           { type:'header', text:{ type:'plain_text', text:'🛠️ WIOM IT Helpdesk', emoji:true }},
@@ -688,26 +689,16 @@ app.listen(PORT, async () => {
         for (const cat of CATEGORIES) {
           const isExpanded = expandedSet.has(cat.key);
           const arrow = isExpanded ? '▼' : '▶';
-          const totalBtns = cat.rows.reduce((s, r) => s + r.length, 0);
-
           blocks.push({
             type: 'actions',
             elements: [{
               type: 'button',
-              text: { type: 'plain_text', text: `${arrow}  ${cat.label}  (${totalBtns})`, emoji: true },
+              text: { type: 'plain_text', text: `${arrow}  ${cat.label}`, emoji: true },
               action_id: `cat_toggle_${cat.key}`,
               value: cat.key,
               ...(cat.style ? { style: cat.style } : {})
             }]
           });
-
-          // Show description as context text under header
-          if (cat.desc) {
-            blocks.push({
-              type: 'context',
-              elements: [{ type: 'mrkdwn', text: `_${cat.desc}_` }]
-            });
-          }
 
           if (isExpanded) {
             for (const row of cat.rows) {
