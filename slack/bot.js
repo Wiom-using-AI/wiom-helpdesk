@@ -1,4 +1,4 @@
-require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+﻿require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const { App }  = require('@slack/bolt');
 const axios    = require('axios') || require('https');
 const claudeSvc= require('../services/claude');
@@ -6,7 +6,7 @@ const emailSvc = require('../services/email');
 
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:3000';
 
-// ── Init Slack Bolt App ───────────────────────────────────────────────────────
+// â”€â”€ Init Slack Bolt App â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const app = new App({
   token        : process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -14,7 +14,7 @@ const app = new App({
   appToken     : process.env.SLACK_APP_TOKEN        // xapp-... token
 });
 
-// ── In-memory session store (per Slack user) ──────────────────────────────────
+// â”€â”€ In-memory session store (per Slack user) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const sessions = {};   // { slackUserId: { sessionId, empId, empName, messages[] } }
 
 const getSession = (userId) => sessions[userId] || null;
@@ -23,7 +23,7 @@ const setSession = (userId, data) => {
   sessions[userId] = { ...sessions[userId], ...data };
 };
 
-// ── Helper: Lookup employee by Slack user ID ──────────────────────────────────
+// â”€â”€ Helper: Lookup employee by Slack user ID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const lookupEmployee = async (slackUserId, client) => {
   try {
     // Get Slack profile
@@ -47,32 +47,32 @@ const lookupEmployee = async (slackUserId, client) => {
   }
 };
 
-// ── /helpdesk Slash Command ───────────────────────────────────────────────────
+// â”€â”€ /helpdesk Slash Command â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.command('/helpdesk', async ({ command, ack, client, respond }) => {
   await ack();
 
   const userId  = command.user_id;
   const text    = command.text?.trim() || '';
 
-  // /helpdesk reset — clear session
+  // /helpdesk reset â€” clear session
   if (text === 'reset') {
     delete sessions[userId];
-    await respond({ text: '🔄 Session reset! Ab nayi baat shuru karo.', response_type: 'ephemeral' });
+    await respond({ text: 'ðŸ”„ Session reset! Ab nayi baat shuru karo.', response_type: 'ephemeral' });
     return;
   }
 
-  // /helpdesk status — show my tickets
+  // /helpdesk status â€” show my tickets
   if (text === 'status') {
     const session = getSession(userId);
     if (!session?.empId) {
-      await respond({ text: '❌ Pehle koi problem batao: `/helpdesk wifi nahi chal raha`', response_type: 'ephemeral' });
+      await respond({ text: 'âŒ Pehle koi problem batao: `/helpdesk wifi nahi chal raha`', response_type: 'ephemeral' });
       return;
     }
     await showMyTickets(userId, session.empId, respond, client);
     return;
   }
 
-  // /helpdesk — no text
+  // /helpdesk â€” no text
   if (!text) {
     await respond({
       response_type: 'ephemeral',
@@ -81,7 +81,7 @@ app.command('/helpdesk', async ({ command, ack, client, respond }) => {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: '*🛠 WIOM IT Helpdesk* — Namaste!\n\nAapki problem batao, main solve karne ki koshish karoonga:\n\n`/helpdesk wifi nahi chal raha`\n`/helpdesk outlook open nahi ho raha`\n`/helpdesk laptop bahut slow hai`\n`/helpdesk printer kaam nahi kar raha`\n\n*Other commands:*\n`/helpdesk status` — Mere tickets dekho\n`/helpdesk reset` — Nayi baat shuru karo'
+            text: '*ðŸ›  WIOM IT Helpdesk* â€” Namaste!\n\nAapki problem batao, main solve karne ki koshish karoonga:\n\n`/helpdesk wifi nahi chal raha`\n`/helpdesk outlook open nahi ho raha`\n`/helpdesk laptop bahut slow hai`\n`/helpdesk printer kaam nahi kar raha`\n\n*Other commands:*\n`/helpdesk status` â€” Mere tickets dekho\n`/helpdesk reset` â€” Nayi baat shuru karo'
           }
         }
       ]
@@ -90,7 +90,7 @@ app.command('/helpdesk', async ({ command, ack, client, respond }) => {
   }
 
   // Show typing indicator
-  await respond({ text: '🤖 _Soch raha hoon... ek second..._', response_type: 'ephemeral' });
+  await respond({ text: 'ðŸ¤– _Soch raha hoon... ek second..._', response_type: 'ephemeral' });
 
   // Lookup employee
   const emp = await lookupEmployee(userId, client);
@@ -116,7 +116,7 @@ app.command('/helpdesk', async ({ command, ack, client, respond }) => {
     const blocks = [
       {
         type: 'section',
-        text: { type: 'mrkdwn', text: `*🤖 WIOM IT Helpdesk*\n\n${reply}` }
+        text: { type: 'mrkdwn', text: `*ðŸ¤– WIOM IT Helpdesk*\n\n${reply}` }
       }
     ];
 
@@ -142,12 +142,12 @@ app.command('/helpdesk', async ({ command, ack, client, respond }) => {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `✅ *Ticket Create Ho Gaya!*\n` +
-                  `🎫 *ID:* \`${ticketRes.ticketId}\`\n` +
-                  `📋 *Category:* ${ticketRes.category}\n` +
-                  `🔴 *Priority:* ${ticketRes.priority}\n` +
-                  `⏱ *SLA:* ${ticketRes.slaHours} hours\n\n` +
-                  `ADMIN_EMAIL Kumar ko alert kar diya gaya hai. Woh jald hi aapki madad karenge! 🙏`
+            text: `âœ… *Ticket Create Ho Gaya!*\n` +
+                  `ðŸŽ« *ID:* \`${ticketRes.ticketId}\`\n` +
+                  `ðŸ“‹ *Category:* ${ticketRes.category}\n` +
+                  `ðŸ”´ *Priority:* ${ticketRes.priority}\n` +
+                  `â± *SLA:* ${ticketRes.slaHours} hours\n\n` +
+                  `ADMIN_EMAIL Kumar ko alert kar diya gaya hai. Woh jald hi aapki madad karenge! ðŸ™`
           }
         });
         // Send ADMIN_EMAIL a DM alert
@@ -161,14 +161,14 @@ app.command('/helpdesk', async ({ command, ack, client, respond }) => {
         elements: [
           {
             type     : 'button',
-            text     : { type: 'plain_text', text: '✅ Problem solve ho gayi' },
+            text     : { type: 'plain_text', text: 'âœ… Problem solve ho gayi' },
             style    : 'primary',
             action_id: 'resolved_self',
             value    : JSON.stringify({ userId, ticketId: null })
           },
           {
             type     : 'button',
-            text     : { type: 'plain_text', text: '🎫 Ticket Raise Karo' },
+            text     : { type: 'plain_text', text: 'ðŸŽ« Ticket Raise Karo' },
             style    : 'danger',
             action_id: 'raise_ticket',
             value    : JSON.stringify({ userId, issue: text, empId: emp.empId, empName: emp.empName })
@@ -182,13 +182,13 @@ app.command('/helpdesk', async ({ command, ack, client, respond }) => {
   } catch (err) {
     console.error('Slack /helpdesk error:', err);
     await respond({
-      text         : '❌ Kuch error aa gaya. IT Helpdesk se Slack pe contact karo',
+      text         : 'âŒ Kuch error aa gaya. IT Helpdesk se Slack pe contact karo',
       response_type: 'ephemeral'
     });
   }
 });
 
-// ── Button: Problem Resolved ──────────────────────────────────────────────────
+// â”€â”€ Button: Problem Resolved â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.action('resolved_self', async ({ ack, body, respond }) => {
   await ack();
   const userId = body.user.id;
@@ -197,11 +197,11 @@ app.action('resolved_self', async ({ ack, body, respond }) => {
   await respond({
     response_type: 'ephemeral',
     replace_original: true,
-    text: '🎉 *Bahut badiya!* Problem solve ho gayi. Agar koi aur problem ho toh `/helpdesk` type karo. Have a productive day! 💪'
+    text: 'ðŸŽ‰ *Bahut badiya!* Problem solve ho gayi. Agar koi aur problem ho toh `/helpdesk` type karo. Have a productive day! ðŸ’ª'
   });
 });
 
-// ── Button: Raise Ticket ──────────────────────────────────────────────────────
+// â”€â”€ Button: Raise Ticket â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.action('raise_ticket', async ({ ack, body, respond, client }) => {
   await ack();
 
@@ -220,7 +220,7 @@ app.action('raise_ticket', async ({ ack, body, respond, client }) => {
     empDept: emp.dept,
     slackUserId: userId,
     slackChannelId: body.channel?.id,
-    description: issue || 'IT Issue — reported via Slack',
+    description: issue || 'IT Issue â€” reported via Slack',
     category: 'Other',
     priority: 'Medium',
     source  : 'slack',
@@ -233,13 +233,13 @@ app.action('raise_ticket', async ({ ack, body, respond, client }) => {
     await respond({
       response_type: 'ephemeral',
       replace_original: true,
-      text: `✅ *Ticket ${ticket.ticketId} create ho gaya!*\nADMIN_EMAIL Kumar ko alert kar diya. Woh jald aapki madad karenge. 🙏`
+      text: `âœ… *Ticket ${ticket.ticketId} create ho gaya!*\nADMIN_EMAIL Kumar ko alert kar diya. Woh jald aapki madad karenge. ðŸ™`
     });
     await notifyADMIN_EMAIL(client, ticket, { empId, empName }, body.channel?.id);
   }
 });
 
-// ── DM: Any direct message to bot ────────────────────────────────────────────
+// â”€â”€ DM: Any direct message to bot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.message(async ({ message, client, say }) => {
   if (message.bot_id || message.subtype) return; // Skip bot messages
 
@@ -273,7 +273,7 @@ app.message(async ({ message, client, say }) => {
       });
       if (ticket) {
         await say({
-          text     : `🎫 *Ticket ${ticket.ticketId}* create ho gaya! ADMIN_EMAIL ko alert kar diya. Priority: *${ticket.priority}*, SLA: *${ticket.slaHours}h*`,
+          text     : `ðŸŽ« *Ticket ${ticket.ticketId}* create ho gaya! ADMIN_EMAIL ko alert kar diya. Priority: *${ticket.priority}*, SLA: *${ticket.slaHours}h*`,
           thread_ts: message.ts
         });
         await notifyADMIN_EMAIL(client, ticket, emp, message.channel);
@@ -281,11 +281,11 @@ app.message(async ({ message, client, say }) => {
     }
   } catch (err) {
     console.error('DM handler error:', err);
-    await say({ text: '❌ Kuch error aa gaya. IT Helpdesk se Slack pe contact karo', thread_ts: message.ts });
+    await say({ text: 'âŒ Kuch error aa gaya. IT Helpdesk se Slack pe contact karo', thread_ts: message.ts });
   }
 });
 
-// ── Helper: Create ticket via API ─────────────────────────────────────────────
+// â”€â”€ Helper: Create ticket via API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const createTicket = async (data) => {
   try {
     const res = await fetch(`${API_BASE}/api/tickets`, {
@@ -301,13 +301,13 @@ const createTicket = async (data) => {
   }
 };
 
-// ── Helper: Notify ADMIN_EMAIL via Slack DM ────────────────────────────────────────
+// â”€â”€ Helper: Notify ADMIN_EMAIL via Slack DM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const notifyADMIN_EMAIL = async (client, ticket, emp, channelId) => {
   try {
     const ADMIN_EMAILId = process.env.ADMIN_EMAIL_SLACK_ID;
     if (!ADMIN_EMAILId) return;
 
-    const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+    const priEmoji = { Critical:'ðŸ”´', High:'ðŸŸ ', Medium:'ðŸŸ¡', Low:'ðŸŸ¢' };
 
     await client.chat.postMessage({
       channel: ADMIN_EMAILId,
@@ -316,7 +316,7 @@ const notifyADMIN_EMAIL = async (client, ticket, emp, channelId) => {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `${priEmoji[ticket.priority]||'🟡'} *Naya Ticket: ${ticket.ticketId}*\n\n` +
+            text: `${priEmoji[ticket.priority]||'ðŸŸ¡'} *Naya Ticket: ${ticket.ticketId}*\n\n` +
                   `*Employee:* ${emp.empName} (${emp.empId})\n` +
                   `*Issue:* ${ticket.description}\n` +
                   `*Priority:* ${ticket.priority} | *SLA:* ${ticket.slaHours}h\n` +
@@ -328,14 +328,14 @@ const notifyADMIN_EMAIL = async (client, ticket, emp, channelId) => {
           elements: [
             {
               type     : 'button',
-              text     : { type: 'plain_text', text: '✅ Mark Resolved' },
+              text     : { type: 'plain_text', text: 'âœ… Mark Resolved' },
               style    : 'primary',
               action_id: 'admin_resolve',
               value    : ticket.ticketId
             },
             {
               type     : 'button',
-              text     : { type: 'plain_text', text: '💬 Reply to Employee' },
+              text     : { type: 'plain_text', text: 'ðŸ’¬ Reply to Employee' },
               action_id: 'admin_reply',
               value    : JSON.stringify({ ticketId: ticket.ticketId, slackUserId: ticket.slackUserId })
             }
@@ -348,7 +348,7 @@ const notifyADMIN_EMAIL = async (client, ticket, emp, channelId) => {
   }
 };
 
-// ── Admin: Mark Resolved ──────────────────────────────────────────────────────
+// â”€â”€ Admin: Mark Resolved â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.action('admin_resolve', async ({ ack, body, client, respond }) => {
   await ack();
   const ticketId = body.actions[0].value;
@@ -366,14 +366,14 @@ app.action('admin_resolve', async ({ ack, body, client, respond }) => {
     await respond({
       response_type   : 'ephemeral',
       replace_original: false,
-      text            : `✅ *${ticketId}* mark as resolved!`
+      text            : `âœ… *${ticketId}* mark as resolved!`
     });
   } catch (err) {
-    await respond({ text: `❌ Error: ${err.message}`, response_type: 'ephemeral' });
+    await respond({ text: `âŒ Error: ${err.message}`, response_type: 'ephemeral' });
   }
 });
 
-// ── Show my tickets ───────────────────────────────────────────────────────────
+// â”€â”€ Show my tickets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const showMyTickets = async (userId, empId, respond, client) => {
   try {
     const res  = await fetch(`${API_BASE}/api/tickets?empId=${empId}`);
@@ -381,32 +381,33 @@ const showMyTickets = async (userId, empId, respond, client) => {
     const tickets = (data.tickets || []).slice(0, 5);
 
     if (!tickets.length) {
-      await respond({ text: '📭 Aapka koi ticket nahi hai abhi.', response_type: 'ephemeral' });
+      await respond({ text: 'ðŸ“­ Aapka koi ticket nahi hai abhi.', response_type: 'ephemeral' });
       return;
     }
 
-    const priEmoji = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
-    const stEmoji  = { Open:'⏳', 'In Progress':'🔧', Resolved:'✅', Closed:'🔒' };
+    const priEmoji = { Critical:'ðŸ”´', High:'ðŸŸ ', Medium:'ðŸŸ¡', Low:'ðŸŸ¢' };
+    const stEmoji  = { Open:'â³', 'In Progress':'ðŸ”§', Resolved:'âœ…', Closed:'ðŸ”’' };
 
     const ticketList = tickets.map(t =>
-      `${stEmoji[t.status]||'⏳'} *${t.ticketId}* — ${t.category} (${priEmoji[t.priority]||'🟡'}${t.priority})\n` +
+      `${stEmoji[t.status]||'â³'} *${t.ticketId}* â€” ${t.category} (${priEmoji[t.priority]||'ðŸŸ¡'}${t.priority})\n` +
       `   ${t.description?.substring(0,60)}...`
     ).join('\n\n');
 
     await respond({
       response_type: 'ephemeral',
-      text: `*🎫 Aapke Recent Tickets:*\n\n${ticketList}`
+      text: `*ðŸŽ« Aapke Recent Tickets:*\n\n${ticketList}`
     });
   } catch (err) {
-    await respond({ text: '❌ Tickets load nahi hue. Try again.', response_type: 'ephemeral' });
+    await respond({ text: 'âŒ Tickets load nahi hue. Try again.', response_type: 'ephemeral' });
   }
 };
 
-// ── Start Bot ─────────────────────────────────────────────────────────────────
+// â”€â”€ Start Bot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 (async () => {
   const port = process.env.SLACK_PORT || 3001;
   await app.start(port);
-  console.log(`\n🤖 WIOM Slack Bot running!`);
-  console.log(`⚡ Socket Mode — no public URL needed`);
-  console.log(`📋 Commands: /helpdesk | DM the bot\n`);
+  console.log(`\nðŸ¤– WIOM Slack Bot running!`);
+  console.log(`âš¡ Socket Mode â€” no public URL needed`);
+  console.log(`ðŸ“‹ Commands: /helpdesk | DM the bot\n`);
 })();
+
