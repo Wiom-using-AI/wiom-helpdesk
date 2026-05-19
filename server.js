@@ -657,31 +657,6 @@ app.listen(PORT, async () => {
           ] : []),
 
           { type:'divider' },
-
-          // Most Used - always visible
-          { type:'section', text:{ type:'mrkdwn', text:'*⚡ Sabse Zyada Use Hone Wale — Turant Click Karo:*' }},
-          {
-            type: 'actions',
-            elements: [
-              { type:'button', text:{ type:'plain_text', text:'📶 WiFi Problem',    emoji:true }, value:'WiFi not working no internet connection',                   action_id:'home_quick_11', style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'💻 Laptop Slow',     emoji:true }, value:'My laptop is very slow what should I do',                  action_id:'home_quick_1',  style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'📹 Teams Issue',     emoji:true }, value:'Microsoft Teams not working call dropping or not opening', action_id:'home_quick_13', style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'📧 Outlook Problem', emoji:true }, value:'Outlook not opening or cannot send receive emails',        action_id:'home_quick_50', style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'🔑 WiFi Password',   emoji:true }, value:'Need WiFi password or forgot WiFi password',              action_id:'home_quick_32', style:'primary' }
-            ]
-          },
-          {
-            type: 'actions',
-            elements: [
-              { type:'button', text:{ type:'plain_text', text:'🔋 Battery Issue',   emoji:true }, value:'Laptop battery drains quickly or not charging at all',     action_id:'home_quick_5',  style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'🔑 Password Reset',  emoji:true }, value:'Forgot password need to reset it',                        action_id:'home_quick_14', style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'💾 Storage Full',    emoji:true }, value:'Laptop storage full C drive is full cannot save files',   action_id:'home_quick_18', style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'📷 Camera Problem',  emoji:true }, value:'Laptop camera not working in Teams Zoom or Meet',         action_id:'home_quick_20', style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'🎤 Mic Not Working', emoji:true }, value:'Microphone not working voice not going in Teams or calls', action_id:'home_quick_16', style:'primary' }
-            ]
-          },
-
-          { type:'divider' },
           { type:'section', text:{ type:'mrkdwn', text:'*📂 Apni Category Choose Karo:*' }},
           { type:'context', elements:[{ type:'mrkdwn', text:'_Category button click karo → expand hogi → apna problem select karo • Ya seedha DM mein type karo 💬_' }]}
         ];
