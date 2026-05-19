@@ -398,32 +398,32 @@ app.listen(PORT, async () => {
           desc: 'Slow laptop • Screen • Keyboard • Audio • Camera • USB • Bluetooth aur zyada',
           rows: [
             [
-              { text:'💻 Laptop Very Slow',         value:'My laptop is very slow what should I do',                                   id:'home_quick_1'  },
+              { text:'💻 Laptop Slow',              value:'My laptop is very slow what should I do',                                   id:'home_quick_1'  },
               { text:'💻 Won\'t Turn On',            value:'My laptop is not turning on at all',                                        id:'home_quick_2'  },
-              { text:'💙 Blue Screen Error',         value:'Getting blue screen of death BSOD error',                                   id:'home_quick_3'  },
+              { text:'💙 Blue Screen',               value:'Getting blue screen of death BSOD error',                                   id:'home_quick_3'  },
               { text:'🌡️ Overheating',              value:'My laptop is overheating getting very hot',                                  id:'home_quick_4'  },
-              { text:'🔋 Battery Not Charging',      value:'Laptop battery drains quickly or not charging at all',                      id:'home_quick_5'  }
+              { text:'🔋 Battery Issue',             value:'Laptop battery drains quickly or not charging at all',                      id:'home_quick_5'  }
             ],
             [
               { text:'🖥️ Screen Black',             value:'Laptop screen is black cannot see anything',                                id:'home_quick_6'  },
-              { text:'⌨️ Keyboard Not Working',      value:'Laptop keyboard not working some keys not responding',                      id:'home_quick_7'  },
+              { text:'⌨️ Keyboard Issue',            value:'Laptop keyboard not working some keys not responding',                      id:'home_quick_7'  },
               { text:'🖱️ Touchpad Issue',            value:'Mouse or touchpad is not working not responding',                          id:'home_quick_8'  },
               { text:'❄️ Freezing / Hanging',        value:'Laptop is hanging freezing not responding at all',                          id:'home_quick_21' },
               { text:'⚡ Sudden Shutdown',           value:'Laptop shuts down suddenly without any warning',                            id:'home_quick_30' }
             ],
             [
-              { text:'🔊 No Sound / Audio',          value:'No sound coming from laptop speakers audio not working',                   id:'home_quick_9'  },
-              { text:'🎤 Microphone Not Working',    value:'Microphone not working voice not going in Teams or calls',                  id:'home_quick_16' },
-              { text:'📷 Camera Not Working',        value:'Laptop camera not working in Teams Zoom or Meet',                          id:'home_quick_20' },
-              { text:'🎧 Headphone Not Working',     value:'Headphone or earphone not connecting or no sound',                         id:'home_quick_46' },
+              { text:'🔊 No Sound',                  value:'No sound coming from laptop speakers audio not working',                   id:'home_quick_9'  },
+              { text:'🎤 Mic Not Working',           value:'Microphone not working voice not going in Teams or calls',                  id:'home_quick_16' },
+              { text:'📷 Camera Issue',              value:'Laptop camera not working in Teams Zoom or Meet',                          id:'home_quick_20' },
+              { text:'🎧 Headphone Issue',           value:'Headphone or earphone not connecting or no sound',                         id:'home_quick_46' },
               { text:'🖥️ External Monitor',          value:'External monitor not detected screen not showing on it',                   id:'home_quick_17' }
             ],
             [
               { text:'📺 Screen Flickering',         value:'Laptop screen is flickering blinking or flashing',                         id:'home_quick_39' },
-              { text:'🔵 Bluetooth Not Working',     value:'Laptop bluetooth not working cannot connect any device',                    id:'home_quick_40' },
+              { text:'🔵 Bluetooth Issue',           value:'Laptop bluetooth not working cannot connect any device',                    id:'home_quick_40' },
               { text:'🔌 USB Not Working',           value:'USB port not working pendrive or device not detected',                     id:'home_quick_63' },
-              { text:'😴 Won\'t Wake from Sleep',    value:'Laptop not waking up from sleep screen stays black',                       id:'home_quick_64' },
-              { text:'💨 Fan Loud Noise',            value:'Laptop fan is making very loud noise constantly',                          id:'home_quick_38' }
+              { text:'😴 Sleep / Wake Issue',        value:'Laptop not waking up from sleep screen stays black',                       id:'home_quick_64' },
+              { text:'💨 Fan Noise',                 value:'Laptop fan is making very loud noise constantly',                          id:'home_quick_38' }
             ],
             [
               { text:'💧 Liquid Damage',             value:'Liquid or water spilled on laptop needs immediate attention',               id:'home_quick_70', style:'danger' },
@@ -452,30 +452,30 @@ app.listen(PORT, async () => {
           desc: 'Teams • Zoom • Outlook • Password reset • Virus • Account locked • OneDrive',
           rows: [
             [
-              { text:'📹 Teams Not Working',         value:'Microsoft Teams not working call dropping or not opening',                  id:'home_quick_13' },
-              { text:'🖥️ Zoom Not Working',          value:'Zoom not working cannot join meeting or Zoom crashing',                    id:'home_quick_27' },
-              { text:'📧 Outlook Not Working',       value:'Outlook not opening or cannot send receive emails',                        id:'home_quick_50' },
-              { text:'🌐 Browser Slow / Crashing',   value:'Browser is slow crashing or freezing Chrome Firefox Edge',                 id:'home_quick_31' },
-              { text:'📄 Word / Excel Not Opening',  value:'Microsoft Word or Excel not opening showing error',                        id:'home_quick_23' }
+              { text:'📹 Teams Issue',               value:'Microsoft Teams not working call dropping or not opening',                  id:'home_quick_13' },
+              { text:'🖥️ Zoom Issue',                value:'Zoom not working cannot join meeting or Zoom crashing',                    id:'home_quick_27' },
+              { text:'📧 Outlook Issue',             value:'Outlook not opening or cannot send receive emails',                        id:'home_quick_50' },
+              { text:'🌐 Browser Issue',             value:'Browser is slow crashing or freezing Chrome Firefox Edge',                 id:'home_quick_31' },
+              { text:'📄 Word / Excel Issue',        value:'Microsoft Word or Excel not opening showing error',                        id:'home_quick_23' }
             ],
             [
-              { text:'☁️ OneDrive Not Syncing',      value:'OneDrive not syncing files not going to cloud',                            id:'home_quick_51' },
-              { text:'🔄 Windows Update Problem',    value:'Windows update not installing stuck or causing issues',                    id:'home_quick_24' },
+              { text:'☁️ OneDrive Sync Issue',       value:'OneDrive not syncing files not going to cloud',                            id:'home_quick_51' },
+              { text:'🔄 Windows Update Issue',      value:'Windows update not installing stuck or causing issues',                    id:'home_quick_24' },
               { text:'📄 PDF Not Opening',           value:'PDF file not opening PDF reader not working',                              id:'home_quick_52' },
-              { text:'💥 App Keeps Crashing',        value:'Application keeps crashing or closing suddenly',                           id:'home_quick_53' },
-              { text:'📋 Copy Paste Not Working',    value:'Copy paste not working Ctrl+C Ctrl+V not responding',                     id:'home_quick_34' }
+              { text:'💥 App Crashing',              value:'Application keeps crashing or closing suddenly',                           id:'home_quick_53' },
+              { text:'📋 Copy Paste Issue',          value:'Copy paste not working Ctrl+C Ctrl+V not responding',                     id:'home_quick_34' }
             ],
             [
               { text:'🔑 Password Reset',            value:'Forgot password need to reset it',                                         id:'home_quick_14' },
-              { text:'📧 Email Password Reset',      value:'Forgot email account password need to reset it',                           id:'home_quick_59' },
-              { text:'💾 Storage / Disk Full',       value:'Laptop storage full C drive is full cannot save files',                    id:'home_quick_18' },
+              { text:'📧 Email Password',            value:'Forgot email account password need to reset it',                           id:'home_quick_59' },
+              { text:'💾 Storage Full',              value:'Laptop storage full C drive is full cannot save files',                    id:'home_quick_18' },
               { text:'🦠 Virus Suspected',           value:'Laptop may have virus showing ads or behaving strangely',                  id:'home_quick_19' },
               { text:'🔒 Account Locked',            value:'Account is locked cannot login to Windows or any account',                 id:'home_quick_55' }
             ],
             [
               { text:'📱 2FA / OTP Issue',           value:'Two factor authentication OTP not coming cannot login',                    id:'home_quick_56' },
               { text:'🛡️ Antivirus Alert',           value:'Antivirus showing alert or has blocked something',                        id:'home_quick_57' },
-              { text:'☁️ OneDrive Storage Full',     value:'OneDrive storage is full files not syncing',                               id:'home_quick_58' },
+              { text:'☁️ OneDrive Full',             value:'OneDrive storage is full files not syncing',                               id:'home_quick_58' },
               { text:'🕐 Wrong Date / Time',         value:'Laptop showing wrong date or time needs to be corrected',                  id:'home_quick_35' }
             ]
           ]
