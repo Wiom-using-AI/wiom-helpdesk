@@ -778,7 +778,7 @@ app.listen(PORT, async () => {
  const priColor = { Critical:'#ef4444', High:'#f59e0b', Medium:'#3b82f6', Low:'#10b981' };
  await client.chat.postMessage({
  channel: adminId,
- text: `${priEmoji[ticket.priority]||''} Naya ticket: ${ticket.ticketId} ${emp.empName}`,
+ text: `${priEmoji[ticket.priority]||''} New Ticket: ${ticket.ticketId} ${emp.empName}`,
  attachments: [{
  color: priColor[ticket.priority] || '#3b82f6',
  blocks: [
@@ -826,7 +826,7 @@ app.listen(PORT, async () => {
  }
 
  // ── /helpdesk status ────────────────────────────────────────────────
- if (text.toLowerCase() === 'status' || text.toLowerCase() === 'meri tickets') {
+ if (text.toLowerCase() === 'status' || text.toLowerCase() === 'my tickets') {
  const emp = await lookupEmployee(userId, client);
  const tickets = await Ticket.find({
  $or: [{ empId: emp.empId }, { slackUserId: userId }],
@@ -889,10 +889,10 @@ app.listen(PORT, async () => {
  const priEmoji = { Critical:'', High:'', Medium:'', Low:'' };
  blocks.push({ type:'divider' });
  blocks.push({ type:'section', fields:[
- { type:'mrkdwn', text:`*✅ Ticket Bana:*\n\`${result.ticketId}\`` },
+ { type:'mrkdwn', text:`*✅ Ticket Created:*\n\`${result.ticketId}\`` },
  { type:'mrkdwn', text:`*${priEmoji[result.priority]||''} Priority:*\n${result.priority}` }
  ]});
- blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko alert kar diya gaya ` }]});
+ blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been alerted ` }]});
  await notifyAdmin(client, result, emp);
  }
  }
@@ -900,7 +900,7 @@ app.listen(PORT, async () => {
  await respond({ response_type: 'ephemeral', text: reply, blocks });
  } catch (err) {
  console.error('Slack /helpdesk error:', err.message);
- await respond({ text: '❌ Error aa gaya. Baad mein try karo.', response_type: 'ephemeral' });
+ await respond({ text: '❌ An error occurred. Please try again later.', response_type: 'ephemeral' });
  }
  });
 
@@ -913,20 +913,20 @@ app.listen(PORT, async () => {
  view: {
  type : 'modal',
  callback_id: 'ticket_modal',
- title : { type:'plain_text', text:'Naya IT Ticket', emoji:true },
- submit : { type:'plain_text', text:'Ticket Banao ✅', emoji:true },
+ title : { type:'plain_text', text:'New IT Ticket', emoji:true },
+ submit : { type:'plain_text', text:'Submit Ticket ✅', emoji:true },
  close : { type:'plain_text', text:'Cancel', emoji:true },
  blocks : [
  {
  type : 'input',
  block_id: 'description_block',
- label : { type:'plain_text', text:'Problem kya hai?', emoji:true },
+ label : { type:'plain_text', text:'Describe your problem:', emoji:true },
  element : {
  type : 'plain_text_input',
  action_id : 'description_input',
  multiline : true,
  min_length : 10,
- placeholder: { type:'plain_text', text:'Jaise: Laptop on nahi ho raha, WiFi nahi chal raha, Password bhool gaya...' }
+ placeholder: { type:'plain_text', text:'e.g. Laptop not turning on, WiFi not working, Forgot password...' }
  }
  },
  {
@@ -936,30 +936,30 @@ app.listen(PORT, async () => {
  element : {
  type : 'static_select',
  action_id : 'category_input',
- placeholder: { type:'plain_text', text:'Category select karo' },
+ placeholder: { type:'plain_text', text:'Select a category' },
  options : [
- { text:{ type:'plain_text', text:'Hardware Laptop, keyboard, mouse, screen' }, value:'Hardware' },
- { text:{ type:'plain_text', text:'Software App, Windows, Office' }, value:'Software' },
- { text:{ type:'plain_text', text:'Network WiFi, internet, VPN' }, value:'Network' },
- { text:{ type:'plain_text', text:'Account Password, login, email' }, value:'Account' },
- { text:{ type:'plain_text', text:'Purchase New equipment request' }, value:'Purchase' },
- { text:{ type:'plain_text', text:'❓ Other Kuch aur' }, value:'Other' }
+ { text:{ type:'plain_text', text:'Hardware - Laptop, keyboard, mouse, screen' }, value:'Hardware' },
+ { text:{ type:'plain_text', text:'Software - App, Windows, Office' }, value:'Software' },
+ { text:{ type:'plain_text', text:'Network - WiFi, internet, VPN' }, value:'Network' },
+ { text:{ type:'plain_text', text:'Account - Password, login, email' }, value:'Account' },
+ { text:{ type:'plain_text', text:'Purchase - New equipment request' }, value:'Purchase' },
+ { text:{ type:'plain_text', text:'❓ Other - Something else' }, value:'Other' }
  ]
  }
  },
  {
  type : 'input',
  block_id: 'priority_block',
- label : { type:'plain_text', text:'Kitna Urgent Hai?', emoji:true },
+ label : { type:'plain_text', text:'How Urgent Is It?', emoji:true },
  element : {
  type : 'static_select',
  action_id : 'priority_input',
  initial_option: { text:{ type:'plain_text', text:'Medium Normal problem' }, value:'Medium' },
  options : [
- { text:{ type:'plain_text', text:'Critical Kaam bilkul ruk gaya' }, value:'Critical' },
- { text:{ type:'plain_text', text:'High Bahut zaruri, jaldi chahiye' }, value:'High' },
- { text:{ type:'plain_text', text:'Medium Normal problem, chal sakta hai' }, value:'Medium' },
- { text:{ type:'plain_text', text:'Low Jab time mile tab theek karo' }, value:'Low' }
+ { text:{ type:'plain_text', text:'Critical - Work completely stopped' }, value:'Critical' },
+ { text:{ type:'plain_text', text:'High - Very urgent, needed ASAP' }, value:'High' },
+ { text:{ type:'plain_text', text:'Medium - Normal issue, can partially work' }, value:'Medium' },
+ { text:{ type:'plain_text', text:'Low - Minor issue, fix when possible' }, value:'Low' }
  ]
  }
  }
@@ -1003,7 +1003,7 @@ app.listen(PORT, async () => {
  channel: userId,
  text : ` Ticket ${result.ticketId} create ho gaya!`,
  blocks : [
- { type:'header', text:{ type:'plain_text', text:'✅ Ticket Create Ho Gaya!', emoji:true }},
+ { type:'header', text:{ type:'plain_text', text:'✅ Ticket Created Successfully!', emoji:true }},
  { type:'section', fields:[
  { type:'mrkdwn', text:`* Ticket ID:*\n\`${result.ticketId}\`` },
  { type:'mrkdwn', text:`*${priEmoji[result.priority]||''} Priority:*\n${result.priority}` },
@@ -1011,7 +1011,7 @@ app.listen(PORT, async () => {
  { type:'mrkdwn', text:`*⏳ Status:*\nOpen` }
  ]},
  { type:'section', text:{ type:'mrkdwn', text:`* Problem:*\n${description}` }},
- { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya | _App Home mein "Mere Tickets" section mein dekh sakte ho_` }]}
+ { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been notified | Track your ticket: type *my tickets*` }]}
  ]
  });
  await notifyAdmin(client, result, emp);
@@ -1022,7 +1022,7 @@ app.listen(PORT, async () => {
  try {
  await client.chat.postMessage({
  channel: userId,
- text : '❌ Ticket create karne mein error aaya. Dobara try karein ya call karein: *IT Helpdesk (Slack)*'
+ text : '❌ Error creating ticket. Please try again or contact IT Helpdesk.'
  });
  } catch {}
  }
@@ -1043,9 +1043,9 @@ app.listen(PORT, async () => {
  );
 
  const stars = '⭐'.repeat(rating);
- const ratingMsg = rating >= 4 ? 'Shukriya! Bahut accha feedback mila '
- : rating >= 3 ? 'Shukriya! Hum aur behtar karne ki koshish karenge '
- : 'Shukriya! Hum is feedback ko improve karne mein use karenge ';
+ const ratingMsg = rating >= 4 ? 'Thank you! Great feedback received '
+ : rating >= 3 ? 'Thank you! We will keep improving '
+ : 'Thank you! We will use this feedback to improve ';
 
  await client.chat.update({
  channel: body.channel.id,
@@ -1053,9 +1053,9 @@ app.listen(PORT, async () => {
  text : `✅ Ticket ${ticketId} Rating: ${stars}`,
  blocks : [
  { type:'section', text:{ type:'mrkdwn', text:
- `✅ *Ticket \`${ticketId}\` resolve ho gaya!*\n\n*Aapki Rating:* ${stars} (${rating}/5)\n${ratingMsg}`
+ `✅ *Ticket \`${ticketId}\` has been resolved!*\n\n*Your Rating:* ${stars} (${rating}/5)\n${ratingMsg}`
  }},
- { type:'context', elements:[{ type:'mrkdwn', text:`IT Helpdesk: IT Helpdesk (Slack) | Koi aur problem ho toh batao!` }]}
+ { type:'context', elements:[{ type:'mrkdwn', text:`IT Helpdesk: IT Helpdesk (Slack) | Let us know if you need more help!` }]}
  ]
  });
  console.log(`⭐ Rating ${rating}/5 saved for ${ticketId}`);
@@ -1516,7 +1516,7 @@ app.listen(PORT, async () => {
  }
 
  // ── FEATURE 7: Meri tickets command ──────────────────────────────
- const isTicketCheck = /^(meri tickets|my tickets|tickets dikhao|ticket status|mera ticket|open tickets|meri ticket)$/i.test(text.trim());
+ const isTicketCheck = /^(my tickets|my tickets|tickets dikhao|ticket status|mera ticket|open tickets|meri ticket)$/i.test(text.trim());
  if (isTicketCheck) {
  const tickets = await Ticket.find({
  $or: [{ empId: emp.empId }, { slackUserId: userId }],
@@ -1615,7 +1615,7 @@ app.listen(PORT, async () => {
  { type:'mrkdwn', text:`*⏳ Status:*\nOpen` }
  ]},
  { type:'section', text:{ type:'mrkdwn', text:`* Problem:*\n${(result.description||'').substring(0,100)}` }},
- { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya | Status: *meri tickets* likh ke check karo` }]}
+ { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been notified | Status: *my tickets* likh ke check karo` }]}
  ]
  });
  await notifyAdmin(client, result, emp);
@@ -1625,7 +1625,7 @@ app.listen(PORT, async () => {
  await say({
  text: 'Ticket banane ke liye `/ticket` command use karo seedha modal khulega!',
  blocks: [
- { type:'section', text:{ type:'mrkdwn', text:`* Ticket Banana Hai?*\n\nDo tarike hain:\n\n*1.* \`/ticket\` type karo → form bhar do → turant ticket ban jayega ✅\n*2.* Apni problem batao → AI steps dega → phir ticket automatically suggest karega ` }},
+ { type:'section', text:{ type:'mrkdwn', text:`* Need to Create a Ticket?*\n\nTwo ways to create a ticket:\n\n*1.* \`/ticket\` type karo → form bhar do → turant ticket ban jayega ✅\n*2.* Describe your problem → AI will provide steps → then a ticket will be suggested automatically ` }},
  { type:'context', elements:[{ type:'mrkdwn', text:`_Urgent hai? Call karo: *IT Helpdesk (Slack)*_` }]}
  ]
  });
@@ -1653,10 +1653,10 @@ app.listen(PORT, async () => {
  text: ` Ticket ${result.ticketId} create ho gaya!`,
  blocks: [
  { type:'section', fields:[
- { type:'mrkdwn', text:`* Ticket Bana!*\n\`${result.ticketId}\`` },
+ { type:'mrkdwn', text:`* Ticket Created!*\n\`${result.ticketId}\`` },
  { type:'mrkdwn', text:`*${priEmoji[result.priority]||''} Priority*\n${result.priority}` }
  ]},
- { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team ko notify kar diya gaya ` }]}
+ { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been notified ` }]}
  ]
  });
  await notifyAdmin(client, result, emp);
@@ -1666,7 +1666,7 @@ app.listen(PORT, async () => {
 
  if (isNo) {
  pendingTickets.delete(userId);
- await say({ text: 'Theek hai! Koi aur problem ho toh batao.' });
+ await say({ text: 'Theek hai! Let us know if you need more help.' });
  return;
  }
  }

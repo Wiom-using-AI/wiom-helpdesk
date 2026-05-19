@@ -230,7 +230,7 @@
     <div class="nav-item" onclick="showTab('tickets')"><span class="icon">🎫</span> All Tickets</div>
     <div class="nav-item" onclick="showTab('open')"><span class="icon">⏳</span> Open Tickets</div>
     <div class="nav-item" onclick="showTab('employees')"><span class="icon">👥</span> Employees</div>
-    <div class="nav-item" onclick="showTab('report')"><span class="icon">📈</span> Aaj Ka Report</div>
+    <div class="nav-item" onclick="showTab('report')"><span class="icon">📈</span> Today Report</div>
     <div class="nav-item" onclick="showTab('analytics')"><span class="icon">📉</span> Analytics</div>
     <div class="nav-item" onclick="showTab('broadcast')"><span class="icon">📢</span> Broadcast</div>
     <div class="nav-item" onclick="showTab('team')"><span class="icon">🛡️</span> IT Team</div>
@@ -260,19 +260,19 @@
           <div class="icon">🎫</div>
           <div class="label">Total Tickets</div>
           <div class="value" id="statTotal">—</div>
-          <div class="sub">Aaj tak ke sab</div>
+          <div class="sub">Total till today</div>
         </div>
         <div class="stat-card orange">
           <div class="icon">⏳</div>
           <div class="label">Open Tickets</div>
           <div class="value" id="statOpen">—</div>
-          <div class="sub">Abhi pending hain</div>
+          <div class="sub">Currently pending</div>
         </div>
         <div class="stat-card green">
           <div class="icon">✅</div>
           <div class="label">Resolved Today</div>
           <div class="value" id="statResolved">—</div>
-          <div class="sub">Aaj resolve hue</div>
+          <div class="sub">Resolved today</div>
         </div>
         <div class="stat-card red">
           <div class="icon">🚨</div>
@@ -781,7 +781,7 @@ function showTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   event.currentTarget.classList.add('active');
-  const titles = { dashboard:'Dashboard', tickets:'All Tickets', open:'Open Tickets', employees:'Employees', report:'Aaj Ka Report', analytics:'Analytics', broadcast:'Broadcast', team:'IT Team', kb:'Knowledge Base', import:'Bulk Import' };
+  const titles = { dashboard:'Dashboard', tickets:'All Tickets', open:'Open Tickets', employees:'Employees', report:'Today Report', analytics:'Analytics', broadcast:'Broadcast', team:'IT Team', kb:'Knowledge Base', import:'Bulk Import' };
   document.getElementById('pageTitle').textContent = titles[tab] || tab;
   if (tab === 'report')    loadReport();
   if (tab === 'open')      loadOpenTickets();
