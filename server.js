@@ -1045,6 +1045,54 @@ app.listen(PORT, async () => {
  }
  });
 
+ // ── New ticket button after close notification ───────────────────────
+ slackApp.action('new_ticket_after_close', async ({ body, ack, client }) => {
+ await ack();
+ const userId = body.user.id;
+ try {
+ await client.views.open({
+ trigger_id: body.trigger_id,
+ view: {
+ type : 'modal',
+ callback_id: 'ticket_modal',
+ title : { type:'plain_text', text:'New IT Ticket', emoji:true },
+ submit : { type:'plain_text', text:'Submit Ticket', emoji:true },
+ close : { type:'plain_text', text:'Cancel', emoji:true },
+ blocks : [
+ { type:'input', block_id:'description_block',
+ label:{ type:'plain_text', text:'Describe your problem:' },
+ element:{ type:'plain_text_input', action_id:'description_input', multiline:true, min_length:10,
+ placeholder:{ type:'plain_text', text:'e.g. Laptop not turning on, WiFi not working...' }}},
+ { type:'input', block_id:'category_block',
+ label:{ type:'plain_text', text:'Category' },
+ element:{ type:'static_select', action_id:'category_input',
+ placeholder:{ type:'plain_text', text:'Select a category' },
+ options:[
+ { text:{ type:'plain_text', text:'Hardware - Laptop, keyboard, screen' }, value:'Hardware' },
+ { text:{ type:'plain_text', text:'Software - App, Windows, Office' }, value:'Software' },
+ { text:{ type:'plain_text', text:'Network - WiFi, internet' }, value:'Network' },
+ { text:{ type:'plain_text', text:'Account - Password, login, email' }, value:'Account' },
+ { text:{ type:'plain_text', text:'Purchase - New equipment request' }, value:'Purchase' },
+ { text:{ type:'plain_text', text:'Other' }, value:'Other' }
+ ]}},
+ { type:'input', block_id:'priority_block',
+ label:{ type:'plain_text', text:'How Urgent?' },
+ element:{ type:'static_select', action_id:'priority_input',
+ initial_option:{ text:{ type:'plain_text', text:'Medium - Normal issue' }, value:'Medium' },
+ options:[
+ { text:{ type:'plain_text', text:'Critical - Work completely stopped' }, value:'Critical' },
+ { text:{ type:'plain_text', text:'High - Very urgent' }, value:'High' },
+ { text:{ type:'plain_text', text:'Medium - Normal issue' }, value:'Medium' },
+ { text:{ type:'plain_text', text:'Low - Minor issue' }, value:'Low' }
+ ]}}
+ ]
+ }
+ });
+ } catch (err) {
+ console.error('new_ticket_after_close error:', err.message);
+ }
+ });
+
  // ── FEATURE 8: Rating action handler ─────────────────────────────────
  slackApp.action('rate_ticket', async ({ body, ack, client }) => {
  await ack();
