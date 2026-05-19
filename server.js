@@ -394,7 +394,7 @@ app.listen(PORT, async () => {
       // ── Category definitions ──────────────────────────────────────────────
       const CATEGORIES = [
         {
-          key: 'laptop', label: '💻 Laptop & Display',
+          key: 'laptop', label: '🔵 💻 Laptop & Display',
           desc: 'Slow laptop • Screen • Keyboard • Audio • Camera • USB • Bluetooth aur zyada',
           rows: [
             [
@@ -435,7 +435,7 @@ app.listen(PORT, async () => {
           ]
         },
         {
-          key: 'network', label: '🌐 Network & Internet', style: 'primary',
+          key: 'network', label: '🟢 🌐 Network & Internet', style: 'primary',
           desc: 'WiFi problem • Internet slow • Website blocked • Password • Disconnecting',
           rows: [
             [
@@ -448,7 +448,7 @@ app.listen(PORT, async () => {
           ]
         },
         {
-          key: 'software', label: '💿 Software, Apps & Account',
+          key: 'software', label: '🟡 💿 Software, Apps & Account',
           desc: 'Teams • Zoom • Outlook • Password reset • Virus • Account locked • OneDrive',
           rows: [
             [
@@ -481,7 +481,7 @@ app.listen(PORT, async () => {
           ]
         },
         {
-          key: 'replacement', label: '🔄 Replacement / Upgrade', style: 'danger',
+          key: 'replacement', label: '🔴 🔄 Replacement / Upgrade', style: 'danger',
           desc: 'Laptop • Mouse • Keyboard • Monitor — replacement request karein',
           rows: [
             [
