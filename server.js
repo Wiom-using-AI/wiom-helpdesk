@@ -808,8 +808,20 @@ app.listen(PORT, async () => {
  });
  const json = await res.json();
  if (res.status === 409) return { _duplicate: true, ticket: json.ticket, message: json.message };
+ if (!res.ok) {
+ console.error('Ticket creation failed:', res.status, json.error || json.message || JSON.stringify(json));
+ return null;
+ }
+ if (!json.ticket) {
+ console.error('Ticket creation response missing ticket field:', JSON.stringify(json));
+ return null;
+ }
+ console.log('Ticket created:', json.ticket.ticketId, '| empId:', data.empId, '| category:', json.ticket.category);
  return json.ticket;
- } catch { return null; }
+ } catch (err) {
+ console.error('createTicketSlack fetch error:', err.message);
+ return null;
+ }
  };
 
  // ── /helpdesk command ─────────────────────────────────────────────────
@@ -1001,21 +1013,26 @@ app.listen(PORT, async () => {
  } else if (result) {
  await client.chat.postMessage({
  channel: userId,
- text : ` Ticket ${result.ticketId} create ho gaya!`,
+ text : `Ticket ${result.ticketId} created!`,
  blocks : [
  { type:'header', text:{ type:'plain_text', text:'✅ Ticket Created Successfully!', emoji:true }},
  { type:'section', fields:[
- { type:'mrkdwn', text:`* Ticket ID:*\n\`${result.ticketId}\`` },
+ { type:'mrkdwn', text:`*Ticket ID:*\n\`${result.ticketId}\`` },
  { type:'mrkdwn', text:`*${priEmoji[result.priority]||''} Priority:*\n${result.priority}` },
- { type:'mrkdwn', text:`* Category:*\n${result.category}` },
- { type:'mrkdwn', text:`*⏳ Status:*\nOpen` }
+ { type:'mrkdwn', text:`*Category:*\n${result.category}` },
+ { type:'mrkdwn', text:`*Status:*\nOpen` }
  ]},
- { type:'section', text:{ type:'mrkdwn', text:`* Problem:*\n${description}` }},
- { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been notified | Track your ticket: type *my tickets*` }]}
+ { type:'section', text:{ type:'mrkdwn', text:`*Problem:*\n${description}` }},
+ { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been notified | Track: type *my tickets*` }]}
  ]
  });
  await notifyAdmin(client, result, emp);
- console.log(` Ticket ${result.ticketId} created via /ticket modal by ${emp.empName}`);
+ console.log(`Ticket ${result.ticketId} created via /ticket modal by ${emp.empName}`);
+ } else {
+ await client.chat.postMessage({
+ channel: userId,
+ text : '❌ Ticket create karne mein problem aayi. Please try again or contact IT directly.'
+ });
  }
  } catch (err) {
  console.error('/ticket modal submit error:', err.message);
@@ -1605,28 +1622,30 @@ app.listen(PORT, async () => {
  } else if (result) {
  const priEmoji = { Critical:'', High:'', Medium:'', Low:'' };
  await say({
- text: ` Ticket ${result.ticketId} ban gaya!`,
+ text: `Ticket ${result.ticketId} ban gaya!`,
  blocks: [
  { type:'header', text:{ type:'plain_text', text:'✅ Ticket Created!', emoji:true }},
  { type:'section', fields:[
- { type:'mrkdwn', text:`* Ticket ID:*\n\`${result.ticketId}\`` },
+ { type:'mrkdwn', text:`*Ticket ID:*\n\`${result.ticketId}\`` },
  { type:'mrkdwn', text:`*${priEmoji[result.priority]||''} Priority:*\n${result.priority}` },
- { type:'mrkdwn', text:`* Category:*\n${result.category||'Other'}` },
- { type:'mrkdwn', text:`*⏳ Status:*\nOpen` }
+ { type:'mrkdwn', text:`*Category:*\n${result.category||'Other'}` },
+ { type:'mrkdwn', text:`*Status:*\nOpen` }
  ]},
- { type:'section', text:{ type:'mrkdwn', text:`* Problem:*\n${(result.description||'').substring(0,100)}` }},
- { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been notified | Status: *my tickets* likh ke check karo` }]}
+ { type:'section', text:{ type:'mrkdwn', text:`*Problem:*\n${(result.description||'').substring(0,100)}` }},
+ { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been notified | Track: type *my tickets*` }]}
  ]
  });
  await notifyAdmin(client, result, emp);
+ } else {
+ await say({ text: '❌ Ticket create karne mein problem aayi. Please `/ticket` command use karo.' });
  }
  } else {
- // No context → ask for problem description
+ // No context → open /ticket modal instructions
  await say({
- text: 'Ticket banane ke liye `/ticket` command use karo seedha modal khulega!',
+ text: 'Ticket banane ke liye `/ticket` command use karo!',
  blocks: [
- { type:'section', text:{ type:'mrkdwn', text:`* Need to Create a Ticket?*\n\nTwo ways to create a ticket:\n\n*1.* \`/ticket\` type karo → form bhar do → turant ticket ban jayega ✅\n*2.* Describe your problem → AI will provide steps → then a ticket will be suggested automatically ` }},
- { type:'context', elements:[{ type:'mrkdwn', text:`_Urgent hai? Call karo: *IT Helpdesk (Slack)*_` }]}
+ { type:'section', text:{ type:'mrkdwn', text:`*Need to Create a Ticket?*\n\nType \`/ticket\` → fill the form → ticket instantly created ✅\n\nOr describe your problem first — AI will help then suggest a ticket automatically.` }},
+ { type:'context', elements:[{ type:'mrkdwn', text:`_Urgent? Call IT Helpdesk directly._` }]}
  ]
  });
  }
@@ -1650,16 +1669,21 @@ app.listen(PORT, async () => {
  } else if (result) {
  const priEmoji = { Critical:'', High:'', Medium:'', Low:'' };
  await say({
- text: ` Ticket ${result.ticketId} create ho gaya!`,
+ text: `Ticket ${result.ticketId} create ho gaya!`,
  blocks: [
+ { type:'header', text:{ type:'plain_text', text:'✅ Ticket Created!', emoji:true }},
  { type:'section', fields:[
- { type:'mrkdwn', text:`* Ticket Created!*\n\`${result.ticketId}\`` },
- { type:'mrkdwn', text:`*${priEmoji[result.priority]||''} Priority*\n${result.priority}` }
+ { type:'mrkdwn', text:`*Ticket ID:*\n\`${result.ticketId}\`` },
+ { type:'mrkdwn', text:`*${priEmoji[result.priority]||''} Priority:*\n${result.priority}` },
+ { type:'mrkdwn', text:`*Category:*\n${result.category||'Other'}` },
+ { type:'mrkdwn', text:`*Status:*\nOpen` }
  ]},
- { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been notified ` }]}
+ { type:'context', elements:[{ type:'mrkdwn', text:`✅ IT team has been notified | Track: type *my tickets*` }]}
  ]
  });
  await notifyAdmin(client, result, emp);
+ } else {
+ await say({ text: '❌ Ticket create karne mein problem aayi. Please try `/ticket` command use karo ya IT team ko directly contact karo.' });
  }
  return;
  }
@@ -1752,16 +1776,34 @@ app.listen(PORT, async () => {
 
  const blocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}];
 
- if (shouldCreateTicket && ticketData) {
+ // ── Auto-detect ticket context when AI suggests raising a ticket ──
+ if (shouldCreateTicket) {
+ // Extract category from conversation
+ const allUserText = conv.messages.filter(m=>m.role==='user').map(m=>m.content).join(' ').toLowerCase();
+ let autoCategory = 'Other';
+ if (/wifi|internet|network|connection|hotspot|broadband/i.test(allUserText)) autoCategory = 'Network';
+ else if (/teams|zoom|outlook|email|browser|chrome|word|excel|office|app|software|windows|update|onedrive|pdf|virus|storage|2fa|otp|antivirus/i.test(allUserText)) autoCategory = 'Software';
+ else if (/laptop|screen|keyboard|mouse|battery|charg|touchpad|usb|bluetooth|camera|mic|headphone|sound|speaker|display|monitor|fan|overheat|blue screen|bsod|freeze|hang|slow|boot|startup/i.test(allUserText)) autoCategory = 'Hardware';
+ else if (/password|account|login|locked|access|2fa|otp|email.*reset|reset.*email/i.test(allUserText)) autoCategory = 'Account';
+ else if (/replace|replacement|new mouse|new keyboard|new monitor|new laptop/i.test(allUserText)) autoCategory = 'Purchase';
+
+ let autoPriority = 'Medium';
+ if (/urgent|critical|emergency|immediately|stop.*work|can.*t work|completely|floor down/i.test(allUserText)) autoPriority = 'High';
+ else if (/minor|small|little|low|whenever/i.test(allUserText)) autoPriority = 'Low';
+
+ // Use last user message as description (most recent problem statement)
+ const lastUserMsg = conv.messages.filter(m=>m.role==='user').slice(-3).map(m=>m.content).join('; ');
+
  pendingTickets.set(userId, {
  empId: emp.empId, empName: emp.empName, empEmail: emp.email,
  empDept: emp.dept, empFloor: emp.floor,
  laptop: emp.laptop, laptopSN: emp.laptopSN,
- ...ticketData,
- description: ticketData.description || text,
+ category: ticketData?.category || autoCategory,
+ priority: ticketData?.priority || autoPriority,
+ description: ticketData?.description || lastUserMsg || text,
  source: 'slack', slackUserId: userId
  });
- blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? *"Ha"* ya *"Nahi"* reply karo_ ` }]});
+ blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? *"Ha"* ya *"Nahi"* type karo_ ` }]});
  }
 
  await say({ text: reply, blocks });
