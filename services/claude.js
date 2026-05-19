@@ -213,7 +213,21 @@ OneDrive full: Delete unnecessary files from OneDrive folder. Need more space = 
 Email password: Raise ticket â€” IT resets email passwords only
 
 ðŸ”„ REPLACEMENT:
-All replacement requests (laptop, mouse, keyboard, monitor) = Raise ticket only. IT team processes requests.`;
+All replacement requests (laptop, mouse, keyboard, monitor) = Raise ticket only. IT team processes requests.
+
+CASUAL / FRIENDLY MESSAGES:
+When user says "kaise ho", "kaisa hai", "how are you", "kya haal" - Reply: "Main bilkul theek hoon! Batao kya IT problem aa rahi hai - help karne ke liye ready hoon!"
+When user says "thanks", "shukriya", "thank you", "dhanyawad" - Reply: "Khushi hui! Koi bhi aur IT problem ho toh batao - hamesha yahan hoon!"
+When user says "hello", "hi", "hey", "namaste" - Reply: "Hello! WIOM IT Helpdesk mein aapka swagat hai! Kya IT problem hai - batao, turant help karunga!"
+When user says "bye", "alvida", "ok bye" - Reply: "Theek hai! Koi bhi IT problem ho toh kabhi bhi message karo - hamesha ready hoon!"
+
+ADMIN / SAJAN CONTACT:
+When user asks about admin, Sajan, IT head, IT manager, contact, phone number - Reply with:
+"Sajan Kumar se contact karo - WIOM IT Admin
+Phone: 9654244281
+Email: sajan.kumar@wiom.in
+Ya seedha ticket banao - type karo: *ticket bana do* - IT team jaldi respond karegi!"`;
+
 
 
 // â”€â”€ Extract steps already tried (to prevent repeats) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -271,6 +285,14 @@ const getKBFallback = (problem) => {
     return `Storage cleanup karo! ðŸ’¾\nStep 1: Win+R â†’ cleanmgr â†’ C: â†’ Clean system files.\nStep 2: Win+R â†’ %temp% â†’ Ctrl+A â†’ Delete.\nStep 3: Recycle Bin empty karo.\nScript button neeche hai! â¬‡ï¸`;
   if (p.includes('virus') || p.includes('malware') || p.includes('antivirus'))
     return `Virus scan karo! ðŸ¦ \nStep 1: Windows Security kholo â†’ Virus & threat protection.\nStep 2: Quick Scan karo â†’ wait karo.\nStep 3: Serious lag raha â†’ ticket raise karo: type karo *ticket bana do* ðŸŽ«\nScript button neeche hai! â¬‡ï¸`;
+  if (p.includes('kaise ho') || p.includes('kaisa hai') || p.includes('how are you') || p.includes('kya haal'))
+    return 'Main bilkul theek hoon! Batao kya IT problem aa rahi hai - help ke liye ready hoon!';
+  if (p.includes('thanks') || p.includes('shukriya') || p.includes('thank you') || p.includes('dhanyawad'))
+    return 'Khushi hui! Koi bhi aur IT problem ho toh batao - hamesha yahan hoon!';
+  if (p === 'hello' || p === 'hi' || p === 'hey' || p.includes('namaste') || p.includes('hii'))
+    return 'Hello! WIOM IT Helpdesk mein aapka swagat hai! Kya IT problem hai - batao, turant help karunga!';
+  if (p.includes('sajan') || p.includes('admin') || p.includes('it head') || p.includes('phone number') || p.includes('number do'))
+    return 'Sajan Kumar - WIOM IT Admin\nPhone: 9654244281\nEmail: sajan.kumar@wiom.in\nTicket banana ho toh type karo: *ticket bana do*';
   // Generic fallback
   return `Aapki problem note kar li! ðŸ”§\nStep 1: Pehle laptop restart karo â€” bahut problems resolve ho jaati hain.\nStep 2: Neeche script button hai â€” ek click mein automatic fix try karo! â¬‡ï¸\nStep 3: Kaam nahi hua â†’ DM mein detail mein type karo â€” main help karunga! ðŸ’¬`;
 };
