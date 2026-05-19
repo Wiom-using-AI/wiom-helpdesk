@@ -434,7 +434,7 @@ app.listen(PORT, async () => {
           ]
         },
         {
-          key: 'network', label: '🌐 Network & Internet',
+          key: 'network', label: '🌐 Network & Internet', style: 'primary',
           rows: [
             [
               { text:'📶 WiFi Not Working',          value:'WiFi not working no internet connection',                                   id:'home_quick_11' },
@@ -478,10 +478,10 @@ app.listen(PORT, async () => {
           ]
         },
         {
-          key: 'replacement', label: '🔄 Replacement / Upgrade',
+          key: 'replacement', label: '🔄 Replacement / Upgrade', style: 'danger',
           rows: [
             [
-              { text:'🔄 Laptop Replacement',        value:'Laptop needs replacement old one is damaged or not working',               id:'home_quick_37', style:'danger' },
+              { text:'🔄 Laptop Replacement',        value:'Laptop needs replacement old one is damaged or not working',               id:'home_quick_37' },
               { text:'🖱️ Mouse Replacement',         value:'Mouse is damaged need a replacement',                                      id:'home_quick_60' },
               { text:'⌨️ Keyboard Replacement',      value:'Keyboard is damaged need a replacement',                                   id:'home_quick_61' },
               { text:'🖥️ New Monitor Request',       value:'Need a new monitor or monitor replacement',                               id:'home_quick_62' }
@@ -658,21 +658,21 @@ app.listen(PORT, async () => {
           {
             type: 'actions',
             elements: [
-              { type:'button', text:{ type:'plain_text', text:'📶 WiFi Problem', emoji:true },        value:'WiFi not working no internet connection',                    action_id:'home_quick_11', style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'💻 Laptop Slow', emoji:true },          value:'My laptop is very slow what should I do',                   action_id:'home_quick_1',  style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'📹 Teams Issue', emoji:true },          value:'Microsoft Teams not working call dropping or not opening',  action_id:'home_quick_13', style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'📧 Outlook Problem', emoji:true },      value:'Outlook not opening or cannot send receive emails',         action_id:'home_quick_50', style:'primary' },
-              { type:'button', text:{ type:'plain_text', text:'🔑 WiFi Password', emoji:true },        value:'Need WiFi password or forgot WiFi password',               action_id:'home_quick_32' }
+              { type:'button', text:{ type:'plain_text', text:'📶 WiFi Problem',    emoji:true }, value:'WiFi not working no internet connection',                   action_id:'home_quick_11', style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'💻 Laptop Slow',     emoji:true }, value:'My laptop is very slow what should I do',                  action_id:'home_quick_1',  style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'📹 Teams Issue',     emoji:true }, value:'Microsoft Teams not working call dropping or not opening', action_id:'home_quick_13', style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'📧 Outlook Problem', emoji:true }, value:'Outlook not opening or cannot send receive emails',        action_id:'home_quick_50', style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'🔑 WiFi Password',   emoji:true }, value:'Need WiFi password or forgot WiFi password',              action_id:'home_quick_32', style:'primary' }
             ]
           },
           {
             type: 'actions',
             elements: [
-              { type:'button', text:{ type:'plain_text', text:'🔋 Battery Issue', emoji:true },        value:'Laptop battery drains quickly or not charging at all',      action_id:'home_quick_5'  },
-              { type:'button', text:{ type:'plain_text', text:'🔑 Password Reset', emoji:true },       value:'Forgot password need to reset it',                         action_id:'home_quick_14' },
-              { type:'button', text:{ type:'plain_text', text:'💾 Storage Full', emoji:true },         value:'Laptop storage full C drive is full cannot save files',     action_id:'home_quick_18' },
-              { type:'button', text:{ type:'plain_text', text:'📷 Camera Problem', emoji:true },       value:'Laptop camera not working in Teams Zoom or Meet',          action_id:'home_quick_20' },
-              { type:'button', text:{ type:'plain_text', text:'🎤 Mic Not Working', emoji:true },      value:'Microphone not working voice not going in Teams or calls',  action_id:'home_quick_16' }
+              { type:'button', text:{ type:'plain_text', text:'🔋 Battery Issue',   emoji:true }, value:'Laptop battery drains quickly or not charging at all',     action_id:'home_quick_5',  style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'🔑 Password Reset',  emoji:true }, value:'Forgot password need to reset it',                        action_id:'home_quick_14', style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'💾 Storage Full',    emoji:true }, value:'Laptop storage full C drive is full cannot save files',   action_id:'home_quick_18', style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'📷 Camera Problem',  emoji:true }, value:'Laptop camera not working in Teams Zoom or Meet',         action_id:'home_quick_20', style:'primary' },
+              { type:'button', text:{ type:'plain_text', text:'🎤 Mic Not Working', emoji:true }, value:'Microphone not working voice not going in Teams or calls', action_id:'home_quick_16', style:'primary' }
             ]
           },
 
@@ -689,7 +689,8 @@ app.listen(PORT, async () => {
               type: 'button',
               text: { type: 'plain_text', text: `${arrow}  ${cat.label}`, emoji: true },
               action_id: `cat_toggle_${cat.key}`,
-              value: cat.key
+              value: cat.key,
+              ...(cat.style ? { style: cat.style } : {})
             }]
           });
           if (isExpanded) {
@@ -701,7 +702,7 @@ app.listen(PORT, async () => {
                   text    : { type: 'plain_text', text: btn.text, emoji: true },
                   value   : btn.value,
                   action_id: btn.id,
-                  ...(btn.style ? { style: btn.style } : {})
+                  style   : btn.style || cat.style || undefined
                 }))
               });
             }
