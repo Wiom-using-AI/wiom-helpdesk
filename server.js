@@ -684,11 +684,20 @@ app.listen(PORT, async () => {
  type : 'button',
  text : { type: 'plain_text', text: btn.text, emoji: true },
  value : btn.value,
- action_id: btn.id,
- style : undefined // all sub-buttons: same default grey
+ action_id: btn.id
  }))
  });
  }
+ // Collapse button — click to close this category & scroll back up
+ blocks.push({
+ type: 'actions',
+ elements: [{
+ type: 'button',
+ text: { type: 'plain_text', text: '▲ Close & Scroll Up', emoji: true },
+ action_id: `cat_toggle_${cat.key}`,
+ value: cat.key
+ }]
+ });
  blocks.push({ type: 'divider' });
  }
  }
@@ -1061,6 +1070,38 @@ app.listen(PORT, async () => {
  }
  });
 
+ // ── Back to categories (DM) ──────────────────────────────────────────
+ slackApp.action('dm_back_to_categories', async ({ body, ack, client }) => {
+ await ack();
+ const userId = body.user.id;
+ try {
+ const emp = await lookupEmployee(userId, client);
+ const firstName = (emp.empName || 'there').split(' ')[0];
+ const catBlocks = [
+ { type:'section', text:{ type:'mrkdwn', text:`*Hello ${firstName}!* \n_Apni IT problem category select karo:_` }},
+ { type:'divider' },
+ ...CATEGORIES.map(cat => ({
+ type: 'actions',
+ elements: [{
+ type : 'button',
+ text : { type: 'plain_text', text: cat.label, emoji: true },
+ style : 'primary',
+ action_id: `dm_cat_${cat.key}`,
+ value : cat.key
+ }]
+ }))
+ ];
+ await client.chat.update({
+ channel: userId,
+ ts: body.message.ts,
+ text: 'Categories',
+ blocks: catBlocks
+ });
+ } catch (err) {
+ console.error('dm_back_to_categories error:', err.message);
+ }
+ });
+
  // ── New ticket button after close notification ───────────────────────
  slackApp.action('new_ticket_after_close', async ({ body, ack, client }) => {
  await ack();
@@ -1232,14 +1273,14 @@ app.listen(PORT, async () => {
  });
  });
 
- // ── DM category expand handlers (post sub-buttons on click) ──────────
+ // ── DM category expand handlers — UPDATE message (no duplicate) ──────
  CATEGORIES.forEach(cat => {
  slackApp.action(`dm_cat_${cat.key}`, async ({ body, ack, client }) => {
  await ack();
  const userId = body.user.id;
  try {
  const catBlocks = [
- { type:'section', text:{ type:'mrkdwn', text:`> *${cat.label}*` }}
+ { type:'section', text:{ type:'mrkdwn', text:`*${cat.label}* — select your issue:` }},
  ];
  for (const row of cat.rows) {
  catBlocks.push({
@@ -1252,7 +1293,29 @@ app.listen(PORT, async () => {
  }))
  });
  }
+ // Add back button to return to categories
+ catBlocks.push({ type: 'divider' });
+ catBlocks.push({
+ type: 'actions',
+ elements: [{
+ type: 'button',
+ text: { type: 'plain_text', text: '↩ Back to Categories', emoji: true },
+ action_id: 'dm_back_to_categories',
+ value: 'back'
+ }]
+ });
+
+ // UPDATE existing message instead of posting new one (prevents duplicates)
+ try {
+ await client.chat.update({
+ channel: userId,
+ ts: body.message.ts,
+ text: cat.label,
+ blocks: catBlocks
+ });
+ } catch {
  await client.chat.postMessage({ channel: userId, text: cat.label, blocks: catBlocks });
+ }
  } catch (err) {
  console.error('dm_cat action error:', err.message);
  }
