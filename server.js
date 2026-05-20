@@ -427,9 +427,9 @@ app.listen(PORT, async () => {
  { text:'Fan Noise', value:'Laptop fan is making very loud noise constantly', id:'home_quick_38' }
  ],
  [
- { text:'Liquid Damage', value:'Liquid or water spilled on laptop needs immediate attention', id:'home_quick_70', style:'danger' },
- { text:'Stuck Restarting', value:'Laptop is stuck in restart loop keeps restarting again and again', id:'home_quick_33', style:'danger' },
- { text:'Boot Error', value:'Laptop not starting getting boot error Windows not loading', id:'home_quick_65', style:'danger' },
+ { text:'Liquid Damage', value:'Liquid or water spilled on laptop needs immediate attention', id:'home_quick_70' },
+ { text:'Stuck Restarting', value:'Laptop is stuck in restart loop keeps restarting again and again', id:'home_quick_33' },
+ { text:'Boot Error', value:'Laptop not starting getting boot error Windows not loading', id:'home_quick_65' },
  { text:'Caps Lock Stuck', value:'Caps Lock always stays on or keyboard keys are stuck', id:'home_quick_72' },
  { text:'Slow After Update', value:'Laptop became very slow after a Windows update', id:'home_quick_71' }
  ]
@@ -1237,8 +1237,7 @@ app.listen(PORT, async () => {
  type : 'button',
  text : { type: 'plain_text', text: btn.text, emoji: true },
  value : btn.value,
- action_id: btn.id,
- ...(btn.style ? { style: btn.style } : {})
+ action_id: btn.id
  }))
  });
  }
@@ -1680,6 +1679,7 @@ app.listen(PORT, async () => {
  elements: [{
  type : 'button',
  text : { type: 'plain_text', text: cat.label, emoji: true },
+ style : 'primary',
  action_id: `dm_cat_${cat.key}`,
  value : cat.key
  }]
