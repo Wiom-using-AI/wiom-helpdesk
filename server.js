@@ -664,18 +664,16 @@ app.listen(PORT, async () => {
 
  for (const cat of CATEGORIES) {
  const isExpanded = expandedSet.has(cat.key);
- // Colored section card — emoji gives distinct color per category
+ // All category buttons: same color (primary = green)
  blocks.push({
- type: 'section',
- text: { type: 'mrkdwn',
- text: `${cat.emoji}  *${cat.label}*\n_${cat.desc}_` },
- accessory: {
+ type: 'actions',
+ elements: [{
  type: 'button',
- text: { type: 'plain_text', text: isExpanded ? '▼ Close' : '▶ Select', emoji: true },
- style: cat.color || 'primary',
+ text: { type: 'plain_text', text: `${isExpanded ? '▼' : '▶'} ${cat.label}`, emoji: true },
+ style: 'primary',
  action_id: `cat_toggle_${cat.key}`,
  value: cat.key
- }
+ }]
  });
 
  if (isExpanded) {
@@ -687,7 +685,7 @@ app.listen(PORT, async () => {
  text : { type: 'plain_text', text: btn.text, emoji: true },
  value : btn.value,
  action_id: btn.id,
- style : btn.style || undefined
+ style : undefined // all sub-buttons: same default grey
  }))
  });
  }
