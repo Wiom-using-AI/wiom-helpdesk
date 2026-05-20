@@ -463,5 +463,35 @@ const quickReply = async (userMessage, empName = 'Employee', laptop = null, lapt
   return (typeof parsed.reply === 'string' ? parsed.reply : raw) || userMessage;
 };
 
-module.exports = { chat, quickReply };
+// ── Direct KB lookup — instant, no AI call needed ────────────────────────────
+const getKBAnswer = (problem) => {
+  if (!problem) return null;
+  const p = problem.toLowerCase();
+
+  // Map of keywords → instant KB answers
+  const quickAnswers = [
+    { keys: ['slow','speed','hang','freeze','sluggish'], ans: `Koi baat nahi! 🔧 Yeh try karo:\nStep 1: Ctrl+Shift+Esc → CPU column click → top process → End Task\nStep 2: Win+R → %temp% → Ctrl+A → Delete\nStep 3: Restart laptop\nThodi der mein fast ho jayega! ✅` },
+    { keys: ['wifi','internet','network','connection'], ans: `Dekho yeh karo! 📶\nStep 1: Taskbar WiFi icon → OFF karo → 10 sec → ON karo\nStep 2: Forget network → dobara password enter karo\nStep 3: Laptop restart karo\nKaam aa jaye toh batao! ✅` },
+    { keys: ['blue screen','bsod','bluescreen'], ans: `BSOD aa gaya! 💙 Try karo:\nStep 1: Laptop restart karo (mostly fix ho jata hai)\nStep 2: Win+X → Device Manager → Display/Network → Update Driver\nStep 3: Agar baar baar aaye → ticket raise karo\nBatao kya hua! ✅` },
+    { keys: ['battery','charging','charge'], ans: `Battery issue! 🔋 Yeh dekho:\nStep 1: Charger plug nikalo → 30 sec wait → dobara lagao\nStep 2: Dusra power socket try karo\nStep 3: Agar nahi charga → ticket raise karo (hardware issue)\nBatao result! ✅` },
+    { keys: ['overheat','hot','fan','temperature'], ans: `Laptop garam ho raha hai! 🌡️\nStep 1: Saare tabs/apps band karo → laptop stand use karo\nStep 2: Ctrl+Shift+Esc → CPU → heavy apps End Task karo\nStep 3: Clean karo laptop vents (air blower se)\nBetter feel hoga! ✅` },
+    { keys: ['black screen','screen black','display'], ans: `Screen black! 🖥️ Try karo:\nStep 1: Power button 10 sec dabao → release → restart\nStep 2: Fn+F7 ya Fn+F8 (brightness keys)\nStep 3: External monitor lagao → agar dikhta hai toh screen issue → ticket\nBatao! ✅` },
+    { keys: ['keyboard','key','type'], ans: `Keyboard issue! ⌨️ Try karo:\nStep 1: Laptop restart karo\nStep 2: Ctrl+Shift+Esc → Driver update check\nStep 3: On-Screen Keyboard: Settings → Accessibility → Keyboard ON\nAgar physical damage hai → ticket raise karo! ✅` },
+    { keys: ['touchpad','mouse','cursor'], ans: `Touchpad kaam nahi kar raha! 🖱️\nStep 1: Fn+F9 dabao (touchpad enable/disable toggle)\nStep 2: Restart laptop\nStep 3: Device Manager → Mice → Uninstall → Restart (auto reinstall)\nBatao! ✅` },
+    { keys: ['teams','microsoft teams'], ans: `Teams issue! 📹 Try karo:\nStep 1: Teams puri tarah band karo (system tray se) → dobara open\nStep 2: Teams Settings → Clear Cache → restart\nStep 3: Agar nahi chala → ticket raise karo\nKaam aa jaye! ✅` },
+    { keys: ['outlook','email','mail'], ans: `Outlook problem! 📧 Try karo:\nStep 1: Ctrl+Shift+Esc → Outlook → End Task → dobara open\nStep 2: Win+R → outlook /safe → Enter (safe mode)\nStep 3: File → Account Settings → Repair\nBatao kya hua! ✅` },
+    { keys: ['password','forgot','reset'], ans: `Password reset chahiye! 🔑\nWindows password = Ticket raise karo (IT reset karega)\nEmail password = Ticket raise karo\nGoogle account = myaccount.google.com → Security → Password\nTicket banane ke liye type karo: *ha* ✅` },
+    { keys: ['shutdown','restart','stuck restarting','boot'], ans: `Stuck hai laptop! 🔄 Try karo:\nStep 1: Power button 10 sec dabao → force shutdown\nStep 2: Power on karo → F8 → Safe Mode → restart normally\nStep 3: Baar baar hota hai → ticket raise karo\nBatao result! ✅` },
+    { keys: ['sound','audio','speaker','no sound'], ans: `Sound nahi aa raha! 🔊 Try karo:\nStep 1: Taskbar speaker icon → volume check → unmute\nStep 2: Right-click speaker → Sound settings → Output device check\nStep 3: Win+R → mmsys.cpl → test speakers\nKaam aa jaye! ✅` },
+    { keys: ['camera','webcam'], ans: `Camera issue! 📷 Try karo:\nStep 1: Teams/Zoom Settings → Camera → sahi device select karo\nStep 2: Device Manager → Cameras → Disable → Enable\nStep 3: Privacy Settings → Camera → Apps ko allow karo\nBatao! ✅` },
+    { keys: ['storage','disk','full','space'], ans: `Storage full! 💾 Karo yeh:\nStep 1: Win+R → cleanmgr → C: → Clean system files\nStep 2: Win+R → %temp% → Ctrl+A → Delete\nStep 3: Recycle Bin empty karo\nFree space ho jayega! ✅` },
+  ];
+
+  for (const { keys, ans } of quickAnswers) {
+    if (keys.some(k => p.includes(k))) return ans;
+  }
+  return null; // No match — let AI handle it
+};
+
+module.exports = { chat, quickReply, getKBAnswer };
 

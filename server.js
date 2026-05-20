@@ -1422,17 +1422,33 @@ app.listen(PORT, async () => {
  }
  });
 
- // ── Get AI response ─────────────────────────────────────────────
- await Conversation.updateMany(
+ // ── Get AI response — try KB first (instant), then AI ───────────
+ // Run DB cleanup in background (don't await — saves ~200ms)
+ Conversation.updateMany(
  { slackUserId: userId, source: 'slack', resolved: false },
  { resolved: true }
- );
- const conv = await getSlackSession(userId, empInfo);
- conv.messages.push({ role: 'user', content: problem });
+ ).catch(() => {});
+
  const claudeSvc = require('./services/claude');
- const { reply } = await claudeSvc.chat(conv.messages, empInfo);
+
+ // Try static KB first — instant, no API call needed
+ let reply = claudeSvc.getKBAnswer ? claudeSvc.getKBAnswer(problem) : null;
+
+ if (!reply) {
+ // KB miss → call AI with minimal context (no session history for speed)
+ const quickMessages = [{ role: 'user', content: problem }];
+ const result = await claudeSvc.chat(quickMessages, empInfo);
+ reply = result.reply;
+
+ // Save session in background (don't block)
+ getSlackSession(userId, empInfo).then(conv => {
+ conv.messages.push({ role: 'user', content: problem });
  conv.messages.push({ role: 'assistant', content: reply });
- await conv.save();
+ if (conv.messages.length > 20) conv.messages = conv.messages.slice(-20);
+ conv.save().catch(() => {});
+ }).catch(() => {});
+ }
+
  const formattedReply = formatForSlack(reply);
 
  // ── Build response blocks for modal ─────────────────────────────
