@@ -747,28 +747,39 @@ app.listen(PORT, async () => {
  return conv;
  };
 
- // ── Employee lookup ───────────────────────────────────────────────────
+ // ── Employee cache (5 min TTL) — avoids repeated MongoDB calls ────────
+ const empCache = new Map();
+ const EMP_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
  const lookupEmployee = async (slackUserId, client) => {
+ // Serve from cache if fresh
+ const cached = empCache.get(slackUserId);
+ if (cached && (Date.now() - cached.ts) < EMP_CACHE_TTL) return cached.data;
+
  try {
- let dbEmp = await Employee.findOne({ slackUserId });
+ let dbEmp = await Employee.findOne({ slackUserId }).lean();
  if (dbEmp) {
- return { empId: dbEmp.empId, empName: dbEmp.name, email: dbEmp.email,
+ const data = { empId: dbEmp.empId, empName: dbEmp.name, email: dbEmp.email,
  dept: dbEmp.department, floor: dbEmp.floor,
  laptop: dbEmp.laptop, laptopSN: dbEmp.laptopSN };
+ empCache.set(slackUserId, { data, ts: Date.now() });
+ return data;
  }
  const profile = await client.users.info({ user: slackUserId });
  const email = profile.user?.profile?.email;
  const name = profile.user?.profile?.real_name || profile.user?.name;
- if (email) dbEmp = await Employee.findOne({ email: email.toLowerCase() });
- if (!dbEmp && name) dbEmp = await Employee.findOne({ name: { $regex: name.split(' ')[0], $options: 'i' } });
- if (dbEmp) {
- dbEmp.slackUserId = slackUserId;
- await dbEmp.save();
- return { empId: dbEmp.empId, empName: dbEmp.name, email: dbEmp.email,
- dept: dbEmp.department, floor: dbEmp.floor,
- laptop: dbEmp.laptop, laptopSN: dbEmp.laptopSN };
+ if (email) dbEmp = await Employee.findOne({ email: email.toLowerCase() }).lean();
+ if (!dbEmp && name) dbEmp = await Employee.findOne({ name: { $regex: name.split(' ')[0], $options: 'i' } }).lean();
+ if (dbEmp && !dbEmp.slackUserId) {
+ Employee.findByIdAndUpdate(dbEmp._id, { slackUserId }).catch(() => {});
  }
- return { empId: slackUserId, empName: name || 'Employee', email, dept: 'Unknown' };
+ const data = dbEmp
+ ? { empId: dbEmp.empId, empName: dbEmp.name, email: dbEmp.email,
+ dept: dbEmp.department, floor: dbEmp.floor,
+ laptop: dbEmp.laptop, laptopSN: dbEmp.laptopSN }
+ : { empId: slackUserId, empName: name || 'Employee', email, dept: 'Unknown' };
+ empCache.set(slackUserId, { data, ts: Date.now() });
+ return data;
  } catch {
  return { empId: slackUserId, empName: 'Employee', email: null, dept: 'Unknown' };
  }
@@ -1944,17 +1955,22 @@ app.listen(PORT, async () => {
  }
 
  // ── Normal AI chat ────────────────────────────────────────────────
+ // Show instant typing indicator so user knows bot is working
+ const thinkingMsg = await say({ text: '⏳ Soch raha hoon...' });
+
  const conv = await getSlackSession(userId, emp);
  conv.messages.push({ role: 'user', content: text });
- // Trim to last 30 messages to keep DB lean
- if (conv.messages.length > 30) conv.messages = conv.messages.slice(-30);
- await conv.save();
+ if (conv.messages.length > 20) conv.messages = conv.messages.slice(-20);
 
- const { reply, shouldCreateTicket, ticketData } = await claudeSvc.chat(
+ // Run DB save and AI call in parallel for speed
+ const [, { reply, shouldCreateTicket, ticketData }] = await Promise.all([
+ conv.save(),
+ claudeSvc.chat(
  conv.messages,
  { empId: emp.empId, empName: emp.empName, source: 'slack',
  laptop: emp.laptop, laptopSN: emp.laptopSN, dept: emp.dept, floor: emp.floor }
- );
+ )
+ ]);
 
  conv.messages.push({ role: 'assistant', content: reply });
  await conv.save();
@@ -1994,12 +2010,22 @@ app.listen(PORT, async () => {
  blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? *"Ha"* ya *"Nahi"* type karo_ ` }]});
  }
 
+ // Replace "Soch raha hoon..." with actual reply
+ try {
+ await client.chat.update({
+ channel: userId,
+ ts: thinkingMsg.ts,
+ text: reply,
+ blocks
+ });
+ } catch {
  await say({ text: reply, blocks });
+ }
 
  } catch (err) {
  console.error('❌ DM handler error:', err.message);
  try {
- await say({ text: '❌ Kuch technical problem aa gayi. Thoda wait karein aur dobara try karein. IT Helpdesk: IT Helpdesk (Slack)' });
+ await say({ text: '❌ Kuch technical problem aa gayi. Thoda wait karein aur dobara try karein.' });
  } catch (sayErr) {
  console.error('❌ Could not send error message:', sayErr.message);
  }

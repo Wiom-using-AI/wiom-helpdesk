@@ -329,10 +329,10 @@ const callClaude = async (systemPrompt, history) => {
 // ── Call Groq (LLaMA fallback) ────────────────────────────────────────────────
 const callGroq = async (systemPrompt, history) => {
   const completion = await groq.chat.completions.create({
-    model      : 'llama-3.1-8b-instant',    // fast + always available on Groq
+    model      : 'llama-3.1-8b-instant',    // fastest Groq model
     messages   : [{ role: 'system', content: systemPrompt }, ...history],
-    temperature: 0.2,
-    max_tokens : 500
+    temperature: 0.15,
+    max_tokens : 350   // shorter = faster response
   });
   const text = completion.choices?.[0]?.message?.content?.trim();
   if (!text) throw new Error('Empty response from Groq');
@@ -383,22 +383,20 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     + (laptop ? `\nEmployee laptop: ${laptop}${laptopSN ? ` (SN: ${laptopSN})` : ''}` : '')
     + triedSteps;
 
-  // Call Claude first, fall back to Groq, then static KB
+  // Use Groq directly (fast) — Claude only if ANTHROPIC_API_KEY set
   let raw;
   try {
-    raw = await callClaude(systemPrompt, history);
-    console.log('✅ Claude responded OK');
-  } catch (claudeErr) {
-    console.error('❌ Claude failed:', claudeErr.message);
+    raw = anthropic ? await callClaude(systemPrompt, history) : await callGroq(systemPrompt, history);
+    console.log('✅ AI responded OK');
+  } catch (err) {
+    console.error('❌ AI failed:', err.message);
     try {
       raw = await callGroq(systemPrompt, history);
-      console.log('✅ Groq fallback responded OK');
-    } catch (groqErr) {
-      console.error('❌ Groq also failed:', groqErr.message);
-      // Static KB fallback — look up problem in last user message
+      console.log('✅ Groq fallback OK');
+    } catch {
       const lastMsg = history.filter(m => m.role === 'user').pop()?.content || '';
       raw = getKBFallback(lastMsg);
-      console.log('⚠️  Using static KB fallback');
+      console.log('⚠️ Using static KB fallback');
     }
   }
 
