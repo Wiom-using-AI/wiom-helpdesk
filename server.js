@@ -2105,7 +2105,7 @@ app.listen(PORT, async () => {
  // Replace "Soch raha hoon..." with actual reply
  try {
  await client.chat.update({
- channel: userId,
+ channel: thinkingMsg.channel,
  ts: thinkingMsg.ts,
  text: reply,
  blocks
