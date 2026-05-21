@@ -833,39 +833,6 @@ app.listen(PORT, async () => {
  }
  }
 
- // ── POPULAR ISSUES ─────────────────────────────────────────────────────
- blocks.push({ type: 'divider' });
- blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '🔥 *Popular Issues*' } });
-
- const popularIssues = [
- { text: 'WiFi not working', action_id: 'home_quick_11', value: 'WiFi not working no internet connection' },
- { text: 'Laptop slow', action_id: 'home_quick_1', value: 'My laptop is very slow what should I do' },
- { text: 'VPN not connecting', action_id: 'home_quick_73', value: 'VPN not connecting or VPN is not working' },
- { text: 'Outlook not working', action_id: 'home_quick_50', value: 'Outlook not opening or cannot send receive emails' },
- { text: 'Printer offline', action_id: 'home_quick_54', value: 'Printer is offline not working cannot print' }
- ];
- for (const issue of popularIssues) {
- blocks.push({
- type: 'section',
- text: { type: 'mrkdwn', text: issue.text },
- accessory: {
- type: 'button',
- text: { type: 'plain_text', text: 'Fix Now', emoji: true },
- action_id: issue.action_id,
- value: issue.value
- }
- });
- }
-
- // ── ANNOUNCEMENTS + SYSTEM STATUS ──────────────────────────────────────
- blocks.push({ type: 'divider' });
- blocks.push({
- type: 'section',
- fields: [
- { type: 'mrkdwn', text: '📢 *Announcements*\nVPN maintenance on Sunday 2 AM – 4 AM\n<https://web-production-ef6c1.up.railway.app|View all>' },
- { type: 'mrkdwn', text: '🛡️ *System Status*\n🟢 _All systems are operational_' }
- ]
- });
 
  // ── MY TICKETS ─────────────────────────────────────────────────────────
  if (myTickets.length > 0) {
