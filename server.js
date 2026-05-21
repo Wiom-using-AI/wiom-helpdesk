@@ -656,17 +656,17 @@ app.listen(PORT, async () => {
 
  const blocks = [
 
- // ── HERO: Robot intro + Online status ──────────────────────────────────
+ // ── HERO: Robot GIF + Greeting ─────────────────────────────────────────
  {
  type: 'section',
  text: {
  type: 'mrkdwn',
- text: `*Hi ${name}!* 👋\n\n*I'm Zivon AI* ⚡\nYour smart IT support assistant\n\n⚡ Fast   😊 Friendly   🧠 Smart`
+ text: `*Hello ${name}! 👋 Main Zivon hoon — aapki kya help karu?* 😊\n\n_Main WIOM ka smart IT assistant hoon!_\n\n⚡ Fast   😊 Friendly   🧠 Smart`
  },
  accessory: {
  type: 'image',
  image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif',
- alt_text: 'Zivon AI Bot'
+ alt_text: 'Zivon AI'
  }
  },
  {
