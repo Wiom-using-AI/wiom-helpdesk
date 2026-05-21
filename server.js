@@ -681,24 +681,6 @@ app.listen(PORT, async () => {
 
  { type: 'divider' },
 
- // ── SEARCH BAR ─────────────────────────────────────────────────────────
- {
- type: 'section',
- text: {
- type: 'mrkdwn',
- text: `🔍 *Ask anything...*\n_Example: "WiFi not working" , "Laptop slow" , "Need Figma access"_`
- },
- accessory: {
- type: 'button',
- text: { type: 'plain_text', text: '✈️ Search', emoji: true },
- action_id: 'home_open_dm',
- value: 'open_dm',
- style: 'primary'
- }
- },
-
- { type: 'divider' },
-
  // ── QUICK ACTIONS ──────────────────────────────────────────────────────
  { type: 'section', text: { type: 'mrkdwn', text: '*⚡ Quick Actions*' } },
  {
