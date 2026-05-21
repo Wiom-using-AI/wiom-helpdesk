@@ -27,6 +27,15 @@ Last line: ONE short warm closing. Example: "Kaam aa jaye toh batao! 🙏"
 Total reply: MAX 5 lines. Steps must be action-only (what to click/press).
 Output ONLY the reply text — no JSON, no markdown code blocks, just the reply.
 
+━━━ ANSWER EXACTLY WHAT IS ASKED ━━━
+MOST IMPORTANT: Read what the user ACTUALLY asked. Answer THAT specific question.
+- "kab tak hoga" / "ticket status" / "kab solve hoga" → Tell them: ticket is with IT team, typically 24h, type "my tickets" to check
+- "kise hai" / "tum kaun ho" / "aap kaun ho" → Introduce yourself as WIOM IT Helpdesk Bot
+- "wifi password" → Give the password directly: spartans500
+- "meri laptop model kya hai" → Tell them to type "my laptop"
+- First time question → Give steps, NOT ticket suggestion (ticket only after 2+ failed attempts)
+Never assume user's problem is unsolvable. Never jump to "raise ticket" on first message.
+
 ━━━ TONE ━━━
 - Friendly and warm — like a helpful IT colleague, not a robot.
 - Use emojis naturally: 😊 ✅ 🔧 💻 📶 🎫 🙏 etc.
@@ -482,30 +491,24 @@ const getKBAnswer = (problem) => {
     return `Main hoon *WIOM IT Helpdesk Bot!* 🤖\nAapke laptop, WiFi, software — har IT problem mein help karta hoon.\nBatao kya problem hai, turant fix karunga! 😊`;
   }
 
-  // ── Ticket status / ETA questions ───────────────────────────────────────
-  if (/ticket\s*(kab|kb|kab\s*tak|kab\s*solve|kab\s*hoga|kab\s*fix|status|update|progress|ka\s*kya|ho\s*gaya|hua\s*kya|abhi\s*tak|kyun\s*nahi|pending|lamba)/i.test(p) ||
-      /kab\s*tak\s*(hoga|milega|fix|solve|resolve)/i.test(p) ||
-      /mera\s*(ticket|kaam|issue|problem)\s*(kab|kb|solve|fix|hoga|ho\s*ga)/i.test(p)) {
+  // ── Ticket status / ETA questions (typo-tolerant: tiket/tikket/ticket) ──
+  const pTicket = p.replace(/ti+ke+t/gi, 'ticket'); // normalize typos
+  if (/ticket\s*(kab|kb|kab\s*tak|kab\s*solve|kab\s*hoga|kab\s*fix|status|update|progress|ho\s*gaya|hua\s*kya|abhi\s*tak|kyun\s*nahi|pending)/i.test(pTicket) ||
+      /kab\s*tak\s*(hoga|milega|fix\s*hoga|solve\s*hoga|resolve)/i.test(pTicket) ||
+      /mera\s*ticket\s*(kab|solve|fix|hoga|ho\s*ga)/i.test(pTicket)) {
     return `Aapka ticket IT team ke paas hai! 📋\nTypically *same day ya 24h* mein resolve hota hai (priority ke hisaab se).\n\nStatus check karne ke liye type karo: *my tickets* 👀\nUrgent hai toh: *raise ticket* 🎫`;
   }
 
-  // ── Special multi-keyword checks FIRST (before single-keyword matches) ──
-  const isWifiPassword = (p.includes('wifi') || p.includes('wi-fi') || p.includes('wiom') || p.includes('network')) &&
-    (p.includes('password') || p.includes('pass') || p.includes('pwd') || p.includes('pssword') ||
-     p.includes('pasword') || p.includes('passward') || p.includes('pasward') ||
-     p.includes('kay hai') || p.includes('kya hai') || p.includes('batao') || p.includes('kya h') ||
-     p.includes('bata') || p.includes('kya he') || p.includes('kya') || p.includes('hai') ||
-     p.includes('bolo') || p.includes('what') || p.includes('tell'));
+  // ── WiFi password — strict match only (not generic Hindi sentences) ──
+  const isWifiPassword =
+    /wifi\s*(ka|ke|ki)?\s*(password|pass|pwd|pasword|passward)/i.test(p) ||
+    /password\s*(wifi|wi-fi|wiom|network)/i.test(p) ||
+    /^(wifi|wi-fi|network)\s*(password|pass|pwd)\s*\??$/i.test(p.trim()) ||
+    /^(pass|pwd|password)\s*\??$/i.test(p.trim()) ||
+    /network\s*ka\s*pass/i.test(p) ||
+    /office\s*(wifi|network|wi-fi)\s*(password|pass)/i.test(p);
 
-  // Direct "wifi password" / "password bata" type questions
-  const isDirectPasswordQuestion =
-    /^(wifi|wi-fi|network|wiom)[\s\-]*(password|pass|pwd|pasword|passward|pasward)/i.test(p.trim()) ||
-    /^password[\s\-]*(wifi|wi-fi|network|wiom)/i.test(p.trim()) ||
-    /wifi\s*(ka|ke|ki)?\s*(password|pass|pwd)/i.test(p) ||
-    /password\s*(kya|kay|kia|ki|ka|ke)?\s*(hai|he|h|hain)/i.test(p) ||
-    /^(pass|pwd|password)\s*$/i.test(p.trim());
-
-  if (isWifiPassword || isDirectPasswordQuestion) {
+  if (isWifiPassword) {
     return `WiFi Password 📶\n\n*Sab networks ka same password hai:*\n🔑 Password: \`spartans500\`\n\n*Available Networks:*\n• *Wiom office 5g-Test* — Ground floor\n• *Wiom office Guest* — Guest network\n• *Wiom office 3rd floor* — 3rd floor\n• *Wiomnet* — Saket office (Password: \`Password@12345\`)\n\nKaam aa gaya toh batao! ✅`;
   }
 
@@ -517,8 +520,8 @@ const getKBAnswer = (problem) => {
     { keys: ['battery','charging','charge'], ans: `Battery issue! 🔋 Yeh dekho:\nStep 1: Charger plug nikalo → 30 sec wait → dobara lagao\nStep 2: Dusra power socket try karo\nStep 3: Agar nahi charga → ticket raise karo (hardware issue)\nBatao result! ✅` },
     { keys: ['overheat','hot','fan','temperature'], ans: `Laptop garam ho raha hai! 🌡️\nStep 1: Saare tabs/apps band karo → laptop stand use karo\nStep 2: Ctrl+Shift+Esc → CPU → heavy apps End Task karo\nStep 3: Clean karo laptop vents (air blower se)\nBetter feel hoga! ✅` },
     { keys: ['black screen','screen black','display'], ans: `Screen black! 🖥️ Try karo:\nStep 1: Power button 10 sec dabao → release → restart\nStep 2: Fn+F7 ya Fn+F8 (brightness keys)\nStep 3: External monitor lagao → agar dikhta hai toh screen issue → ticket\nBatao! ✅` },
-    { keys: ['keyboard','key','type'], ans: `Keyboard issue! ⌨️ Try karo:\nStep 1: Laptop restart karo\nStep 2: Ctrl+Shift+Esc → Driver update check\nStep 3: On-Screen Keyboard: Settings → Accessibility → Keyboard ON\nAgar physical damage hai → ticket raise karo! ✅` },
-    { keys: ['touchpad','mouse','cursor'], ans: `Touchpad kaam nahi kar raha! 🖱️\nStep 1: Fn+F9 dabao (touchpad enable/disable toggle)\nStep 2: Restart laptop\nStep 3: Device Manager → Mice → Uninstall → Restart (auto reinstall)\nBatao! ✅` },
+    { keys: ['keyboard not working','keyboard kaam nahi','keyboard issue','keyboard problem','keys not working'], ans: `Keyboard issue! ⌨️ Try karo:\nStep 1: Laptop restart karo\nStep 2: On-Screen Keyboard: Settings → Accessibility → Keyboard ON\nStep 3: Device Manager → Keyboards → Uninstall → Restart\nAgar physical damage hai → ticket raise karo! ✅` },
+    { keys: ['touchpad','mouse not working','cursor not moving','cursor stuck'], ans: `Touchpad/Mouse issue! 🖱️\nStep 1: Fn+F9 dabao (touchpad toggle)\nStep 2: Restart laptop\nStep 3: Device Manager → Mice → Uninstall → Restart\nBatao! ✅` },
     { keys: ['teams','microsoft teams'], ans: `Teams issue! 📹 Try karo:\nStep 1: Teams puri tarah band karo (system tray se) → dobara open\nStep 2: Teams Settings → Clear Cache → restart\nStep 3: Agar nahi chala → ticket raise karo\nKaam aa jaye! ✅` },
     { keys: ['outlook','email','mail'], ans: `Outlook problem! 📧 Try karo:\nStep 1: Ctrl+Shift+Esc → Outlook → End Task → dobara open\nStep 2: Win+R → outlook /safe → Enter (safe mode)\nStep 3: File → Account Settings → Repair\nBatao kya hua! ✅` },
     { keys: ['password','forgot','reset'], ans: `Password reset chahiye! 🔑\nWindows password = Ticket raise karo (IT reset karega)\nEmail password = Ticket raise karo\nGoogle account = myaccount.google.com → Security → Password\nTicket banane ke liye type karo: *ha* ✅` },
@@ -532,15 +535,18 @@ const getKBAnswer = (problem) => {
     { keys: ['vpn','remote','connect'], ans: `VPN/Remote access ke liye IT ticket raise karo — IT team setup karega.\nType karo: *ha* ✅` },
   ];
 
-  // "Still not working" / failed step follow-up
-  const isStillNotWorking = /still\s*not\s*working|abhi\s*bhi\s*nahi|nahi\s*hua|nahi\s*chala|nahi\s*chal\s*raha|kaam\s*nahi\s*kiya|phir\s*bhi\s*nahi|same\s*problem|same\s*issue/i.test(p);
-  if (isStillNotWorking) {
-    return `Koi baat nahi! 😊 IT team ka sahayata lenge.\n\nTicket raise karo — IT turant dekh legi:\nType karo: *raise ticket* ✅\n\nYa seedha /ticket command use karo.`;
-  }
-
   for (const { keys, ans } of quickAnswers) {
     if (keys.some(k => p.includes(k))) return ans;
   }
+
+  // "Still not working" — only short phrases (not full questions)
+  const words = p.trim().split(/\s+/);
+  const isShortFailMessage = words.length <= 6 &&
+    /still\s*not\s*working|abhi\s*bhi\s*nahi\s*(chal|hua|ho)|nahi\s*chala|nahi\s*chal\s*raha|kaam\s*nahi\s*(kiya|kar\s*raha)|phir\s*bhi\s*nahi|same\s*problem/i.test(p);
+  if (isShortFailMessage) {
+    return `Koi baat nahi! 😊 IT team se help lenge.\nTicket raise karo — turant dekh legi:\nType karo: *raise ticket* ✅`;
+  }
+
   return null; // No match — let AI handle it
 };
 
