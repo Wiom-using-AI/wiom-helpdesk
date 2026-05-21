@@ -665,18 +665,13 @@ app.listen(PORT, async () => {
  },
  accessory: {
  type: 'image',
- image_url: 'https://img.icons8.com/fluency/96/bot.png',
+ image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.png',
  alt_text: 'Zivon AI Bot'
  }
  },
  {
- type: 'section',
- text: { type: 'mrkdwn', text: `🟢 *Zivon is Online*\n_Ready to help you 24/7_` },
- accessory: {
- type: 'image',
- image_url: 'https://img.icons8.com/fluency/48/activity-grid.png',
- alt_text: 'online'
- }
+ type: 'context',
+ elements: [{ type: 'mrkdwn', text: '🟢 *Zivon is Online* — Ready to help you 24/7' }]
  },
 
  { type: 'divider' },
