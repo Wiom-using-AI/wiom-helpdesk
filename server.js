@@ -846,16 +846,8 @@ app.listen(PORT, async () => {
  });
  }
 
- // ── FOOTER + SOS ───────────────────────────────────────────────────────
+ // ── FOOTER ─────────────────────────────────────────────────────────────
  blocks.push({ type: 'divider' });
- blocks.push({
- type: 'actions',
- elements: [{
- type: 'button', style: 'danger',
- text: { type: 'plain_text', text: '🆘 SOS IT Emergency', emoji: true },
- action_id: 'home_sos', value: 'sos'
- }]
- });
  blocks.push({
  type: 'context',
  elements: [{ type: 'mrkdwn', text: `_Can't find your issue? Type your problem in DM. I'll help you out! 😊_ &nbsp;&nbsp;|&nbsp;&nbsp; _Made with ❤️ by WIOM IT Team_` }]
