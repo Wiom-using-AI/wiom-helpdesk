@@ -1468,6 +1468,9 @@ app.listen(PORT, async () => {
  });
 
  // ── APP HOME TAB ─────────────────────────────────────────────────────
+ // Track who got the greeting DM already (so it only sends once per session)
+ const greetedUsers = new Set();
+
  slackApp.event('app_home_opened', async ({ event, client }) => {
  try {
  const userId = event.user;
@@ -1479,6 +1482,44 @@ app.listen(PORT, async () => {
  const expandedSet = expandedHomeMap.get(userId) || new Set();
  const blocks = buildHomeBlocks(emp, myTickets, expandedSet);
  await client.views.publish({ user_id: userId, view: { type: 'home', blocks } });
+
+ // Send greeting DM once per session when user opens Home Tab
+ if (!greetedUsers.has(userId)) {
+ greetedUsers.add(userId);
+ const firstName = emp?.name?.split(' ')[0] || 'there';
+ try {
+ const dm = await client.conversations.open({ users: userId });
+ await client.chat.postMessage({
+ channel: dm.channel.id,
+ text: `Hello ${firstName}! Main Zivon hoon — aapki kya help karu? 😊`,
+ blocks: [
+ {
+ type: 'section',
+ text: {
+ type: 'mrkdwn',
+ text: `*Hello ${firstName}! 👋*\n*Main Zivon hoon ⚡ — aapki kya help karu?* 😊\n\nKoi bhi IT problem ho — laptop, WiFi, software — batao, turant help karunga!`
+ },
+ accessory: {
+ type: 'image',
+ image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif',
+ alt_text: 'Zivon'
+ }
+ },
+ {
+ type: 'actions',
+ elements: [
+ { type: 'button', style: 'primary', text: { type: 'plain_text', text: '💻 Laptop Issue', emoji: true }, action_id: 'dm_cat_laptop', value: 'laptop' },
+ { type: 'button', text: { type: 'plain_text', text: '🌐 WiFi / Net', emoji: true }, action_id: 'dm_cat_network', value: 'network' },
+ { type: 'button', text: { type: 'plain_text', text: '⚙️ Software', emoji: true }, action_id: 'dm_cat_software', value: 'software' },
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🆘 SOS', emoji: true }, action_id: 'home_sos', value: 'sos' }
+ ]
+ }
+ ]
+ });
+ } catch (dmErr) {
+ console.error('Greeting DM error:', dmErr.message);
+ }
+ }
  } catch (err) {
  console.error('App Home error:', err.message);
  }
