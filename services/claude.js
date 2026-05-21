@@ -170,6 +170,13 @@ WiFi not working (2nd attempt — if 1st failed): Device Manager → Network Ada
 WiFi not working (3rd attempt — if 2nd failed): Win+R → cmd → type: netsh winsock reset → Enter → restart laptop → reconnect
 Slow internet (1st): Forget network → reconnect (password: spartans500) → close heavy apps (Teams, Chrome) → restart laptop
 Slow internet (2nd attempt): Device Manager → Network adapters → WiFi → right-click → Update driver → Search automatically
+⚡ WiFi password question (HIGHEST PRIORITY — ANSWER DIRECTLY, NO STEPS):
+If anyone asks WiFi password / wifi ka password / pass kya hai / network password → IMMEDIATELY reply:
+"WiFi Password 📶
+Password: spartans500 (sabhi networks ke liye same)
+Networks: Wiom office 5g-Test (Ground floor) | Wiom office Guest | Wiom office 3rd floor | Wiomnet-Saket (Password: Password@12345)"
+DO NOT give steps to find password. DO NOT say "Device Manager". Just give the password directly.
+
 WiFi password: spartans500 — same for all networks
 WiFi networks: "Wiom office 5g-Test" Ground floor (password: spartans500) | "Wiom office Guest" (password: spartans500) | "Wiom office 3rd floor" 3rd floor (password: spartans500) | "Wiomnet" Saket office (password: Password@12345)
 Hotspot (1st): Phone hotspot OFF → ON → laptop forget hotspot → reconnect → ensure mobile data ON on phone
@@ -468,10 +475,30 @@ const getKBAnswer = (problem) => {
   if (!problem) return null;
   const p = problem.toLowerCase();
 
+  // ── Special multi-keyword checks FIRST (before single-keyword matches) ──
+  const isWifiPassword = (p.includes('wifi') || p.includes('wi-fi') || p.includes('wiom') || p.includes('network')) &&
+    (p.includes('password') || p.includes('pass') || p.includes('pwd') || p.includes('pssword') ||
+     p.includes('pasword') || p.includes('passward') || p.includes('pasward') ||
+     p.includes('kay hai') || p.includes('kya hai') || p.includes('batao') || p.includes('kya h') ||
+     p.includes('bata') || p.includes('kya he') || p.includes('kya') || p.includes('hai') ||
+     p.includes('bolo') || p.includes('what') || p.includes('tell'));
+
+  // Direct "wifi password" / "password bata" type questions
+  const isDirectPasswordQuestion =
+    /^(wifi|wi-fi|network|wiom)[\s\-]*(password|pass|pwd|pasword|passward|pasward)/i.test(p.trim()) ||
+    /^password[\s\-]*(wifi|wi-fi|network|wiom)/i.test(p.trim()) ||
+    /wifi\s*(ka|ke|ki)?\s*(password|pass|pwd)/i.test(p) ||
+    /password\s*(kya|kay|kia|ki|ka|ke)?\s*(hai|he|h|hain)/i.test(p) ||
+    /^(pass|pwd|password)\s*$/i.test(p.trim());
+
+  if (isWifiPassword || isDirectPasswordQuestion) {
+    return `WiFi Password 📶\n\n*Sab networks ka same password hai:*\n🔑 Password: \`spartans500\`\n\n*Available Networks:*\n• *Wiom office 5g-Test* — Ground floor\n• *Wiom office Guest* — Guest network\n• *Wiom office 3rd floor* — 3rd floor\n• *Wiomnet* — Saket office (Password: \`Password@12345\`)\n\nKaam aa gaya toh batao! ✅`;
+  }
+
   // Map of keywords → instant KB answers
   const quickAnswers = [
     { keys: ['slow','speed','hang','freeze','sluggish'], ans: `Koi baat nahi! 🔧 Yeh try karo:\nStep 1: Ctrl+Shift+Esc → CPU column click → top process → End Task\nStep 2: Win+R → %temp% → Ctrl+A → Delete\nStep 3: Restart laptop\nThodi der mein fast ho jayega! ✅` },
-    { keys: ['wifi','internet','network','connection'], ans: `Dekho yeh karo! 📶\nStep 1: Taskbar WiFi icon → OFF karo → 10 sec → ON karo\nStep 2: Forget network → dobara password enter karo\nStep 3: Laptop restart karo\nKaam aa jaye toh batao! ✅` },
+    { keys: ['wifi','internet','network','connection'], ans: `Dekho yeh karo! 📶\nStep 1: Taskbar WiFi icon → OFF karo → 10 sec → ON karo\nStep 2: Forget network → dobara password enter karo: spartans500\nStep 3: Laptop restart karo\nKaam aa jaye toh batao! ✅` },
     { keys: ['blue screen','bsod','bluescreen'], ans: `BSOD aa gaya! 💙 Try karo:\nStep 1: Laptop restart karo (mostly fix ho jata hai)\nStep 2: Win+X → Device Manager → Display/Network → Update Driver\nStep 3: Agar baar baar aaye → ticket raise karo\nBatao kya hua! ✅` },
     { keys: ['battery','charging','charge'], ans: `Battery issue! 🔋 Yeh dekho:\nStep 1: Charger plug nikalo → 30 sec wait → dobara lagao\nStep 2: Dusra power socket try karo\nStep 3: Agar nahi charga → ticket raise karo (hardware issue)\nBatao result! ✅` },
     { keys: ['overheat','hot','fan','temperature'], ans: `Laptop garam ho raha hai! 🌡️\nStep 1: Saare tabs/apps band karo → laptop stand use karo\nStep 2: Ctrl+Shift+Esc → CPU → heavy apps End Task karo\nStep 3: Clean karo laptop vents (air blower se)\nBetter feel hoga! ✅` },
