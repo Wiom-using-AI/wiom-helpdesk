@@ -1555,6 +1555,41 @@ app.listen(PORT, async () => {
  }
  });
 
+ // ── SOS Issue selected → send DM with contact info ───────────────────
+ slackApp.action('sos_issue', async ({ body, ack, client }) => {
+ await ack();
+ const userId = body.user.id;
+ const issueType = body.actions[0].value;
+ try {
+ const emp = await Employee.findOne({ slackUserId: userId });
+ const name = emp?.name?.split(' ')[0] || 'Employee';
+ // Send DM
+ const dm = await client.conversations.open({ users: userId });
+ await client.chat.postMessage({
+ channel: dm.channel.id,
+ text: `🆘 SOS raised: ${issueType}`,
+ blocks: [
+ { type: 'section', text: { type: 'mrkdwn', text: `*${name}, aapka SOS register ho gaya!* 🆘\n*Issue:* ${issueType}` }},
+ { type: 'divider' },
+ { type: 'section', text: { type: 'mrkdwn', text: `📞 *IT Admin se seedha contact karo:*\n📧 *Email:* sajan.kumar@wiom.in\n📱 *Phone:* *9654244281*\n\n_IT Admin ko notification bhej diya gaya hai — woh jald hi aapke paas aayenge!_ ✅` }},
+ ]
+ });
+ // Notify admin
+ if (process.env.SAJAN_SLACK_ID) {
+ await client.chat.postMessage({
+ channel: process.env.SAJAN_SLACK_ID,
+ text: `🆘 SOS Alert from ${emp?.name || userId}!`,
+ blocks: [
+ { type: 'header', text: { type: 'plain_text', text: '🆘 SOS EMERGENCY ALERT!', emoji: true }},
+ { type: 'section', text: { type: 'mrkdwn', text: `*Employee:* ${emp?.name || userId}\n*Emp ID:* ${emp?.empId || '-'}\n*Dept:* ${emp?.department || '-'}\n*Issue:* *${issueType}*` }}
+ ]
+ });
+ }
+ } catch (err) {
+ console.error('sos_issue error:', err.message);
+ }
+ });
+
  // ── DM category expand handlers — UPDATE message (no duplicate) ──────
  CATEGORIES.forEach(cat => {
  slackApp.action(`dm_cat_${cat.key}`, async ({ body, ack, client }) => {
@@ -1718,6 +1753,44 @@ app.listen(PORT, async () => {
  action_id: 'raise_ticket_email_pwd',
  value: 'email_password_reset'
  }]}
+ ]
+ }
+ });
+ return;
+ }
+
+ // ── SOS Emergency — show issue type selector ─────────────────
+ if (actionId === 'home_sos') {
+ await client.views.open({
+ trigger_id: triggerId,
+ view: {
+ type: 'modal',
+ title: { type: 'plain_text', text: '🆘 SOS IT Emergency', emoji: true },
+ close: { type: 'plain_text', text: 'Close', emoji: true },
+ blocks: [
+ {
+ type: 'section',
+ text: { type: 'mrkdwn', text: '*Please select issue type:*' }
+ },
+ {
+ type: 'actions',
+ elements: [
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🔴 Laptop Dead', emoji: true }, action_id: 'sos_issue', value: 'Laptop Dead — laptop is not turning on at all' },
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🌐 Internet Down', emoji: true }, action_id: 'sos_issue', value: 'Internet Down — no internet or network connectivity' }
+ ]
+ },
+ {
+ type: 'actions',
+ elements: [
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🔐 Account Locked', emoji: true }, action_id: 'sos_issue', value: 'Account Locked — cannot login to account or system' },
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '💻 Blue Screen', emoji: true }, action_id: 'sos_issue', value: 'Blue Screen — getting BSOD blue screen of death error' }
+ ]
+ },
+ { type: 'divider' },
+ {
+ type: 'section',
+ text: { type: 'mrkdwn', text: '📞 *IT Admin Direct Contact:*\n📧 *Email:* sajan.kumar@wiom.in\n📱 *Phone:* 9654244281' }
+ }
  ]
  }
  });
