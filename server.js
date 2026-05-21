@@ -2047,10 +2047,32 @@ app.listen(PORT, async () => {
  }
 
  // ── Normal AI chat ────────────────────────────────────────────────
- // Show instant typing indicator so user knows bot is working
+
+ // ── SPEED: Try KB first — instant answer, no API call ─────────────
+ const kbReply = claudeSvc.getKBAnswer ? claudeSvc.getKBAnswer(text) : null;
+ if (kbReply) {
+ const formattedKB = formatForSlack(kbReply);
+ const kbBlocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedKB }}];
+ // Check if ticket suggestion needed
+ if (/ticket|raise|help|IT team/i.test(kbReply)) {
+ kbBlocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? type karo: *ha*_ ✅` }]});
+ pendingTickets.set(userId, {
+ empId: emp.empId, empName: emp.empName, empEmail: emp.email,
+ empDept: emp.dept, empFloor: emp.floor,
+ laptop: emp.laptop, laptopSN: emp.laptopSN,
+ category: 'Other', priority: 'Medium',
+ description: text, source: 'slack', slackUserId: userId
+ });
+ }
+ await say({ text: kbReply, blocks: kbBlocks });
+ return;
+ }
+
+ // KB miss → start session load early, show thinking in parallel
+ const convPromise = getSlackSession(userId, emp);
  const thinkingMsg = await say({ text: '⏳ Soch raha hoon...' });
 
- const conv = await getSlackSession(userId, emp);
+ const conv = await convPromise;
  conv.messages.push({ role: 'user', content: text });
  if (conv.messages.length > 20) conv.messages = conv.messages.slice(-20);
 

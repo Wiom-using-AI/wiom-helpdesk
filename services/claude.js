@@ -512,7 +512,17 @@ const getKBAnswer = (problem) => {
     { keys: ['sound','audio','speaker','no sound'], ans: `Sound nahi aa raha! 🔊 Try karo:\nStep 1: Taskbar speaker icon → volume check → unmute\nStep 2: Right-click speaker → Sound settings → Output device check\nStep 3: Win+R → mmsys.cpl → test speakers\nKaam aa jaye! ✅` },
     { keys: ['camera','webcam'], ans: `Camera issue! 📷 Try karo:\nStep 1: Teams/Zoom Settings → Camera → sahi device select karo\nStep 2: Device Manager → Cameras → Disable → Enable\nStep 3: Privacy Settings → Camera → Apps ko allow karo\nBatao! ✅` },
     { keys: ['storage','disk','full','space'], ans: `Storage full! 💾 Karo yeh:\nStep 1: Win+R → cleanmgr → C: → Clean system files\nStep 2: Win+R → %temp% → Ctrl+A → Delete\nStep 3: Recycle Bin empty karo\nFree space ho jayega! ✅` },
+    { keys: ['printer','print'], ans: `Printer issue! 🖨️ Try karo:\nStep 1: Printer OFF → ON karo, USB/WiFi check karo\nStep 2: Win+R → services.msc → Print Spooler → Restart\nStep 3: Agar nahi chala → ticket raise karo\nBatao! ✅` },
+    { keys: ['zoom','meet','video call','video conference'], ans: `Zoom/Meet issue! 🎥 Try karo:\nStep 1: Zoom/Meet band karo → dobara open\nStep 2: Internet check karo → browser mein try karo\nStep 3: Settings → Audio/Video → sahi device select karo\nBatao! ✅` },
+    { keys: ['excel','word','office','powerpoint'], ans: `MS Office issue! 📄 Try karo:\nStep 1: App puri tarah band karo → restart karo\nStep 2: Win+R → %appdata%\\Microsoft → delete temp files\nStep 3: File → Open & Repair option try karo\nNahi hua → ticket raise karo! ✅` },
+    { keys: ['vpn','remote','connect'], ans: `VPN/Remote access ke liye IT ticket raise karo — IT team setup karega.\nType karo: *ha* ✅` },
   ];
+
+  // "Still not working" / failed step follow-up
+  const isStillNotWorking = /still\s*not\s*working|abhi\s*bhi\s*nahi|nahi\s*hua|nahi\s*chala|nahi\s*chal\s*raha|kaam\s*nahi\s*kiya|phir\s*bhi\s*nahi|same\s*problem|same\s*issue/i.test(p);
+  if (isStillNotWorking) {
+    return `Koi baat nahi! 😊 IT team ka sahayata lenge.\n\nTicket raise karo — IT turant dekh legi:\nType karo: *raise ticket* ✅\n\nYa seedha /ticket command use karo.`;
+  }
 
   for (const { keys, ans } of quickAnswers) {
     if (keys.some(k => p.includes(k))) return ans;
