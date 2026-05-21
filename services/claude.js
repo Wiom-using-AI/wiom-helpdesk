@@ -11,7 +11,7 @@ let modelLogged = false;
 const activeModel = () => anthropic ? 'claude-3-5-haiku-20241022 (Anthropic)' : 'llama-3.3-70b-versatile (Groq)';
 
 // ── WIOM IT System Prompt ─────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Tu WIOM ka IT support dost hai — ek real helpful colleague ki tarah baat karta hai, bilkul robot ki tarah nahi.
+const SYSTEM_PROMPT = `Tu Zivon hai — WIOM ka smart IT helpdesk assistant. Ek real helpful dost ki tarah baat karta hai, bilkul robot ki tarah nahi.
 
 ━━━ SABSE ZAROORI: INSAAN KI TARAH BAT KARO ━━━
 Tu ek dost hai jo IT mein expert hai. Koi employee problem leke aaya hai — usse warmly, naturally baat kar.
@@ -49,7 +49,7 @@ Password bhool gaya → "Koi baat nahi yaar, hota hai! Windows/email password ke
 
 ━━━ AFTER STEPS FAIL ━━━
 Pehli baar fail → Naye steps do (bilkul different, repeat mat karo)
-Doosri baar fail → "Yaar yeh thoda zyada tricky lag raha hai — IT team ko dikhana padega. Type karo *ha*, main ticket bhej deta hoon! 🎫"
+Doosri baar fail → "Yaar yeh thoda zyada tricky lag raha hai — IT team ko dikhana padega. Type karo *ha*, main ticket bhej deta hoon! 🎫\nAgar possible ho toh ek *screenshot* bhi bhejo — IT team ko bahut help milegi! 📸"
 
 ━━━ TICKET RULES ━━━
 ❌ Kabhi mat kaho "Ticket raised successfully / created / submitted" — TU ticket create nahi kar sakta
@@ -450,7 +450,7 @@ const getKBAnswer = (problem) => {
   // Map of keywords → instant KB answers
   const quickAnswers = [
     { keys: ['slow','speed','hang','freeze','sluggish'], ans: `Koi baat nahi! 🔧 Yeh try karo:\nStep 1: Ctrl+Shift+Esc → CPU column click → top process → End Task\nStep 2: Win+R → %temp% → Ctrl+A → Delete\nStep 3: Restart laptop\nThodi der mein fast ho jayega! ✅` },
-    { keys: ['wifi','internet','network','connection'], ans: `Dekho yeh karo! 📶\nStep 1: Taskbar WiFi icon → OFF karo → 10 sec → ON karo\nStep 2: Forget network → dobara password enter karo: spartans500\nStep 3: Laptop restart karo\nKaam aa jaye toh batao! ✅` },
+    { keys: ['wifi','internet','network','connection'], ans: `Arre WiFi ka issue! 📶 Yeh try karo:\n\nTaskbar WiFi icon OFF karo → 10 sec ruko → ON karo. Phir forget network karo aur dobara connect karo (password: \`spartans500\`)\n\nYa ye DNS fix command run karo — Win+R dabao, type karo:\n\`\`\`\nipconfig /flushdns\n\`\`\`\nPhir restart karo. Batana kaise gaya! 😊` },
     { keys: ['blue screen','bsod','bluescreen'], ans: `BSOD aa gaya! 💙 Try karo:\nStep 1: Laptop restart karo (mostly fix ho jata hai)\nStep 2: Win+X → Device Manager → Display/Network → Update Driver\nStep 3: Agar baar baar aaye → ticket raise karo\nBatao kya hua! ✅` },
     { keys: ['battery','charging','charge'], ans: `Battery issue! 🔋 Yeh dekho:\nStep 1: Charger plug nikalo → 30 sec wait → dobara lagao\nStep 2: Dusra power socket try karo\nStep 3: Agar nahi charga → ticket raise karo (hardware issue)\nBatao result! ✅` },
     { keys: ['overheat','hot','fan','temperature'], ans: `Laptop garam ho raha hai! 🌡️\nStep 1: Saare tabs/apps band karo → laptop stand use karo\nStep 2: Ctrl+Shift+Esc → CPU → heavy apps End Task karo\nStep 3: Clean karo laptop vents (air blower se)\nBetter feel hoga! ✅` },
@@ -479,7 +479,7 @@ const getKBAnswer = (problem) => {
   const isShortFailMessage = words.length <= 6 &&
     /still\s*not\s*working|abhi\s*bhi\s*nahi\s*(chal|hua|ho)|nahi\s*chala|nahi\s*chal\s*raha|kaam\s*nahi\s*(kiya|kar\s*raha)|phir\s*bhi\s*nahi|same\s*problem/i.test(p);
   if (isShortFailMessage) {
-    return `Koi baat nahi! 😊 IT team se help lenge.\nTicket raise karo — turant dekh legi:\nType karo: *raise ticket* ✅`;
+    return `Koi baat nahi! 😊 IT team se help lenge — woh turant dekh legi.\nType karo: *ha* aur ticket bhej deta hoon 🎫\n\nAgar ek *screenshot* le sako toh bhejo — IT team ko bahut help milegi! 📸`;
   }
 
   return null; // No match — let AI handle it

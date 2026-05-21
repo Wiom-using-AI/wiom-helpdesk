@@ -629,10 +629,10 @@ app.listen(PORT, async () => {
  const greeting = istHour < 12 ? 'Good Morning' : istHour < 17 ? 'Good Afternoon' : 'Good Evening';
 
  const blocks = [
- { type:'header', text:{ type:'plain_text', text:'WIOM IT Helpdesk', emoji:true }},
+ { type:'header', text:{ type:'plain_text', text:'⚡ Zivon — WIOM IT Helpdesk', emoji:true }},
 
  { type:'section', text:{ type:'mrkdwn', text:
- '*' + greeting + ', ' + name + '!* :wave:\nSelect a category below or *type your problem directly in DM* AI will help instantly.\n_To create a ticket: type `/ticket`_'
+ '*' + greeting + ', ' + name + '!* :wave:\n_Main Zivon hoon — aapka WIOM IT assistant!_ Koi bhi IT problem ho — laptop, WiFi, software — batao, turant help karunga! 😊\n_Ticket ke liye: `/ticket` type karo_'
  }},
 
  ...(emp ? [{
@@ -1773,9 +1773,9 @@ app.listen(PORT, async () => {
  pendingTickets.delete(userId);
  const firstName = (emp.empName || 'there').split(' ')[0];
  await say({
- text: `Hello ${firstName}! WIOM IT Helpdesk`,
+ text: `Hey ${firstName}! Main Zivon hoon ⚡`,
  blocks: [
- { type:'section', text:{ type:'mrkdwn', text:`*Hello ${firstName}!* \n_Apni IT problem category select karo:_` }},
+ { type:'section', text:{ type:'mrkdwn', text:`*Hey ${firstName}!* 👋 Main *Zivon* hoon — WIOM ka IT helpdesk assistant!\n_Kya problem hai? Category select karo ya seedha type karo:_` }},
  { type:'divider' },
  ...CATEGORIES.map(cat => ({
  type: 'actions',
@@ -1879,7 +1879,7 @@ app.listen(PORT, async () => {
  for (let i = 0; i < btns.length; i += 4) rows.push(btns.slice(i, i + 4));
 
  const blocks = [
- { type: 'section', text: { type: 'mrkdwn', text: `*Kya problem aa rahi hai exactly?* Select karo:` }},
+ { type: 'section', text: { type: 'mrkdwn', text: `*🤔 Kya problem aa rahi hai exactly?* Select karo — Zivon turant help karega:` }},
  ];
  rows.forEach(row => {
  blocks.push({
@@ -1893,9 +1893,35 @@ app.listen(PORT, async () => {
  });
  });
 
- await say({ text: 'Kya problem hai exactly? Select karo:', blocks });
+ await say({ text: 'Zivon: Kya problem hai? Select karo:', blocks });
 
  // Register handlers for these vague-pick actions (once per server start — use regex)
+ return;
+ }
+
+ // ── Catch-all: completely vague short messages → show category buttons ──
+ const isCatchAllVague = text.trim().split(/\s+/).length <= 4 &&
+ /^(help|problem|issue|kuch|kuch\s*nahi|kuch\s*ho\s*gaya|nahi\s*chal|kaam\s*nahi|help\s*karo|kuch\s*hua|ajeeb|theek\s*nahi|dekho|sun|ek\s*problem|problem\s*hai|issue\s*hai|ek\s*issue|dikkat|dikkat\s*hai)/i.test(text.trim());
+ if (isCatchAllVague) {
+ await say({
+ text: 'Kya problem hai? Select karo:',
+ blocks: [
+ { type:'section', text:{ type:'mrkdwn', text:`*🤔 Thoda aur bata sakte ho?*\nKis cheez mein problem aa rahi hai:` }},
+ { type:'actions', elements: [
+ { type:'button', text:{ type:'plain_text', text:'💻 Laptop', emoji:true }, action_id:'vague_pick_laptop_other', value:'laptop hardware issue' },
+ { type:'button', text:{ type:'plain_text', text:'📶 WiFi / Internet', emoji:true }, action_id:'vague_pick_wifi_not_connect', value:'wifi not connecting' },
+ { type:'button', text:{ type:'plain_text', text:'🔑 Password / Login', emoji:true }, action_id:'vague_pick_password_reset', value:'forgot laptop password' },
+ { type:'button', text:{ type:'plain_text', text:'💿 Software / App', emoji:true }, action_id:'vague_pick_software_other', value:'software issue' },
+ ]},
+ { type:'actions', elements: [
+ { type:'button', text:{ type:'plain_text', text:'🖨️ Printer', emoji:true }, action_id:'vague_pick_printer', value:'printer not working' },
+ { type:'button', text:{ type:'plain_text', text:'📧 Email / Outlook', emoji:true }, action_id:'vague_pick_outlook_issue', value:'Outlook not working' },
+ { type:'button', text:{ type:'plain_text', text:'📹 Teams / Zoom', emoji:true }, action_id:'vague_pick_teams_issue', value:'Microsoft Teams not working' },
+ { type:'button', text:{ type:'plain_text', text:'🎫 Create Ticket', emoji:true }, style:'primary', action_id:'vague_pick_create_ticket', value:'create ticket' },
+ ]},
+ { type:'context', elements:[{ type:'mrkdwn', text:`_Ya seedha apni problem type karo — Zivon samjhega! 😊_` }]}
+ ]
+ });
  return;
  }
 
@@ -2197,10 +2223,10 @@ app.listen(PORT, async () => {
 
  await slackApp.client.chat.postMessage({
  channel: adminId,
- text : ` Good Morning! IT Helpdesk Daily Summary ${dateStr}`,
+ text : `⚡ Zivon — Good Morning! IT Helpdesk Daily Summary ${dateStr}`,
  blocks : [
- { type:'header', text:{ type:'plain_text', text:` IT Helpdesk Daily Summary`, emoji:true }},
- { type:'context', elements:[{ type:'mrkdwn', text:`_${dateStr}_` }]},
+ { type:'header', text:{ type:'plain_text', text:`⚡ Zivon — Daily IT Summary`, emoji:true }},
+ { type:'context', elements:[{ type:'mrkdwn', text:`_${dateStr} | Your Smart Office IT Buddy_` }]},
  { type:'divider' },
  { type:'section', fields:[
  { type:'mrkdwn', text:`* Aaj Aaye*\n*${newToday}* tickets` },
@@ -2213,7 +2239,7 @@ app.listen(PORT, async () => {
  { type:'divider' },
  { type:'section', text:{ type:'mrkdwn', text:`*⏳ Sabse Purane Pending Tickets:*\n${oldestText}` }}
  ] : []),
- { type:'context', elements:[{ type:'mrkdwn', text:`_Aaj ki shuruat mubarak! IT Helpdesk: IT Helpdesk (Slack)_` }]}
+ { type:'context', elements:[{ type:'mrkdwn', text:`_Aaj ki shuruat mubarak! ⚡ Zivon — Your Smart Office IT Buddy_` }]}
  ]
  });
  console.log(' Daily summary sent to admin');
