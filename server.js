@@ -134,7 +134,7 @@ cron.schedule('*/30 * * * *', () => {
 // ── Auto-Escalation Cron: Every hour ─────────────────────────────────────────
 cron.schedule('0 * * * *', async () => {
  try {
- const adminId = process.env.ADMIN_EMAIL_SLACK_ID;
+ const adminId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
  if (!slackClient || !adminId || adminId === 'FILL_KARO') return;
 
  const fourHoursAgo = new Date(Date.now() - 4 * 3600000);
@@ -244,7 +244,7 @@ cron.schedule('0 2 * * *', async () => {
 cron.schedule('*/30 * * * *', async () => {
  try {
  if (!slackClient) return;
- const adminId = process.env.ADMIN_EMAIL_SLACK_ID;
+ const adminId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
  if (!adminId || adminId === 'FILL_KARO') return;
 
  const oneHourAgo = new Date(Date.now() - 3600000);
@@ -988,7 +988,7 @@ app.listen(PORT, async () => {
  // ── Notify admin ──────────────────────────────────────────────────────
  const notifyAdmin = async (client, ticket, emp) => {
  try {
- const adminId = process.env.ADMIN_EMAIL_SLACK_ID;
+ const adminId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
  if (!adminId || adminId === 'FILL_KARO') return;
  const priEmoji = { Critical:'', High:'', Medium:'', Low:'' };
  const priColor = { Critical:'#ef4444', High:'#f59e0b', Medium:'#3b82f6', Low:'#10b981' };
@@ -1264,7 +1264,7 @@ app.listen(PORT, async () => {
  // ── /broadcast — Admin sends message to all employees ─────────────────────
  slackApp.command('/broadcast', async ({ command, ack, client }) => {
  await ack();
- const adminId = process.env.ADMIN_EMAIL_SLACK_ID;
+ const adminId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
  // Only admin can broadcast
  if (adminId && command.user_id !== adminId) {
  await client.chat.postEphemeral({
@@ -2238,7 +2238,7 @@ app.listen(PORT, async () => {
  ]
  });
  // Notify admin
- const adminId = process.env.ADMIN_EMAIL_SLACK_ID;
+ const adminId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
  if (adminId && adminId !== 'FILL_KARO' && slackClient) {
  slackClient.chat.postMessage({
  channel: adminId,
@@ -2882,7 +2882,7 @@ app.listen(PORT, async () => {
  app.locals.slackClient = slackApp.client;
 
  // Auto-link admin Slack ID
- const adminSlackId = process.env.ADMIN_EMAIL_SLACK_ID;
+ const adminSlackId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
  if (adminSlackId && adminSlackId !== 'FILL_KARO') {
  await Employee.findOneAndUpdate(
  { name: { $regex: 'ADMIN_EMAIL', $options: 'i' } },
@@ -2894,7 +2894,7 @@ app.listen(PORT, async () => {
  // ── FEATURE 6: Daily 9AM IST summary (= 03:30 UTC) ───────────────
  cron.schedule('30 3 * * *', async () => {
  try {
- const adminId = process.env.ADMIN_EMAIL_SLACK_ID;
+ const adminId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
  if (!adminId || adminId === 'FILL_KARO') return;
 
  const todayStart = new Date();
