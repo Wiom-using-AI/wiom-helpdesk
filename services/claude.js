@@ -283,13 +283,15 @@ const getKBFallback = (problem) => {
   if (p.includes('virus') || p.includes('malware') || p.includes('antivirus'))
     return `Virus scan ! 🦠\nStep 1: Windows Security kholo → Virus & threat protection.\nStep 2: Quick Scan karo → wait karo.\nStep 3: Serious lag raha → raise a ticket: type *raise ticket* 🎫\nClick the script button below! ⬇️`;
   if (p.includes('kaise ho') || p.includes('kaisa hai') || p.includes('how are you') || p.includes('kya haal'))
-    return 'Main bilkul theek hoon! Batao kya IT problem aa rahi hai - help ke liye ready hoon!';
+    return 'Theek hoon! Batao kya IT problem hai, help karta hoon 😊';
   if (p.includes('thanks') || p.includes('shukriya') || p.includes('thank you') || p.includes('dhanyawad'))
-    return 'Khushi hui! Koi bhi aur IT problem ho toh batao - hamesha yahan hoon!';
-  if (p === 'hello' || p === 'hi' || p === 'hey' || p.includes('namaste') || p.includes('hii'))
-    return 'Hello! WIOM IT Helpdesk mein aapka swagat hai! Kya IT problem hai - batao, turant help karunga!';
+    return 'Khushi hui! Koi aur IT problem ho toh batao 😊';
+  if (/^(hello|hi+|hey|namaste|namaskar|hlo|helo)\s*[!.]*$/i.test(p.trim()))
+    return 'Hello! Kya IT problem hai — batao, abhi help karta hoon 😊';
+  if (/\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(p) || /\b(tum|aap)\s*(kya|kise|kaun)\b/i.test(p))
+    return `Main *Zivon* hoon — WIOM ka IT helpdesk assistant ⚡\nLaptop, WiFi, software, password — kisi bhi IT problem mein help karta hoon.\nBatao kya issue hai! 😊`;
   if (p.includes('sajan') || p.includes('admin') || p.includes('it head') || p.includes('phone number') || p.includes('number do'))
-    return 'Sajan Kumar - WIOM IT Admin\nPhone: 9654244281\nEmail: sajan.kumar@wiom.in\nTicket banana ho toh type karo: *raise ticket*';
+    return 'Sajan Kumar — WIOM IT Admin\nPhone: 9654244281\nEmail: sajan.kumar@wiom.in\nTicket ke liye type karo: *raise ticket*';
   // Generic fallback
   return `Your issue has been noted! 🔧\nStep 1: First restart your laptop — this fixes most issues.\nStep 2: Neeche script button hai — ek click mein automatic fix try ! ⬇️\nStep 3: Still not working? Type your problem in DM for more help! 💬`;
 };
@@ -472,9 +474,12 @@ const getKBAnswer = (problem) => {
     return `Great! Khushi hui ki resolve ho gaya 😊✅ Aur koi IT help chahiye toh zaroor batao!`;
   }
 
-  // ── Identity questions ───────────────────────────────────────────────────
-  if (/^(kise\s*hai|kise\s*ho|tum\s*kaun\s*ho|aap\s*kaun\s*ho|kaun\s*ho|kaun\s*hain|what\s*are\s*you|who\s*are\s*you|bot\s*hai\s*kya|kya\s*tum\s*bot|are\s*you\s*a\s*bot|introduce|apna\s*parichay)\s*\??$/i.test(p.trim())) {
-    return `Hey! Main *Zivon* hoon ⚡ — WIOM ka smart IT helpdesk assistant! 🤖\nLaptop slow ho ya WiFi na chale, software issue ho ya password bhool gaye — sab mein help karta hoon.\nBatao kya problem hai, abhi fix karte hain! 😊`;
+  // ── Identity questions — broad match, instant reply, no AI needed ───────
+  const isIdentityQ =
+    /^(kise\s*hai|kise\s*ho|tum\s*kise\s*ho|aap\s*kise\s*ho|tum\s*kaun\s*ho|aap\s*kaun\s*ho|kaun\s*ho|kaun\s*hain|kaun\s*hai|tum\s*kya\s*ho|aap\s*kya\s*ho|kya\s*ho\s*tum|kya\s*hain\s*aap|what\s*are\s*you|who\s*are\s*you|bot\s*hai\s*kya|kya\s*tum\s*bot|are\s*you\s*a\s*bot|introduce|apna\s*parichay|apne\s*bare\s*mein\s*batao)\s*\??$/i.test(p.trim()) ||
+    /\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(p) && p.split(/\s+/).length <= 5;
+  if (isIdentityQ) {
+    return `Main *Zivon* hoon — WIOM ka IT helpdesk assistant ⚡\nLaptop, WiFi, software, password — kisi bhi IT problem mein help karta hoon.\nBatao kya issue hai! 😊`;
   }
 
   // ── Ticket status / ETA questions (typo-tolerant: tiket/tikket/ticket) ──
