@@ -411,7 +411,14 @@ const getKBAnswer = (problem) => {
   };
 
   // ── Only EXACT FACTS in KB — everything else → Claude asks follow-up ────
-  // Fan emergency (safety critical — must be instant)
+
+  // Fan noise/sound (fan IS running but making noise — NOT an emergency)
+  if (/fan\s*(sound|awaaz|baj|noise|shor|loud|kar\s*rha|chal\s*rha|aa\s*rhi)/i.test(p) ||
+      /\bfan\s+(kar|chal|baj|sound)/i.test(p)) {
+    return `Fan ki awaaz aa rahi hai — usually heavy apps se hota hai 🔊\nCtrl+Shift+Esc dabao → CPU column sort karo → koi heavy app End Task karo.\nLaptop hard surface pe rakhho (table pe, bed/sofa pe nahi).\nThodi der mein band ho jaaye toh theek hai. Agar bahut tez awaaz ho ya nahi ruki toh batao 🎫`;
+  }
+
+  // Fan emergency — fan NOT working at all (safety critical — instant response)
   if (/fan\s*(nahi\s*chal|band|kaam\s*nahi|not\s*work|chal\s*nahi)/i.test(p)) {
     return `Fan nahi chal raha — laptop abhi band karo aur charger nikaal do ⚠️ Hardware damage ho sakta hai. Type karo *ha*, ticket abhi bhejta hoon 🎫`;
   }

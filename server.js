@@ -640,39 +640,58 @@ app.listen(PORT, async () => {
  };
 
  // ── DM Script detector: maps free-text issue → script file + label ────
+ // ORDER IS CRITICAL — specific entries FIRST, general ones LAST
  const getScriptForText = (text) => {
    if (!text) return null;
    const t = text.toLowerCase();
-   if (/slow|hang|lagg|speed|fast|speed up|ram|memory|freeze|freez|stuck|chalta nahi|chalti nahi/.test(t)) return { file: 'fix-slow-laptop.bat', label: '⚡ Auto-Fix: Slow Laptop' };
-   if (/wifi|wi-fi|internet|network|connect|hotspot|broadband|ping|speed test/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
+   // ── Fan FIRST — before sound/speed checks (fan sound ≠ speaker sound) ──
+   if (/\bfan\b/.test(t)) return { file: 'fix-fan-noise.bat', label: '🌬️ Auto-Fix: Fan Noise' };
+   // ── Blue/Black screen before general screen ───────────────────────────
    if (/blue.?screen|bsod|bluescreen/.test(t)) return { file: 'fix-bluescreen.bat', label: '💙 Auto-Fix: Blue Screen' };
    if (/black.?screen|no display|blank screen/.test(t)) return { file: 'fix-black-screen.bat', label: '🖥️ Auto-Fix: Black Screen' };
-   if (/overheat|garam|hot|temp|fan noise|fan baj/.test(t)) return { file: 'fix-overheating.bat', label: '🌡️ Auto-Fix: Overheating' };
-   if (/battery|charg|charger|plug/.test(t)) return { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' };
-   if (/sound|audio|speaker|awaaz/.test(t)) return { file: 'fix-sound.bat', label: '🔊 Auto-Fix: Sound' };
-   if (/mic|microphone|awaz nahi|voice nahi/.test(t)) return { file: 'fix-mic.bat', label: '🎤 Auto-Fix: Microphone' };
-   if (/camera|camra|webcam|\bcam\b/.test(t)) return { file: 'fix-camera.bat', label: '📷 Auto-Fix: Camera' };
-   if (/keyboard|keys|typing|type nahi/.test(t)) return { file: 'fix-keyboard.bat', label: '⌨️ Auto-Fix: Keyboard' };
-   if (/touchpad|mouse|cursor/.test(t)) return { file: 'fix-touchpad.bat', label: '🖱️ Auto-Fix: Touchpad' };
-   if (/bluetooth|bt\b/.test(t)) return { file: 'fix-bluetooth.bat', label: '🔵 Auto-Fix: Bluetooth' };
-   if (/printer|print/.test(t)) return { file: 'fix-printer.bat', label: '🖨️ Auto-Fix: Printer' };
-   if (/teams|team/.test(t)) return { file: 'fix-teams.bat', label: '📹 Auto-Fix: Teams' };
-   if (/zoom/.test(t)) return { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' };
-   if (/outlook|email|mail/.test(t)) return { file: 'fix-outlook.bat', label: '📧 Auto-Fix: Outlook' };
-   if (/chrome|browser|firefox|edge|safari/.test(t)) return { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser' };
-   if (/onedrive|one drive|cloud sync/.test(t)) return { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' };
-   if (/usb|pendrive|pen drive|flash drive/.test(t)) return { file: 'fix-usb.bat', label: '🔌 Auto-Fix: USB' };
-   if (/storage|disk full|space|memory full|jagah nahi/.test(t)) return { file: 'fix-storage.bat', label: '💾 Auto-Fix: Storage Cleanup' };
-   if (/virus|malware|ransomware|hack/.test(t)) return { file: 'fix-virus-scan.bat', label: '🦠 Auto-Fix: Virus Scan' };
-   if (/hdmi|monitor|external screen|projector/.test(t)) return { file: 'fix-hdmi.bat', label: '🖥️ Auto-Fix: HDMI/Monitor' };
-   if (/headphone|earphone|earbuds/.test(t)) return { file: 'fix-headphone.bat', label: '🎧 Auto-Fix: Headphone' };
-   if (/word|excel|office|powerpoint/.test(t)) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };
-   if (/pdf/.test(t)) return { file: 'fix-pdf.bat', label: '📄 Auto-Fix: PDF' };
-   if (/windows update|update/.test(t)) return { file: 'fix-windows-update.bat', label: '🔄 Auto-Fix: Windows Update' };
-   if (/crash|app crash|app band|application/.test(t)) return { file: 'fix-app-crash.bat', label: '💥 Auto-Fix: App Crash' };
    if (/screen flicker|flicker|blink/.test(t)) return { file: 'fix-screen-flicker.bat', label: '📺 Auto-Fix: Screen Flicker' };
+   // ── Overheating before slow (both can say "garam") ────────────────────
+   if (/overheat|garam|hot laptop|laptop garm/.test(t)) return { file: 'fix-overheating.bat', label: '🌡️ Auto-Fix: Overheating' };
+   // ── Specific hardware BEFORE general slow ─────────────────────────────
+   if (/camera|camra|webcam|\bcam\b/.test(t)) return { file: 'fix-camera.bat', label: '📷 Auto-Fix: Camera' };
+   if (/mic|microphone/.test(t)) return { file: 'fix-mic.bat', label: '🎤 Auto-Fix: Microphone' };
+   if (/headphone|earphone|earbuds/.test(t)) return { file: 'fix-headphone.bat', label: '🎧 Auto-Fix: Headphone' };
+   if (/projector/.test(t)) return { file: 'fix-projector.bat', label: '📽️ Auto-Fix: Projector' };
+   if (/hdmi|external monitor|external screen/.test(t)) return { file: 'fix-hdmi.bat', label: '🖥️ Auto-Fix: HDMI/Monitor' };
+   if (/resolution|display sett/.test(t)) return { file: 'fix-resolution.bat', label: '🖥️ Auto-Fix: Resolution' };
+   if (/sound|audio|speaker|awaaz/.test(t)) return { file: 'fix-sound.bat', label: '🔊 Auto-Fix: Sound' };
+   if (/keyboard|keys|typing|type nahi/.test(t)) return { file: 'fix-keyboard.bat', label: '⌨️ Auto-Fix: Keyboard' };
+   if (/touchpad|trackpad|cursor/.test(t)) return { file: 'fix-touchpad.bat', label: '🖱️ Auto-Fix: Touchpad' };
+   if (/touchscreen/.test(t)) return { file: 'fix-touchscreen.bat', label: '🖱️ Auto-Fix: Touchscreen' };
+   if (/bluetooth|\bbt\b/.test(t)) return { file: 'fix-bluetooth.bat', label: '🔵 Auto-Fix: Bluetooth' };
+   if (/usb|pendrive|pen drive|flash drive/.test(t)) return { file: 'fix-usb.bat', label: '🔌 Auto-Fix: USB' };
+   if (/sd card|sdcard|memory card/.test(t)) return { file: 'fix-sdcard.bat', label: '💳 Auto-Fix: SD Card' };
+   if (/fingerprint|finger print/.test(t)) return { file: 'fix-fingerprint.bat', label: '👆 Auto-Fix: Fingerprint' };
+   if (/battery|charg|charger|plug/.test(t)) return { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' };
    if (/sleep|wake|hibernate|suspend/.test(t)) return { file: 'fix-sleep-wake.bat', label: '💤 Auto-Fix: Sleep/Wake' };
-   if (/turn on|boot|start nahi|on nahi/.test(t)) return { file: 'fix-wont-turn-on.bat', label: '⚡ Auto-Fix: Won\'t Turn On' };
+   if (/turn on|boot|start nahi|on nahi|won.?t turn/.test(t)) return { file: 'fix-wont-turn-on.bat', label: '⚡ Auto-Fix: Won\'t Turn On' };
+   if (/sudden shutdown|shut.?down|band ho|band ho jata/.test(t)) return { file: 'fix-sudden-shutdown.bat', label: '⚡ Auto-Fix: Sudden Shutdown' };
+   // ── Network ───────────────────────────────────────────────────────────
+   if (/wifi|wi-fi|internet|network|connect|hotspot|broadband|ping/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
+   // ── Software — specific apps BEFORE general ────────────────────────────
+   if (/\bteams\b/.test(t)) return { file: 'fix-teams.bat', label: '📹 Auto-Fix: Teams' };
+   if (/\bzoom\b/.test(t)) return { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' };
+   if (/outlook/.test(t)) return { file: 'fix-outlook.bat', label: '📧 Auto-Fix: Outlook' };
+   if (/onedrive|one drive/.test(t)) return { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' };
+   if (/\bpdf\b/.test(t)) return { file: 'fix-pdf.bat', label: '📄 Auto-Fix: PDF' };
+   if (/word|excel|office|powerpoint/.test(t)) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };
+   if (/chrome|browser|firefox|edge|safari/.test(t)) return { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser' };
+   if (/printer|print/.test(t)) return { file: 'fix-printer.bat', label: '🖨️ Auto-Fix: Printer' };
+   if (/windows update|win update/.test(t)) return { file: 'fix-windows-update.bat', label: '🔄 Auto-Fix: Windows Update' };
+   if (/copy.?paste|clipboard|ctrl.?c|ctrl.?v/.test(t)) return { file: 'fix-clipboard.bat', label: '📋 Auto-Fix: Copy-Paste' };
+   if (/date|time|clock|galat time|wrong time/.test(t)) return { file: 'fix-datetime.bat', label: '🕐 Auto-Fix: Date/Time' };
+   if (/caps.?lock|capslock/.test(t)) return { file: 'fix-capslock.bat', label: '🔡 Auto-Fix: Caps Lock' };
+   if (/crash|app crash|app band/.test(t)) return { file: 'fix-app-crash.bat', label: '💥 Auto-Fix: App Crash' };
+   if (/website block|site block|open nahi ho raha/.test(t)) return { file: 'fix-website-blocked.bat', label: '🌐 Auto-Fix: Website' };
+   if (/virus|malware|ransomware|hack/.test(t)) return { file: 'fix-virus-scan.bat', label: '🦠 Auto-Fix: Virus Scan' };
+   if (/storage|disk full|space|jagah nahi/.test(t)) return { file: 'fix-storage.bat', label: '💾 Auto-Fix: Storage Cleanup' };
+   // ── General laptop slow — LAST (most generic catch) ───────────────────
+   if (/slow|hang|lagg|freez|stuck|fast karo|speed|chalta nahi/.test(t)) return { file: 'fix-slow-laptop.bat', label: '⚡ Auto-Fix: Slow Laptop' };
    return null;
  };
 
@@ -2788,9 +2807,10 @@ app.listen(PORT, async () => {
 
  const blocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}];
 
- // ── Add script download button based on issue detected in conversation ─
- const allConvText = conv.messages.filter(m=>m.role==='user').map(m=>m.content).join(' ');
- const aiScript = getScriptForText(allConvText);
+ // ── Add script download button — use last 2 user msgs only (not full history) ─
+ // Using full history caused "slow laptop" from old messages to override current issue
+ const recentUserText = conv.messages.filter(m=>m.role==='user').slice(-2).map(m=>m.content).join(' ');
+ const aiScript = getScriptForText(recentUserText);
  if (aiScript) {
  blocks.push({
  type: 'actions',
