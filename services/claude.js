@@ -114,6 +114,53 @@ Bye/done → "Theek hai! Koi bhi issue aaye toh batana 😊"`;
 
 
 
+// ── Intent Detector: detects issue category from user message ─────────────────
+// Returns a focused context string injected into system prompt
+const detectIntent = (messages) => {
+  // Use last 3 user messages for intent (most recent context)
+  const recentText = messages
+    .filter(m => m.role === 'user')
+    .slice(-3)
+    .map(m => m.content)
+    .join(' ')
+    .toLowerCase();
+
+  if (/\bnet\b|wifi|wi-fi|internet|network|connect(ion)?|hotspot|broadband|no internet|nahi chal|chal nahi/.test(recentText))
+    return { category: 'NETWORK', hint: 'User has a WiFi/Internet issue. First ask: "WiFi icon taskbar mein dikh raha hai? Connected hai ya disconnected?" — DO NOT suggest restart as first step for network issues.' };
+
+  if (/slow|hang|lagg|freez|speed|fast karo|ram|cpu|processor|heavy|battery drain/.test(recentText))
+    return { category: 'PERFORMANCE', hint: 'User has a slow/performance issue. First ask: "Kab se ho raha hai? Koi specific app mein ya poora laptop?" — then Ctrl+Shift+Esc → Task Manager.' };
+
+  if (/screen|display|black screen|blue screen|bsod|flicker|bright|dim|resolution|monitor|hdmi/.test(recentText))
+    return { category: 'DISPLAY', hint: 'User has a screen/display issue. Ask: "Laptop on hai (power LED on)? Ya screen completely black?" — never suggest network steps.' };
+
+  if (/camera|camra|webcam|\bcam\b/.test(recentText))
+    return { category: 'CAMERA', hint: 'Camera issue. Ask: "Kaunsa app mein nahi chal raha — Teams, Zoom, ya sab mein?" — then Settings→Privacy→Camera.' };
+
+  if (/sound|audio|speaker|headphone|mic|microphone|awaaz/.test(recentText))
+    return { category: 'AUDIO', hint: 'Audio issue. Ask: "Headphone lagaya hai? Taskbar pe speaker icon mein X toh nahi?" — check output device.' };
+
+  if (/teams|zoom|outlook|email|browser|chrome|office|word|excel|onedrive|pdf|app/.test(recentText))
+    return { category: 'SOFTWARE', hint: 'Software/app issue. Ask which specific app and what error — give app-specific fix only.' };
+
+  if (/keyboard|keys|typing|touchpad|mouse|cursor|trackpad/.test(recentText))
+    return { category: 'PERIPHERAL', hint: 'Keyboard/touchpad issue. Ask: "Restart ke baad bhi same hai? Ya sirf koi specific key?" — hardware-specific steps only.' };
+
+  if (/printer|print/.test(recentText))
+    return { category: 'PRINTER', hint: 'Printer issue. Ask: "Printer ON hai? Koi error message dikh raha?" — Print Spooler restart.' };
+
+  if (/password|login|locked|account|access/.test(recentText))
+    return { category: 'ACCOUNT', hint: 'Account/password issue. Windows/email password = ticket only. Google password = myaccount.google.com self-service.' };
+
+  if (/virus|malware|hack|ransomware/.test(recentText))
+    return { category: 'SECURITY', hint: 'Security issue. Urgent — Windows Security Quick Scan first, disconnect internet if serious.' };
+
+  if (/battery|charg|charger/.test(recentText))
+    return { category: 'BATTERY', hint: 'Battery/charging issue. Ask: "Charger LED on hai? Alag socket try kiya?" — replug both ends first.' };
+
+  return { category: 'GENERAL', hint: 'Issue unclear — ask ONE specific question to identify the problem before giving any solution.' };
+};
+
 // ── Extract steps already tried (to prevent repeats) ─────────────────────────
 const extractTriedSteps = (messages) => {
   const assistantMsgs = messages.filter(m => m.role === 'assistant');
@@ -250,9 +297,14 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
   // Build steps-already-tried list so model never repeats them
   const triedSteps = extractTriedSteps(messages);
 
+  // ── INTENT DETECTION — tell AI exactly what category this is ──────────
+  const intent = detectIntent(messages);
+  const intentContext = `\n\n⚡ DETECTED ISSUE CATEGORY: ${intent.category}\n🎯 INSTRUCTION: ${intent.hint}`;
+
   const systemPrompt = SYSTEM_PROMPT
     + `\n\nUSER CONTEXT: ${userContext}`
     + (laptop ? `\nEmployee laptop: ${laptop}${laptopSN ? ` (SN: ${laptopSN})` : ''}` : '')
+    + intentContext
     + triedSteps;
 
   // Use Groq directly (fast) — Claude only if ANTHROPIC_API_KEY set
