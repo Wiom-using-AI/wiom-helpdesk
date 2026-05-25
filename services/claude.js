@@ -315,18 +315,29 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
   }
 
   // Check if ticket needed — detect when AI suggests raising a ticket
-  // Match: "ticket bhejte hain", "ha type karo", "ticket raise karein", etc.
-  const shouldCreateTicket = reply.includes('ticket') && (
-    /ticket\s*(bana|raise|create|chahiye|bhejte)/i.test(reply) ||
-    /type\s*karo[:\s]*\*?ha\*?/i.test(reply) ||
-    /ticket\s*(raise\s*karein|banana|karein)/i.test(reply)
-  );
+  // IMPORTANT: "type karo ha" ALONE is enough — even without the word "ticket"
+  // Claude sometimes says "IT ko bhej deta hoon" without saying "ticket" — catch that too
+  const shouldCreateTicket =
+    // "type karo ha/haan" anywhere in reply → always means ticket confirm
+    /type\s*karo[:\s\s]*\*?ha(an|a|n)?\*?/i.test(reply) ||
+    // Or: "ticket" word + action keywords
+    (reply.toLowerCase().includes('ticket') && (
+      /ticket\s*(bana|raise|create|chahiye|bhejte|banana)/i.test(reply) ||
+      /ticket\s*(raise\s*karein|karein|bhejta)/i.test(reply)
+    )) ||
+    // Claude saying "bhej deta hoon" + "IT" (ticket confirmation without "ticket" word)
+    (/IT\s*(ko|team)\s*(ko\s*)?bhej/i.test(reply) && /type\s*karo/i.test(reply));
 
   // Safety: If AI hallucinated "raised successfully" — strip it and set shouldCreateTicket
   const isHallucinated = /ticket\s*(raised|created|submitted)\s*successfully/i.test(reply);
   if (isHallucinated) {
-    // Replace with proper confirmation prompt
     reply = 'Koi baat nahi! 😊 IT team ko ticket bhejte hain. Type karo: *ha* ✅';
+  }
+
+  // Normalize: if Claude said "bhej deta hoon" without "ticket" word but shouldCreateTicket is true,
+  // append clear ha/nahi prompt so user knows what to do
+  if (shouldCreateTicket && !/type\s*karo/i.test(reply)) {
+    reply = reply.replace(/\s*$/, '') + '\n\nType karo *ha* — ticket raise karta hoon 🎫';
   }
 
   return {
