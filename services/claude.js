@@ -432,11 +432,11 @@ const getKBAnswer = (problem) => {
   if (!problem) return null;
   const p = problem.toLowerCase().trim();
 
-  // ── User saying issue is resolved / normal / working now ────────────────
-  const isResolved =
-    /\b(normal|theek|thik|sahi|chal raha|chal rhi|ho gaya|ho gya|fixed|resolved|working|kaam kar raha|kaam kar rhi|solve ho|hua|fix ho gaya)\b/i.test(p) &&
-    p.split(/\s+/).length <= 8; // short update messages only
-  if (isResolved) {
+  // ── User saying issue is resolved / working fine now ───────────────────
+  // STRICT: only if NO negative word present AND message is short status update
+  const hasNegative = /\b(not|nahi|nahin|nai|nhi|band|problem|issue|chal nahi|kaam nahi|nahi chal|nahi ho|ho nahi)\b/i.test(p);
+  const hasPositive = /\b(normal|noraml|norml|theek|thik|sahi|ho gaya|ho gya|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|theek ho|thik ho|chal raha hai|chal rhi hai)\b/i.test(p);
+  if (hasPositive && !hasNegative && p.split(/\s+/).length <= 7) {
     return `Great! Khushi hui ki issue resolve ho gaya 😊✅ Aur koi IT help chahiye toh zaroor batao!`;
   }
 
@@ -480,8 +480,14 @@ const getKBAnswer = (problem) => {
     { keys: ['battery','charging','charge'],
       ans: `Battery nahi charge ho rahi? 🔋 Pehle charger dono side se ek baar nikaal ke dubara lagao, dusra socket try karo. Phir bhi nahi? Laptop shut down karo, charger nikaalo, power button 30 sec hold karo, phir charger lagao. Nahi hua → ticket raise karte hain (hardware issue) 🎫` },
 
-    { keys: ['overheat','hot','fan','temperature'],
-      ans: `Laptop garam! 🌡️ Saare heavy apps band karo aur laptop hard surface pe rakho (bed/sofa pe mat rakho). Ctrl+Shift+Esc mein CPU wali apps End Task karo. Settings → Power → Balanced mode on karo. Thanda ho jaayega! Abhi bhi zyada ho toh batao 😊` },
+    { keys: ['overheat','garam ho','bahut garam','zyada garam','laptop hot','temperature high'],
+      ans: `Laptop garam ho raha hai! 🌡️ Saare heavy apps band karo aur laptop hard surface pe rakho (bed/sofa pe mat rakho). Ctrl+Shift+Esc mein CPU wali apps End Task karo. Settings → Power → Balanced mode on karo. Thanda ho jaayega! Abhi bhi zyada ho toh batao 😊` },
+
+    { keys: ['fan not working','fan nahi chal','fan band','fan chal nahi','fan kaam nahi'],
+      ans: `Fan nahi chal raha — yeh serious ho sakta hai! ⚠️ Laptop immediately band karo aur charger nikaal do. Zyada use karne se hardware damage ho sakta hai. IT ko batana zaroori hai — type karo *ha* main abhi ticket raise karta hoon! 🎫` },
+
+    { keys: ['fan noise','fan loud','fan ki awaaz','fan bahut','fan sound','fan shor'],
+      ans: `Fan bahut awaaz kar raha hai? 🔊 Pehle heavy apps band karo (Ctrl+Shift+Esc → End Task). Laptop hard surface pe rakho — bed/sofa pe na rakho. Thodi der mein quieter ho jaata hai. Phir bhi awaaz aa rahi hai toh ticket raise karte hain 🎫` },
 
     { keys: ['black screen','screen black'],
       ans: `Screen black ho gayi! 🖥️ Pehle Fn+F5 ya Fn+F8 dabao (brightness keys). Nahi hua toh power button 10 sec hold karo, force restart. Abhi bhi kuch nahi dikhta? External monitor lagao HDMI se — agar wahan dikhta hai toh screen replace ka ticket raise karte hain 🎫` },
