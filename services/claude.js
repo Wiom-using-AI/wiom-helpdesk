@@ -85,6 +85,7 @@ Doosri baar fail → "Yeh thoda IT wala case hai — seedha unhe dikhana padega.
 ✅ Pehle message pe seedha fix do — ticket only after 2 failed attempts
 
 ━━━ NEVER DO THIS ━━━
+❌ "arre yaar", "yaar", "bhai", "arre" — STRICT BAN, office mein nahi chalega, kabhi mat likhna
 ❌ "Laptop Slow Hone Ki Samasya:" — heading style opener
 ❌ "Yeh steps follow karein:" — BANNED
 ❌ "IT Team will contact you soon"
@@ -396,6 +397,19 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     } catch { /* ignore */ }
     if (reply.startsWith('{')) reply = getKBFallback(history.filter(m=>m.role==='user').pop()?.content||'');
   }
+
+  // ── Hard filter: remove informal/banned words no matter what AI says ────
+  // Groq ignores system prompt instructions — we fix it at code level
+  reply = reply
+    .replace(/\barre\s+yaar\b/gi, 'Haan')
+    .replace(/\barre\s+bhai\b/gi, 'Haan')
+    .replace(/\barre\b/gi, '')
+    .replace(/\byaar\b/gi, '')
+    .replace(/\bbhai\b/gi, '')
+    .replace(/\barre\s+nahi\b/gi, 'Nahi')
+    .replace(/\s{2,}/g, ' ')   // collapse double spaces left by removals
+    .replace(/^[\s,!]+/, '')   // clean leading punctuation
+    .trim();
 
   // Strip robotic title lines before "Step 1:" (keep emoji openers)
   const stepIdx = reply.indexOf('Step 1:');
