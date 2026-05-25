@@ -1862,16 +1862,8 @@ app.listen(PORT, async () => {
  const problem = body.actions[0].value;
  const triggerId = body.trigger_id;
  try {
- const emp = await Employee.findOne({ slackUserId: userId });
- const empInfo = {
- empId : emp?.empId || userId,
- empName: emp?.name || 'Employee',
- source : 'slack',
- laptop : emp?.laptop,
- laptopSN: emp?.laptopSN,
- dept : emp?.department,
- floor : emp?.floor
- };
+ // ── FIX: Open modals IMMEDIATELY before any DB call ───────────
+ // Slack trigger_id expires in 3 seconds — DB calls can push past that
 
  // ── Email Password Reset modal ────────────────────────────────
  if (actionId === 'home_quick_59') {
@@ -1906,7 +1898,7 @@ app.listen(PORT, async () => {
  return;
  }
 
- // ── SOS Emergency — show issue type selector ─────────────────
+ // ── SOS Emergency — show issue type selector (NO DB call needed) ─
  if (actionId === 'home_sos') {
  await client.views.open({
  trigger_id: triggerId,
@@ -1960,9 +1952,10 @@ app.listen(PORT, async () => {
  return;
  }
 
- // ── Hardware Replacement / Emergency modal ────────────────────
+ // ── Hardware Replacement / Emergency modal — BEFORE DB CALL ──────
+ // buildHardwareBlocks doesn't use emp, so open modal immediately
  if (HARDWARE_SPECIAL_IDS.has(actionId)) {
- const hwBlocks = buildHardwareBlocks(actionId, emp);
+ const hwBlocks = buildHardwareBlocks(actionId, null);
  await client.views.open({
  trigger_id: triggerId,
  view: {
@@ -1972,24 +1965,36 @@ app.listen(PORT, async () => {
  blocks: hwBlocks
  }
  });
- // Auto-create ticket ONLY for liquid damage emergency
- if (actionId === 'home_quick_70' && emp?.empId) {
- try {
- const result = await createTicketSlack({
- empId: emp.empId, empName: emp.empName, empEmail: emp.email,
- empDept: emp.dept, empFloor: emp.floor,
- laptop: emp.laptop, laptopSN: emp.laptopSN,
- description: `EMERGENCY: Liquid/Water Damage ${emp.laptop || 'Laptop'} (S/N: ${emp.laptopSN || 'Unknown'})`,
- category: 'Hardware', priority: 'Critical',
- source: 'slack', slackUserId: userId
- });
- if (result && !result._duplicate) await notifyAdmin(client, result, emp);
- } catch (ticketErr) {
- console.error('Liquid damage ticket error:', ticketErr.message);
- }
+ // Auto-create ticket ONLY for liquid damage — async, don't block modal
+ if (actionId === 'home_quick_70') {
+ Employee.findOne({ slackUserId: userId }).then(async emp => {
+   if (emp?.empId) {
+     const result = await createTicketSlack({
+       empId: emp.empId, empName: emp.name, empEmail: emp.email || 'unknown@wiom.in',
+       empDept: emp.department, empFloor: emp.floor,
+       laptop: emp.laptop, laptopSN: emp.laptopSN,
+       description: `EMERGENCY: Liquid/Water Damage ${emp.laptop || 'Laptop'} (S/N: ${emp.laptopSN || 'Unknown'})`,
+       category: 'Hardware', priority: 'Critical',
+       source: 'slack', slackUserId: userId
+     });
+     if (result && !result._duplicate) await notifyAdmin(client, result, emp);
+   }
+ }).catch(e => console.error('Liquid damage ticket error:', e.message));
  }
  return;
  }
+
+ // ── Now load employee data (needed for AI + loading modal) ────
+ const emp = await Employee.findOne({ slackUserId: userId });
+ const empInfo = {
+ empId : emp?.empId || userId,
+ empName: emp?.name || 'Employee',
+ source : 'slack',
+ laptop : emp?.laptop,
+ laptopSN: emp?.laptopSN,
+ dept : emp?.department,
+ floor : emp?.floor
+ };
 
  // ── Open loading modal immediately (trigger_id valid only 3 sec) ──
  const loadingView = await client.views.open({
