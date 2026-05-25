@@ -95,9 +95,14 @@ Bluetooth: Settings toggle OFF→ON → Device Manager→Bluetooth→Disable→E
 Virus/Malware: Windows Security→Quick Scan → disconnect internet if serious → ticket
 
 ━━━ TICKET RULES ━━━
-Say "Type karo *ha*, main IT ko bhej deta hoon 🎫" — nothing else
-NEVER say "Ticket raised/created/submitted successfully"
-NEVER show fake IDs
+EXACT PHRASE ONLY: "Type karo *ha*, main IT ko bhej deta hoon 🎫"
+NEVER say you already sent/created a ticket — you CANNOT do that, only the user can confirm with "ha"
+BANNED PHRASES (will cause system errors):
+- "bhej diya gaya hai" ❌
+- "IT team ko bhej diya" ❌
+- "ticket raise kar diya" ❌
+- "aapko sampark kiya jayega" (without asking ha first) ❌
+- "Ticket raised/created/submitted" ❌
 Give fix attempts first — suggest ticket after 2 failures
 
 ━━━ SCOPE ━━━
@@ -328,15 +333,32 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     // Claude saying "bhej deta hoon" + "IT" (ticket confirmation without "ticket" word)
     (/IT\s*(ko|team)\s*(ko\s*)?bhej/i.test(reply) && /type\s*karo/i.test(reply));
 
-  // Safety: If AI hallucinated "raised successfully" — strip it and set shouldCreateTicket
-  const isHallucinated = /ticket\s*(raised|created|submitted)\s*successfully/i.test(reply);
+  // ── HALLUCINATION DETECTOR: Claude claims ticket was sent but it wasn't ──
+  // These patterns mean Claude said it already sent/created ticket — which is FALSE
+  const isHallucinated =
+    /ticket\s*(raised|created|submitted)\s*successfully/i.test(reply) ||
+    // Hindi hallucinations: "bhej diya gaya hai", "bheja ja chuka hai" etc.
+    /bhej\s*diya\s*(gaya|gai|hai|ja|chuka)/i.test(reply) ||
+    /bheja\s*(ja\s*chuka|chuka|gaya)\s*hai/i.test(reply) ||
+    // "IT team ke paas bhej diya"
+    /IT\s*(team\s*)?(ko|ke\s*paas|tak)\s*(bhej|send|forward)\s*(diya|kar\s*diya|gaya)/i.test(reply) ||
+    // "aapko jald hi sampark kiya jayega" without "type karo ha" = hallucinated ticket
+    (/sampark\s*kiya\s*jayega/i.test(reply) && !/type\s*karo/i.test(reply)) ||
+    // "issue IT team ke paas bhej diya gaya hai"
+    /issue.*IT.*bhej.*gaya/i.test(reply) ||
+    /aapka\s*(issue|problem|complaint).*bhej/i.test(reply);
+
   if (isHallucinated) {
-    reply = 'Koi baat nahi! 😊 IT team ko ticket bhejte hain. Type karo: *ha* ✅';
+    // Replace entire hallucinated response with proper confirmation ask
+    const lastUserMsg = history.filter(m => m.role === 'user').pop()?.content || '';
+    const isHardware = /screen|laptop|keyboard|mouse|battery|fan|hardware/i.test(lastUserMsg);
+    reply = isHardware
+      ? `Hardware issue hai — ismein IT team physically help karegi. Type karo *ha*, main ticket raise karta hoon 🎫`
+      : `Koi baat nahi! 😊 IT team ko bhejte hain. Type karo *ha*, ticket raise karta hoon 🎫`;
   }
 
-  // Normalize: if Claude said "bhej deta hoon" without "ticket" word but shouldCreateTicket is true,
-  // append clear ha/nahi prompt so user knows what to do
-  if (shouldCreateTicket && !/type\s*karo/i.test(reply)) {
+  // Normalize: if shouldCreateTicket but no "type karo" visible, add the prompt
+  if (shouldCreateTicket && !isHallucinated && !/type\s*karo/i.test(reply)) {
     reply = reply.replace(/\s*$/, '') + '\n\nType karo *ha* — ticket raise karta hoon 🎫';
   }
 
