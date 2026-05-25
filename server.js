@@ -1662,7 +1662,7 @@ app.listen(PORT, async () => {
  }
  });
 
- // ── SOS Issue selected → send DM with contact info ───────────────────
+ // ── SOS Issue selected → DM employee + alert admin + auto-ticket ─────
  slackApp.action('sos_issue', async ({ body, ack, client }) => {
  await ack();
  const userId = body.user.id;
@@ -1670,25 +1670,63 @@ app.listen(PORT, async () => {
  try {
  const emp = await Employee.findOne({ slackUserId: userId });
  const name = emp?.name?.split(' ')[0] || 'Employee';
- // Send DM
+
+ // Detect category and priority from issue type
+ const isHardware = /laptop|water|liquid|overheat|fan|blue screen|screen/i.test(issueType);
+ const isSecurity = /virus|ransomware|hack|data lost/i.test(issueType);
+ const isNetwork  = /internet|vpn|network/i.test(issueType);
+ const category   = isSecurity ? 'Software' : isNetwork ? 'Network' : 'Hardware';
+ const priority   = /water|liquid|virus|ransomware|data lost|dead/i.test(issueType) ? 'Critical' : 'High';
+
+ // Auto-create ticket for ALL SOS issues
+ let ticketId = null;
+ if (emp?.empId) {
+ try {
+ const result = await createTicketSlack({
+ empId: emp.empId, empName: emp.empName, empEmail: emp.email,
+ empDept: emp.dept, empFloor: emp.floor,
+ laptop: emp.laptop, laptopSN: emp.laptopSN,
+ description: `🆘 SOS: ${issueType}`,
+ category, priority,
+ source: 'slack-sos', slackUserId: userId
+ });
+ if (result && !result._duplicate) {
+ ticketId = result.ticketId;
+ await notifyAdmin(client, result, emp);
+ }
+ } catch (ticketErr) {
+ console.error('SOS ticket error:', ticketErr.message);
+ }
+ }
+
+ // Send DM to employee
  const dm = await client.conversations.open({ users: userId });
  await client.chat.postMessage({
  channel: dm.channel.id,
  text: `🆘 SOS raised: ${issueType}`,
  blocks: [
- { type: 'section', text: { type: 'mrkdwn', text: `*${name}, aapka SOS register ho gaya!* 🆘\n*Issue:* ${issueType}` }},
+ { type: 'header', text: { type: 'plain_text', text: '🆘 SOS Emergency Registered!', emoji: true }},
+ { type: 'section', text: { type: 'mrkdwn', text: `*${name}, aapka SOS register ho gaya!*\n*Issue:* ${issueType.split(' — ')[0]}` }},
  { type: 'divider' },
- { type: 'section', text: { type: 'mrkdwn', text: `📞 *IT Admin se seedha contact karo:*\n📧 *Email:* sajan.kumar@wiom.in\n📱 *Phone:* *9654244281*\n\n_IT Admin ko notification bhej diya gaya hai — woh jald hi aapke paas aayenge!_ ✅` }},
+ { type: 'section', text: { type: 'mrkdwn', text: `📞 *IT Admin se ABHI contact karo:*\n📱 *Phone:* *9654244281*\n📧 *Email:* sajan.kumar@wiom.in` }},
+ ticketId
+ ? { type: 'context', elements: [{ type: 'mrkdwn', text: `✅ Ticket auto-created: \`${ticketId}\` | Priority: *${priority}* | IT Admin ko alert bhej diya gaya hai!` }]}
+ : { type: 'context', elements: [{ type: 'mrkdwn', text: `✅ IT Admin ko alert bhej diya gaya hai! Woh jald aayenge.` }]}
  ]
  });
- // Notify admin
- if (process.env.SAJAN_SLACK_ID) {
+
+ // Emergency Slack alert to admin (in addition to ticket DM)
+ const adminId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
+ if (adminId) {
  await client.chat.postMessage({
- channel: process.env.SAJAN_SLACK_ID,
- text: `🆘 SOS Alert from ${emp?.name || userId}!`,
+ channel: adminId,
+ text: `🆘 SOS Alert from ${emp?.name || userId}: ${issueType}`,
  blocks: [
  { type: 'header', text: { type: 'plain_text', text: '🆘 SOS EMERGENCY ALERT!', emoji: true }},
- { type: 'section', text: { type: 'mrkdwn', text: `*Employee:* ${emp?.name || userId}\n*Emp ID:* ${emp?.empId || '-'}\n*Dept:* ${emp?.department || '-'}\n*Issue:* *${issueType}*` }}
+ { type: 'section', text: { type: 'mrkdwn', text: `*Employee:* ${emp?.name || userId}\n*Emp ID:* ${emp?.empId || '-'}\n*Dept:* ${emp?.department || '-'}\n*Floor:* ${emp?.floor || '-'}\n*Issue:* 🔴 *${issueType.split(' — ')[0]}*\n*Detail:* ${issueType.split(' — ')[1] || '-'}` }},
+ ticketId
+ ? { type: 'context', elements: [{ type: 'mrkdwn', text: `Ticket: \`${ticketId}\` | Priority: *${priority}* | Category: ${category}` }]}
+ : { type: 'context', elements: [{ type: 'mrkdwn', text: `⚠️ Ticket auto-create failed — manual ticket banana hoga` }]}
  ]
  });
  }
@@ -1875,10 +1913,8 @@ app.listen(PORT, async () => {
  title: { type: 'plain_text', text: '🆘 SOS IT Emergency', emoji: true },
  close: { type: 'plain_text', text: 'Close', emoji: true },
  blocks: [
- {
- type: 'section',
- text: { type: 'mrkdwn', text: '*Please select issue type:*' }
- },
+ { type: 'section', text: { type: 'mrkdwn', text: '*Apna emergency issue select karo — IT Admin ko turant alert jayega:*' }},
+ { type: 'divider' },
  {
  type: 'actions',
  elements: [
@@ -1890,14 +1926,32 @@ app.listen(PORT, async () => {
  type: 'actions',
  elements: [
  { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🔐 Account Locked', emoji: true }, action_id: 'sos_issue', value: 'Account Locked — cannot login to account or system' },
- { type: 'button', style: 'danger', text: { type: 'plain_text', text: '💻 Blue Screen', emoji: true }, action_id: 'sos_issue', value: 'Blue Screen — getting BSOD blue screen of death error' }
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '💻 Blue Screen', emoji: true }, action_id: 'sos_issue', value: 'Blue Screen — BSOD blue screen of death error' }
+ ]
+ },
+ {
+ type: 'actions',
+ elements: [
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '💧 Water Damage', emoji: true }, action_id: 'sos_issue', value: 'Water/Liquid Damage — liquid spilled on laptop, shut down immediately' },
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🔥 Overheating', emoji: true }, action_id: 'sos_issue', value: 'Overheating Emergency — laptop very hot, fan not working, risk of damage' }
+ ]
+ },
+ {
+ type: 'actions',
+ elements: [
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🦠 Virus/Ransomware', emoji: true }, action_id: 'sos_issue', value: 'Virus/Ransomware Attack — suspicious activity or files encrypted, disconnect internet now' },
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '📁 Data Lost', emoji: true }, action_id: 'sos_issue', value: 'Critical Data Lost — important files accidentally deleted or missing' }
+ ]
+ },
+ {
+ type: 'actions',
+ elements: [
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🖥️ Projector Down', emoji: true }, action_id: 'sos_issue', value: 'Projector/Screen Share Down — presentation or meeting screen not working' },
+ { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🔑 VPN Not Working', emoji: true }, action_id: 'sos_issue', value: 'VPN Not Working — cannot connect to remote access or company VPN' }
  ]
  },
  { type: 'divider' },
- {
- type: 'section',
- text: { type: 'mrkdwn', text: '📞 *IT Admin Direct Contact:*\n📧 *Email:* sajan.kumar@wiom.in\n📱 *Phone:* 9654244281' }
- }
+ { type: 'section', text: { type: 'mrkdwn', text: '📞 *IT Admin Direct:*  📱 *9654244281*  |  📧 sajan.kumar@wiom.in' }}
  ]
  }
  });
