@@ -394,8 +394,10 @@ const getKBAnswer = (problem) => {
 
   // ── User saying issue is resolved / working fine now ───────────────────
   // STRICT: only if NO negative word present AND message is short status update
-  const hasNegative = /\b(not|nahi|nahin|nai|nhi|band|kharab|problem|issue|chal nahi|kaam nahi|nahi chal|nahi ho|ho nahi|abhi bhi|still|phir bhi)\b/i.test(p);
-  const hasPositive = /\b(normal|noraml|norml|theek|thik|sahi|ho gaya|ho gya|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|theek ho|thik ho|chal raha hai|chal rhi hai|chal gaya|chal gyi|on ho gaya|working|work kar raha|charged|charge ho|connected|connect ho gaya|sorted|done|complete|ho gayi|mil gaya|mil gayi)\b/i.test(p);
+  const hasNegative = /\b(not|nahi|nahin|nai|nhi|mahi|nhi|mat|na\b|band|kharab|problem|issue|error|chal nahi|kaam nahi|nahi chal|nahi ho|ho nahi|abhi bhi|still|phir bhi|nahi chal|chal nahi|nai chal|mahi chal|ho nahi rha|nahi ho rha|nahi rha)\b/i.test(p);
+  // "chal raha hai" ONLY counts as positive if NOT preceded by nahi/mahi/na etc.
+  const chalRahaPositive = /chal\s*raha\s*hai|chal\s*rhi\s*hai/.test(p) && !/(\bmahi\b|\bnahi\b|\bnai\b|\bnhi\b|\bnot\b).{0,15}chal/i.test(p);
+  const hasPositive = chalRahaPositive || /\b(normal|noraml|norml|theek|thik|sahi|ho gaya|ho gya|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|theek ho|thik ho|chal gaya|chal gyi|on ho gaya|working|work kar raha|charged|charge ho|connected|connect ho gaya|sorted|done|complete|ho gayi|mil gaya|mil gayi)\b/i.test(p);
   if (hasPositive && !hasNegative && p.split(/\s+/).length <= 8) {
     return `Great! Khushi hui ki resolve ho gaya 😊✅ Aur koi IT help chahiye toh zaroor batao!`;
   }

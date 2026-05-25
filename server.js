@@ -671,8 +671,8 @@ app.listen(PORT, async () => {
    if (/sleep|wake|hibernate|suspend/.test(t)) return { file: 'fix-sleep-wake.bat', label: '💤 Auto-Fix: Sleep/Wake' };
    if (/turn on|boot|start nahi|on nahi|won.?t turn/.test(t)) return { file: 'fix-wont-turn-on.bat', label: '⚡ Auto-Fix: Won\'t Turn On' };
    if (/sudden shutdown|shut.?down|band ho|band ho jata/.test(t)) return { file: 'fix-sudden-shutdown.bat', label: '⚡ Auto-Fix: Sudden Shutdown' };
-   // ── Network ───────────────────────────────────────────────────────────
-   if (/wifi|wi-fi|internet|network|connect|hotspot|broadband|ping/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
+   // ── Network — "net" alone also means internet in India ───────────────
+   if (/wifi|wi-fi|internet|\bnet\b|network|connect|hotspot|broadband|ping|nahi chal rha|nahi chal raha/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
    // ── Software — specific apps BEFORE general ────────────────────────────
    if (/\bteams\b/.test(t)) return { file: 'fix-teams.bat', label: '📹 Auto-Fix: Teams' };
    if (/\bzoom\b/.test(t)) return { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' };
