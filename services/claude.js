@@ -212,8 +212,14 @@ const detectIntent = (messages) => {
     return { category: 'SECURITY', hint: 'SECURITY ISSUE. Urgent — say "Windows Security → Quick Scan karo, aur internet disconnect karo agar serious lage." Then ticket.' };
 
   // BATTERY / CHARGING — typo-tolerant: battry, battey, week=weak, backup kam
-  if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg|plug.*power|low.*power|backup\s*(nahi|low|kam)|draining|week.*batt|batt.*week/.test(recentText))
-    return { category: 'BATTERY', hint: 'BATTERY/CHARGING ISSUE. User may have typed "battry" or "week" (weak). Give steps directly:\n1. Charger dono taraf firmly lagao\n2. Alag power socket try karo\n3. Laptop band karo → charger lagao → 30 sec wait → on karo\n4. Agar battery 0% pe stuck hai → ticket raise karo\nDo NOT ask diagnostic question — give these steps now.' };
+  if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg|plug.*power|low.*power|backup\s*(nahi|low|kam)|draining|week.*batt|batt.*week/.test(recentText)) {
+    const isChargingIssue = /charg|plug|not charg|chal nahi|percent\s*(nahi|stuck|0)|0\s*%|nahi chal rha/.test(recentText);
+    const isDrainIssue = /drain|backup\s*(kam|nahi|low)|jaldi\s*(khatam|kha)|low backup|week\s*batt|batt.*week/.test(recentText);
+    if (isDrainIssue && !isChargingIssue) {
+      return { category: 'BATTERY_DRAIN', hint: 'BATTERY DRAIN ISSUE (not charging). User says battery drains fast or backup is poor.\nFirst ask: "Ek charge pe kitna time chal raha hai? Kaunse apps mostly open rehte hain?"\nThen suggest: Settings → Battery Saver → Power Mode: Balanced → Ctrl+Shift+Esc → End Task heavy apps.\nDo NOT give charger steps — that is wrong for this issue.' };
+    }
+    return { category: 'BATTERY', hint: 'BATTERY/CHARGING ISSUE. User may have typed "battry" or "week" (weak). Give steps directly:\n1. Charger dono taraf firmly lagao (laptop side + socket side)\n2. Alag power socket try karo\n3. Laptop band karo → charger nikalo → power button 30 sec hold → charger lagao → on karo\n4. Agar battery 0% pe stuck hai → ticket raise karo\nDo NOT ask diagnostic question — give these steps now.' };
+  }
 
   return { category: 'GENERAL', hint: 'ISSUE UNCLEAR. Ask ONE specific diagnostic question: "Thoda aur batao — exactly kya ho raha hai? Koi error message aaya kya?" — do NOT give any solution before they answer.' };
 };
@@ -283,8 +289,13 @@ const getKBFallback = (problem) => {
     return `Zoom fix! 🎥\n1. Zoom band karo → dobara kholo.\n2. Internet check karo → zoom.us/wc/join browser mein try karo.\n3. Zoom Settings → Audio/Video → sahi device select karo.\nClick the script button below! ⬇️`;
   if (p.includes('outlook') || p.includes('email'))
     return `Outlook fix! 📧\n1. Ctrl+Shift+Esc → Outlook process end karo.\n2. Win+R → outlook /safe → Enter.\n3. outlook.office365.com browser mein try karo.\nClick the script button below! ⬇️`;
-  if (p.includes('password') || p.includes('locked') || p.includes('login'))
-    return `Google account password reset ! 🔐\n1. myaccount.google.com pe jaao\n2. Security tab click karo\n3. "How you sign in to Google" mein Password click karo\n4. Current password enter karo (ya fingerprint/prompt se verify karo)\n5. Naya password set karo\n\nAgar nahi hua: raise ticket — IT help karega 🎫`;
+  if (p.includes('password') || p.includes('locked') || p.includes('login')) {
+    // Google/Gmail self-service reset
+    if (/google|gmail/.test(p))
+      return `Google account password reset! 🔐\n1. myaccount.google.com pe jaao\n2. Security tab click karo\n3. "How you sign in to Google" → Password click karo\n4. Current password enter karo (ya fingerprint se verify karo)\n5. Naya password set karo\n\nAgar nahi hua → IT ticket raise karo 🎫`;
+    // Windows/laptop/account — IT only, no self-service
+    return `Windows/Account password sirf IT reset kar sakta hai! 🔐\n\nType karo *ha* — main IT ko bhej deta hoon, woh jaldi reset kar denge 🎫`;
+  }
   if (p.includes('bluetooth'))
     return `Bluetooth fix! 🔵\n1. Settings → Bluetooth → toggle OFF → ON karo.\n2. Device dobara pair karo.\n3. Device Manager → Bluetooth → Disable → Enable.\nClick the script button below! ⬇️`;
   if (p.includes('camera') || p.includes('camra') || p.includes('webcam') || /\bcam\b/.test(p))
@@ -574,7 +585,12 @@ const quickReply = async (userMessage, empName = 'Employee', laptop = null, lapt
   try {
     raw = anthropic ? await callClaude(sys, history) : await callGroq(sys, history);
   } catch {
-    raw = await callGroq(sys, history);
+    // Only try Groq as fallback if Claude was primary (avoid retrying same provider)
+    if (anthropic) {
+      try { raw = await callGroq(sys, history); } catch { raw = getKBFallback(userMessage) || userMessage; }
+    } else {
+      raw = getKBFallback(userMessage) || userMessage;
+    }
   }
 
   const parsed = parseOutput(raw);
@@ -592,7 +608,8 @@ const getKBAnswer = (problem) => {
   const hasNegative = /\b(not|nahi|nahin|nai|nhi|mahi|nhai|nha|mat|na\b|band|kharab|problem|issue|error|chal nahi|kaam nahi|nahi chal|nahi ho|ho nahi|abhi bhi|still|phir bhi|chal nahi|nai chal|mahi chal|nhai chal|ho nahi rha|nahi ho rha|nahi rha)\b/i.test(p);
   // "chal raha hai" ONLY counts as positive if NOT preceded by nahi/mahi/na etc.
   const chalRahaPositive = /chal\s*raha\s*hai|chal\s*rhi\s*hai/.test(p) && !/(\bmahi\b|\bnahi\b|\bnai\b|\bnhi\b|\bnot\b).{0,15}chal/i.test(p);
-  const hasPositive = chalRahaPositive || /\b(normal|noraml|norml|theek|thik|sahi|ho gaya|ho gya|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|theek ho|thik ho|chal gaya|chal gyi|on ho gaya|working|work kar raha|charged|charge ho|connected|connect ho gaya|sorted|done|complete|ho gayi|mil gaya|mil gayi)\b/i.test(p);
+  // Note: "connected" and "working" removed — too broad (e.g. "connected but not working" should NOT trigger resolved)
+  const hasPositive = chalRahaPositive || /\b(normal|noraml|norml|theek|thik|sahi|ho gaya|ho gya|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|theek ho|thik ho|chal gaya|chal gyi|on ho gaya|work kar raha|charged|charge ho|connect ho gaya|sorted|done|complete|ho gayi|mil gaya|mil gayi)\b/i.test(p);
   if (hasPositive && !hasNegative && p.split(/\s+/).length <= 8) {
     return `Great! Khushi hui ki resolve ho gaya 😊✅ Aur koi IT help chahiye toh zaroor batao!`;
   }

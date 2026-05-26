@@ -258,8 +258,9 @@ cron.schedule('*/30 * * * *', async () => {
  for (const g of grouped) {
  const key = `recurring-alert-${g._id}-${new Date().toISOString().slice(0,13)}`;
  // Avoid duplicate alerts in same hour (use simple in-memory set)
- if (global._sentRecurringAlerts?.has(key)) continue;
  if (!global._sentRecurringAlerts) global._sentRecurringAlerts = new Set();
+ if (global._sentRecurringAlerts.size > 200) global._sentRecurringAlerts.clear(); // prevent memory leak
+ if (global._sentRecurringAlerts.has(key)) continue;
  global._sentRecurringAlerts.add(key);
 
  await slackClient.chat.postMessage({
@@ -506,7 +507,7 @@ app.listen(PORT, async () => {
  [
  { text:'🔐 VPN Issue', value:'VPN not connecting or VPN is not working', id:'home_quick_73' },
  { text:'🔑 Access Request', value:'Need access to a system software or application', id:'home_quick_74' },
- { text:'Account Locked', value:'Account is locked cannot login to Windows or any account', id:'home_quick_55' },
+ { text:'Account Locked', value:'Account is locked cannot login to Windows or any account', id:'home_quick_55b' },
  { text:'👤 New User Setup', value:'New employee needs laptop and account setup', id:'home_quick_75' }
  ]
  ]
@@ -520,8 +521,8 @@ app.listen(PORT, async () => {
  { text:'🖨️ Printer Offline', value:'Printer is offline not working cannot print', id:'home_quick_54' },
  { text:'Print Queue Stuck', value:'Printer showing error document stuck in print queue', id:'home_quick_76' },
  { text:'Mouse Issue', value:'Mouse not working cursor not moving properly', id:'home_quick_77' },
- { text:'Keyboard Issue', value:'Laptop keyboard not working some keys not responding', id:'home_quick_7' },
- { text:'USB Not Working', value:'USB port not working pendrive or device not detected', id:'home_quick_63' }
+ { text:'Keyboard Issue', value:'Laptop keyboard not working some keys not responding', id:'home_quick_7b' },
+ { text:'USB Not Working', value:'USB port not working pendrive or device not detected', id:'home_quick_63b' }
  ]
  ]
  }
@@ -546,10 +547,12 @@ app.listen(PORT, async () => {
  'home_quick_39': { fixType: ['fix_screen_flicker'], label: 'Screen Flicker Fix' },
  // ── Input Devices ──────────────────────────────────────────────────────
  'home_quick_7' : { fixType: ['fix_keyboard'], label: '⌨️ Keyboard Fix' },
+ 'home_quick_7b': { fixType: ['fix_keyboard'], label: '⌨️ Keyboard Fix' },
  'home_quick_72': { fixType: ['fix_keyboard'], label: 'Caps Lock Fix' },
  'home_quick_8' : { fixType: ['fix_touchpad'], label: '️ Touchpad Fix' },
  'home_quick_40': { fixType: ['fix_bluetooth'], label: 'Bluetooth Fix' },
  'home_quick_63': { fixType: ['fix_usb'], label: 'USB Fix' },
+ 'home_quick_63b': { fixType: ['fix_usb'], label: 'USB Fix' },
  // ── Camera & Mic ───────────────────────────────────────────────────────
  'home_quick_16': { fixType: ['fix_mic'], label: 'Microphone Fix' },
  'home_quick_20': { fixType: ['fix_camera'], label: 'Camera Fix' },
@@ -582,6 +585,7 @@ app.listen(PORT, async () => {
  'home_quick_4' : { file: 'fix-overheating.bat', label: '️ Overheating Fix' },
  'home_quick_6' : { file: 'fix-black-screen.bat', label: '️ Black Screen Fix' },
  'home_quick_7' : { file: 'fix-keyboard.bat', label: '⌨️ Keyboard Fix' },
+ 'home_quick_7b': { file: 'fix-keyboard.bat', label: '⌨️ Keyboard Fix' },
  'home_quick_8' : { file: 'fix-touchpad.bat', label: '️ Touchpad Fix' },
  'home_quick_21': { file: 'fix-freezing.bat', label: '❄️ Freezing Fix' },
  'home_quick_30': { file: 'fix-sudden-shutdown.bat', label: '⚡ Sudden Shutdown Fix' },
@@ -590,6 +594,7 @@ app.listen(PORT, async () => {
  'home_quick_39': { file: 'fix-screen-flicker.bat', label: 'Screen Flicker Fix' },
  'home_quick_40': { file: 'fix-bluetooth.bat', label: 'Bluetooth Fix' },
  'home_quick_63': { file: 'fix-usb.bat', label: 'USB Fix' },
+ 'home_quick_63b': { file: 'fix-usb.bat', label: 'USB Fix' },
  'home_quick_64': { file: 'fix-sleep-wake.bat', label: 'Sleep/Wake Fix' },
  'home_quick_65': { file: 'fix-bluescreen.bat', label: 'Boot Error Fix' },
  'home_quick_66': { file: 'fix-touchscreen.bat', label: 'Touchscreen Fix' },
@@ -669,16 +674,16 @@ app.listen(PORT, async () => {
    if (/usb|pendrive|pen drive|flash drive/.test(t)) return { file: 'fix-usb.bat', label: '🔌 Auto-Fix: USB' };
    if (/sd card|sdcard|memory card/.test(t)) return { file: 'fix-sdcard.bat', label: '💳 Auto-Fix: SD Card' };
    if (/fingerprint|finger print/.test(t)) return { file: 'fix-fingerprint.bat', label: '👆 Auto-Fix: Fingerprint' };
-   if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg|plug/.test(t)) return { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' };
+   if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg|\bplug\b.*(?:power|charg|laptop)/.test(t)) return { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' };
    if (/sleep|wake|hibernate|suspend/.test(t)) return { file: 'fix-sleep-wake.bat', label: '💤 Auto-Fix: Sleep/Wake' };
    if (/turn on|boot|start nahi|on nahi|won.?t turn/.test(t)) return { file: 'fix-wont-turn-on.bat', label: '⚡ Auto-Fix: Won\'t Turn On' };
    if (/sudden shutdown|shut.?down|band ho|band ho jata/.test(t)) return { file: 'fix-sudden-shutdown.bat', label: '⚡ Auto-Fix: Sudden Shutdown' };
-   // ── Network — "net" alone also means internet in India ───────────────
-   if (/wifi|wi-fi|internet|\bnet\b|network|connect|hotspot|broadband|ping|nahi chal rha|nahi chal raha/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
-   // ── Software — specific apps BEFORE general ────────────────────────────
+   // ── Software apps BEFORE network — "teams not connecting" ≠ wifi ─────
    if (/\bteams\b/.test(t)) return { file: 'fix-teams.bat', label: '📹 Auto-Fix: Teams' };
    if (/\bzoom\b/.test(t)) return { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' };
    if (/outlook/.test(t)) return { file: 'fix-outlook.bat', label: '📧 Auto-Fix: Outlook' };
+   // ── Network — "net" alone also means internet in India ───────────────
+   if (/wifi|wi-fi|internet|\bnet\b|network|hotspot|broadband|ping|nahi chal rha|nahi chal raha/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
    if (/onedrive|one drive/.test(t)) return { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' };
    if (/\bpdf\b/.test(t)) return { file: 'fix-pdf.bat', label: '📄 Auto-Fix: PDF' };
    if (/word|excel|office|powerpoint/.test(t)) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };
@@ -943,6 +948,8 @@ app.listen(PORT, async () => {
  dept: dbEmp.department, floor: dbEmp.floor,
  laptop: dbEmp.laptop, laptopSN: dbEmp.laptopSN }
  : { empId: slackUserId, empName: name || 'Employee', email, dept: 'Unknown' };
+ // Prevent memory leak: cap empCache at 500 entries
+ if (empCache.size >= 500) { const old = [...empCache.keys()].slice(0, 100); old.forEach(k => empCache.delete(k)); }
  empCache.set(slackUserId, { data, ts: Date.now() });
  return data;
  } catch {
@@ -1408,7 +1415,53 @@ app.listen(PORT, async () => {
  slackApp.action(/^vague_pick_/, async ({ body, ack, client, say }) => {
  await ack();
  const userId = body.user.id;
+ const actionId = body.actions[0].action_id;
  const problem = body.actions[0].value; // e.g. "laptop very slow"
+
+ // ── Special case: "Create Ticket" button → open /ticket modal directly ─
+ if (actionId === 'vague_pick_create_ticket') {
+   try {
+     await client.views.open({
+       trigger_id: body.trigger_id,
+       view: {
+         type: 'modal', callback_id: 'ticket_modal',
+         title: { type: 'plain_text', text: 'New IT Ticket', emoji: true },
+         submit: { type: 'plain_text', text: 'Submit Ticket ✅', emoji: true },
+         close: { type: 'plain_text', text: 'Cancel', emoji: true },
+         blocks: [
+           { type: 'input', block_id: 'description_block',
+             label: { type: 'plain_text', text: 'Describe your problem:' },
+             element: { type: 'plain_text_input', action_id: 'description_input', multiline: true, min_length: 10,
+               placeholder: { type: 'plain_text', text: 'e.g. Laptop not turning on, WiFi not working, Forgot password...' }}},
+           { type: 'input', block_id: 'category_block',
+             label: { type: 'plain_text', text: 'Category' },
+             element: { type: 'static_select', action_id: 'category_input',
+               placeholder: { type: 'plain_text', text: 'Select a category' },
+               options: [
+                 { text: { type: 'plain_text', text: 'Hardware - Laptop, keyboard, mouse, screen' }, value: 'Hardware' },
+                 { text: { type: 'plain_text', text: 'Software - App, Windows, Office' }, value: 'Software' },
+                 { text: { type: 'plain_text', text: 'Network - WiFi, internet, VPN' }, value: 'Network' },
+                 { text: { type: 'plain_text', text: 'Account - Password, login, email' }, value: 'Account' },
+                 { text: { type: 'plain_text', text: 'Purchase - New equipment request' }, value: 'Purchase' },
+                 { text: { type: 'plain_text', text: '❓ Other - Something else' }, value: 'Other' }
+               ]}},
+           { type: 'input', block_id: 'priority_block',
+             label: { type: 'plain_text', text: 'How Urgent Is It?' },
+             element: { type: 'static_select', action_id: 'priority_input',
+               initial_option: { text: { type: 'plain_text', text: 'Medium - Normal problem' }, value: 'Medium' },
+               options: [
+                 { text: { type: 'plain_text', text: 'Critical - Work completely stopped' }, value: 'Critical' },
+                 { text: { type: 'plain_text', text: 'High - Very urgent, needed ASAP' }, value: 'High' },
+                 { text: { type: 'plain_text', text: 'Medium - Normal issue, can partially work' }, value: 'Medium' },
+                 { text: { type: 'plain_text', text: 'Low - Minor issue, fix when possible' }, value: 'Low' }
+               ]}}
+         ]
+       }
+     });
+   } catch (err) { console.error('vague_pick_create_ticket modal error:', err.message); }
+   return;
+ }
+
  try {
  const emp = await lookupEmployee(userId, client);
  const conv = await getSlackSession(userId, emp);
@@ -1492,6 +1545,8 @@ app.listen(PORT, async () => {
  // ── APP HOME TAB ─────────────────────────────────────────────────────
  // Track who got the greeting DM already (so it only sends once per session)
  const greetedUsers = new Set();
+ // Clear greetedUsers every 6 hours to prevent memory leak
+ setInterval(() => greetedUsers.clear(), 6 * 60 * 60 * 1000);
 
  slackApp.event('app_home_opened', async ({ event, client }) => {
  try {
@@ -1844,7 +1899,7 @@ app.listen(PORT, async () => {
  };
 
  // ── Quick Action buttons from Home tab ────────────────────────────────
- const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_quick_38','home_quick_39','home_quick_40','home_quick_41','home_quick_42','home_quick_43','home_quick_44','home_quick_45','home_quick_46','home_quick_47','home_quick_48','home_quick_49','home_quick_50','home_quick_51','home_quick_52','home_quick_53','home_quick_54','home_quick_55','home_quick_56','home_quick_57','home_quick_58','home_quick_59','home_quick_60','home_quick_61','home_quick_62','home_quick_63','home_quick_64','home_quick_65','home_quick_66','home_quick_67','home_quick_68','home_quick_69','home_quick_70','home_quick_71','home_quick_72','home_quick_73','home_quick_74','home_quick_75','home_quick_76','home_quick_77','home_sos'];
+ const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_7b','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_quick_38','home_quick_39','home_quick_40','home_quick_41','home_quick_42','home_quick_43','home_quick_44','home_quick_45','home_quick_46','home_quick_47','home_quick_48','home_quick_49','home_quick_50','home_quick_51','home_quick_52','home_quick_53','home_quick_54','home_quick_55','home_quick_55b','home_quick_56','home_quick_57','home_quick_58','home_quick_59','home_quick_60','home_quick_61','home_quick_62','home_quick_63','home_quick_63b','home_quick_64','home_quick_65','home_quick_66','home_quick_67','home_quick_68','home_quick_69','home_quick_70','home_quick_71','home_quick_72','home_quick_73','home_quick_74','home_quick_75','home_quick_76','home_quick_77','home_sos'];
  homeQuickActions.forEach(actionId => {
  slackApp.action(actionId, async ({ body, ack, client }) => {
  await ack();
@@ -2450,6 +2505,7 @@ app.listen(PORT, async () => {
  { resolved: true }
  );
  pendingTickets.delete(userId);
+ failedAttempts.delete(userId); // reset failure count on new topic
  const firstName = (emp.empName || 'there').split(' ')[0];
  await say({ text: ` Theek hai ${firstName}! Nayi baat shuru karte hain. Aapki nai IT problem kya hai?` });
  return;
@@ -2491,6 +2547,7 @@ app.listen(PORT, async () => {
  { resolved: true }
  );
  pendingTickets.delete(userId);
+ failedAttempts.delete(userId); // reset failure count on fresh greeting
  const firstName = (emp.empName || 'there').split(' ')[0];
  await say({
  text: `Hey ${firstName}! Main Zivon hoon ⚡`,
@@ -2812,18 +2869,20 @@ app.listen(PORT, async () => {
  if (kbReply) {
    const formattedKB = formatForSlack(kbReply);
 
-   // Always set pendingTickets so ticket button works
-   pendingTickets.set(userId, {
-     empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
-     empDept: emp.dept, empFloor: emp.floor,
-     laptop: emp.laptop, laptopSN: emp.laptopSN,
-     category: 'Other', priority: 'Medium',
-     description: text, source: 'slack', slackUserId: userId,
-     createdAt: Date.now()
-   });
+   // Only set pendingTickets for non-info replies (avoid stale ticket context for greetings/passwords)
+   const isInfoOnly = /password|spartans|kaun\s*hoon|Zivon|IT Admin|sajan kumar|khushi hui|koi baat nahi|theek hoon|IT problems mein help/i.test(kbReply);
+   if (!isInfoOnly) {
+     pendingTickets.set(userId, {
+       empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
+       empDept: emp.dept, empFloor: emp.floor,
+       laptop: emp.laptop, laptopSN: emp.laptopSN,
+       category: 'Other', priority: 'Medium',
+       description: text, source: 'slack', slackUserId: userId,
+       createdAt: Date.now()
+     });
+   }
 
    // Build blocks: script FIRST → answer → ticket button ALWAYS
-   const isInfoOnly = /password|spartans|kaun\s*hoon|Zivon|IT Admin|sajan kumar|khushi hui|koi baat nahi|theek hoon|IT problems mein help/i.test(kbReply);
    const kbBlocks = isInfoOnly
      ? [{ type:'section', text:{ type:'mrkdwn', text: formattedKB }}]
      : buildDMBlocks(text, formattedKB);
@@ -2840,7 +2899,7 @@ app.listen(PORT, async () => {
    getSlackSession(userId, emp).then(kbConv => {
      kbConv.messages.push({ role: 'user', content: text });
      kbConv.messages.push({ role: 'assistant', content: kbReply });
-     if (kbConv.messages.length > 20) kbConv.messages = kbConv.messages.slice(-20);
+     if (kbConv.messages.length > 30) kbConv.messages = kbConv.messages.slice(-30);
      kbConv.save().catch(e => console.error('KB conv save error:', e.message));
    }).catch(e => console.error('KB session get error:', e.message));
    return;
@@ -2851,7 +2910,7 @@ app.listen(PORT, async () => {
 
  const conv = await convPromise;
  conv.messages.push({ role: 'user', content: text });
- if (conv.messages.length > 20) conv.messages = conv.messages.slice(-20);
+ if (conv.messages.length > 30) conv.messages = conv.messages.slice(-30);
 
  // Run DB save and AI call in parallel for speed
  // Fix 5: Use allSettled so conv.save() failure doesn't silently kill the AI response
@@ -2889,21 +2948,23 @@ app.listen(PORT, async () => {
 
  const lastUserMsg = conv.messages.filter(m=>m.role==='user').slice(-3).map(m=>m.content).join('; ');
 
- // Always set pendingTickets so ticket button always works
- pendingTickets.set(userId, {
-   empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
-   empDept: emp.dept, empFloor: emp.floor,
-   laptop: emp.laptop, laptopSN: emp.laptopSN,
-   category: ticketData?.category || autoCategory,
-   priority: ticketData?.priority || autoPriority,
-   description: ticketData?.description || lastUserMsg || text,
-   source: 'slack', slackUserId: userId,
-   createdAt: Date.now()
- });
-
  // Build blocks: script FIRST → answer → ticket button ALWAYS
  // Use current message (text) for script detection — NOT recentUserText (avoids old WiFi context bleeding in)
  const isInfoOnly = /password|spartans|Zivon|IT Admin|khushi hui|koi baat nahi|theek hoon|IT problems mein|aur koi.*help/i.test(reply);
+
+ // Only set pendingTickets for actionable replies (avoid stale ticket context for greetings/facts)
+ if (!isInfoOnly) {
+   pendingTickets.set(userId, {
+     empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
+     empDept: emp.dept, empFloor: emp.floor,
+     laptop: emp.laptop, laptopSN: emp.laptopSN,
+     category: ticketData?.category || autoCategory,
+     priority: ticketData?.priority || autoPriority,
+     description: ticketData?.description || lastUserMsg || text,
+     source: 'slack', slackUserId: userId,
+     createdAt: Date.now()
+   });
+ }
  const blocks = isInfoOnly
    ? [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}]
    : buildDMBlocks(text, formattedReply, ticketData?.priority || autoPriority);
@@ -2990,11 +3051,11 @@ app.listen(PORT, async () => {
    });
 
    try {
-     const emp = await Employee.findOne({ slackUserId: userId }).catch(() => null);
+     const emp = await lookupEmployee(userId, client).catch(() => null);
      const empInfo = {
-       empId: emp?.empId || userId, empName: emp?.name || emp?.empName || 'User',
+       empId: emp?.empId || userId, empName: emp?.empName || 'User',
        source: 'slack', laptop: emp?.laptop, laptopSN: emp?.laptopSN,
-       dept: emp?.dept || emp?.department, floor: emp?.floor
+       dept: emp?.dept, floor: emp?.floor
      };
 
      const conv = await getSlackSession(userId, emp || { empId: userId, empName: 'User' });
@@ -3018,11 +3079,18 @@ app.listen(PORT, async () => {
      });
    } catch(err) {
      console.error('not_resolved_btn AI error:', err.message);
-     await client.chat.update({
-       channel: thinkMsg.channel, ts: thinkMsg.ts,
-       text: 'Ek aur step try karo!',
-       blocks: buildDMBlocks('', `No worries 👍\n\nEk aur cheez try karo:\n\n1. Laptop restart karo\n2. Dobara check karo\n3. Koi error message aa raha? Bol batao!`)
-     });
+     try {
+       await client.chat.update({
+         channel: thinkMsg.channel, ts: thinkMsg.ts,
+         text: 'Ek aur step try karo!',
+         blocks: buildDMBlocks('', `No worries 👍\n\nEk aur cheez try karo:\n\n1. Laptop restart karo\n2. Dobara check karo\n3. Koi error message aa raha? Bol batao!`)
+       });
+     } catch (updateErr) {
+       console.error('not_resolved_btn fallback update error:', updateErr.message);
+       try {
+         await client.chat.postMessage({ channel: channelId, text: 'No worries! Ek aur kaam karo — laptop restart karo aur dobara check karo.' });
+       } catch {}
+     }
    }
  });
 
