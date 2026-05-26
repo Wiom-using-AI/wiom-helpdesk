@@ -697,214 +697,96 @@ app.listen(PORT, async () => {
    return null;
  };
 
- // ── Build Home Tab blocks (with collapsible categories) ───────────────
+ // ── Category color config ─────────────────────────────────────────────
+ const CAT_COLORS = {
+   laptop:      { icon: '🔵 💻', label: 'Laptop & Display',        desc: 'Screen · Battery · Keyboard · Audio · Camera and more' },
+   network:     { icon: '🟢 🌐', label: 'Network & Internet',       desc: 'Wi-Fi · Internet Slow · Website · VPN and more' },
+   software:    { icon: '🟣 ⚙️',  label: 'Software, Apps & Account', desc: 'Teams · Outlook · Password · Virus · Storage and more' },
+   replacement: { icon: '🟠 🔄', label: 'Replacement / Upgrade',    desc: 'Laptop · Mouse · Keyboard · Monitor replacement' },
+   access:      { icon: '🔴 🔒', label: 'Access & Permissions',     desc: 'VPN · Access Request · Account Locked · New User Setup' },
+   printer:     { icon: '🩵 🖨️', label: 'Printer & Peripheral',    desc: 'Printer · Print Queue · Mouse · USB devices' },
+ };
+
+ // ── Build flat Home Tab blocks — ALL categories visible, no expand needed ──
  const buildHomeBlocks = (emp, myTickets, expandedSet) => {
- const name = emp?.name?.split(' ')[0] || 'Employee';
+ const name = (emp?.empName || emp?.name || 'there').split(' ')[0];
  const laptop = emp?.laptop || null;
  const laptopSN = emp?.laptopSN || null;
- const dept = emp?.department || null;
+ const dept = emp?.dept || emp?.department || null;
  const openCnt = myTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length;
 
  const statEmoji = { 'Open':'🔴', 'In Progress':'🟡', 'Resolved':'✅', 'Closed':'⚫' };
  const priEmoji2 = { 'Critical':'🔴', 'High':'🟠', 'Medium':'🟡', 'Low':'🟢' };
 
- const _now = new Date();
- const istHour = Math.floor((_now.getUTCHours() * 60 + _now.getUTCMinutes() + 330) / 60) % 24;
- const greeting = istHour < 12 ? 'Good Morning' : istHour < 17 ? 'Good Afternoon' : 'Good Evening';
+ const blocks = [];
 
- const blocks = [
-
- // ── HERO: Robot GIF + Greeting ─────────────────────────────────────────
- {
- type: 'section',
- text: {
- type: 'mrkdwn',
- text: `*Hello ${name}! 👋 Main Zivon hoon — aapki kya help karu?* 😊\n\n_Main WIOM ka smart IT assistant hoon!_\n\n⚡ Fast   😊 Friendly   🧠 Smart`
- },
- accessory: {
- type: 'image',
- image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif',
- alt_text: 'Zivon AI'
- }
- },
- {
- type: 'context',
- elements: [{ type: 'mrkdwn', text: '🟢 *Zivon is Online* — Ready to help you 24/7' }]
- },
-
- { type: 'divider' },
-
- // ── QUICK ACTIONS ──────────────────────────────────────────────────────
- { type: 'section', text: { type: 'mrkdwn', text: '*⚡ Quick Actions*' } },
- {
- type: 'actions',
- elements: [
- {
- type: 'button',
- text: { type: 'plain_text', text: '📶 Internet Fix', emoji: true },
- action_id: 'home_quick_11',
- value: 'WiFi not working no internet connection',
- style: 'primary'
- },
- {
- type: 'button',
- text: { type: 'plain_text', text: '🔐 Password Reset', emoji: true },
- action_id: 'home_quick_14',
- value: 'Forgot password need to reset it'
- },
- {
- type: 'button',
- text: { type: 'plain_text', text: '🧹 Quick Cleanup', emoji: true },
- action_id: 'home_quick_1',
- value: 'My laptop is very slow what should I do'
- },
- {
- type: 'button',
- text: { type: 'plain_text', text: '📞 Contact IT', emoji: true },
- action_id: 'home_contact_it',
- value: 'contact_it',
- style: 'danger'
- }
- ]
- },
-
- { type: 'divider' },
-
- // ── MAIN CATEGORIES (2-column grid) ────────────────────────────────────
- { type: 'section', text: { type: 'mrkdwn', text: '*📂 Main Categories*' } },
-
- ];
-
- // Build category grid: 2 per row (3 rows × 2 = 6 categories)
- const catEmojis = {
- laptop: '💻', network: '🌐', software: '⚙️',
- replacement: '📦', access: '🔒', printer: '🖨️'
- };
- const catDescs = {
- laptop: 'Screen, Performance, Battery, Hardware issues',
- network: 'WiFi, VPN, LAN, Internet connection issues',
- software: 'Software, Installation, Email, Login issues',
- replacement: 'Hardware/Software request, Upgrade, New setup',
- access: 'System access, App access, Permission requests',
- printer: 'Printer, Mouse, Keyboard, Peripheral issues'
- };
-
- for (let i = 0; i < CATEGORIES.length; i += 2) {
- const cat1 = CATEGORIES[i];
- const cat2 = CATEGORIES[i + 1];
- const isExp1 = expandedSet.has(cat1.key);
- const isExp2 = cat2 && expandedSet.has(cat2.key);
-
- const rowBtns = [
- {
- type: 'button',
- text: { type: 'plain_text', text: `${catEmojis[cat1.key] || '📁'} ${cat1.label} ${isExp1 ? '▼' : '→'}`, emoji: true },
- action_id: `cat_toggle_${cat1.key}`,
- value: cat1.key,
- style: 'primary'
- }
- ];
- if (cat2) {
- rowBtns.push({
- type: 'button',
- text: { type: 'plain_text', text: `${catEmojis[cat2.key] || '📁'} ${cat2.label} ${isExp2 ? '▼' : '→'}`, emoji: true },
- action_id: `cat_toggle_${cat2.key}`,
- value: cat2.key,
- style: 'primary'
- });
- }
- blocks.push({ type: 'actions', elements: rowBtns });
-
- // Expanded sub-items for cat1
- if (isExp1) {
- blocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: `_${catDescs[cat1.key] || cat1.desc}_` }] });
- for (const row of cat1.rows) {
+ // ── HEADER ──────────────────────────────────────────────────────────────
+ blocks.push({ type: 'header', text: { type: 'plain_text', text: `👋  Hello ${name}!  Welcome to WIOM IT Helpdesk`, emoji: true } });
  blocks.push({
- type: 'actions',
- elements: row.map(btn => ({
- type: 'button',
- text: { type: 'plain_text', text: btn.text, emoji: true },
- value: btn.value,
- action_id: btn.id
- }))
- });
- }
- blocks.push({
- type: 'actions',
- elements: [{
- type: 'button',
- text: { type: 'plain_text', text: '▲ Close', emoji: true },
- action_id: `cat_toggle_${cat1.key}`,
- value: cat1.key
- }]
+   type: 'section',
+   text: { type: 'mrkdwn', text: `*How can we help you today?* 😊\n🟢 *Zivon is Online* — Instant IT support, 24/7${openCnt > 0 ? `   |   🔔 *${openCnt} Open Ticket${openCnt > 1 ? 's' : ''}*` : ''}` },
+   accessory: { type: 'image', image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif', alt_text: 'Zivon AI' }
  });
  blocks.push({ type: 'divider' });
+ blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '*📂   Select a Category*\n_Apni problem select karo — Zivon turant help karega!_ 👇' } });
+
+ // ── ALL CATEGORIES — flat, all sub-issues visible ────────────────────
+ for (const cat of CATEGORIES) {
+   const cfg = CAT_COLORS[cat.key] || { icon: '⚪ 📁', label: cat.label, desc: cat.desc };
+   // Category colored header
+   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `${cfg.icon}  *${cfg.label}*\n_${cfg.desc}_` } });
+   // All sub-issue rows for this category
+   for (const row of cat.rows) {
+     blocks.push({
+       type: 'actions',
+       elements: row.map(btn => ({
+         type: 'button',
+         text: { type: 'plain_text', text: btn.text, emoji: true },
+         value: btn.value,
+         action_id: btn.id
+       }))
+     });
+   }
+   blocks.push({ type: 'divider' });
  }
 
- // Expanded sub-items for cat2
- if (cat2 && isExp2) {
- blocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: `_${catDescs[cat2.key] || cat2.desc}_` }] });
- for (const row of cat2.rows) {
- blocks.push({
- type: 'actions',
- elements: row.map(btn => ({
- type: 'button',
- text: { type: 'plain_text', text: btn.text, emoji: true },
- value: btn.value,
- action_id: btn.id
- }))
- });
- }
- blocks.push({
- type: 'actions',
- elements: [{
- type: 'button',
- text: { type: 'plain_text', text: '▲ Close', emoji: true },
- action_id: `cat_toggle_${cat2.key}`,
- value: cat2.key
- }]
- });
- blocks.push({ type: 'divider' });
- }
- }
-
-
- // ── MY TICKETS ─────────────────────────────────────────────────────────
+ // ── MY TICKETS ───────────────────────────────────────────────────────────
  if (myTickets.length > 0) {
- blocks.push({ type: 'divider' });
- blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '*🎫 My Tickets*' } });
- for (const t of myTickets.slice(0, 3)) {
- blocks.push({
- type: 'section',
- text: {
- type: 'mrkdwn',
- text: `${statEmoji[t.status] || '🔵'} \`${t.ticketId}\` — ${(t.description || '').substring(0, 55)}...\n${priEmoji2[t.priority] || '🟡'} ${t.priority} | ${t.category || 'Other'} | _${Math.floor((Date.now() - new Date(t.createdAt)) / 3600000)}h ago_${t.resolution ? '\n✅ *Resolved:* ' + t.resolution.substring(0, 60) : ''}`
- }
- });
- }
+   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `*🎫   My Tickets*${openCnt > 0 ? ` — 🔴 *${openCnt} Open*` : ''}` } });
+   for (const t of myTickets.slice(0, 3)) {
+     const hrs = Math.floor((Date.now() - new Date(t.createdAt)) / 3600000);
+     blocks.push({
+       type: 'section',
+       text: { type: 'mrkdwn', text: `${statEmoji[t.status]||'🔵'} \`${t.ticketId}\`  ${priEmoji2[t.priority]||'🟡'} *${t.priority}* — ${(t.description||'').substring(0,55)}...\n_${t.category||'Other'} · ${hrs}h ago · ${t.status}${t.resolution ? ' · ✅ Resolved' : ''}_` }
+     });
+   }
+   blocks.push({ type: 'divider' });
  }
 
- // ── DEVICE INFO ────────────────────────────────────────────────────────
- if (emp) {
- blocks.push({ type: 'divider' });
+ // ── BOTTOM CTAs ──────────────────────────────────────────────────────────
  blocks.push({
- type: 'section',
- fields: [
- { type: 'mrkdwn', text: `*👤 Emp ID:* \`${emp.empId}\`` },
- { type: 'mrkdwn', text: `*🏢 Dept:* ${dept || '-'}` },
- { type: 'mrkdwn', text: `*💻 Laptop:* ${laptop || '-'}` },
- { type: 'mrkdwn', text: `*🔖 S/N:* \`${laptopSN || '-'}\`` },
- { type: 'mrkdwn', text: openCnt > 0 ? `*🎫 Open Tickets:* *${openCnt}* ⚠️` : `*🎫 Tickets:* ✅ None open` }
- ]
+   type: 'section',
+   fields: [
+     { type: 'mrkdwn', text: "*🤖  Can't find your issue?*\n_Type your problem in DM — Zivon will help instantly!_" },
+     { type: 'mrkdwn', text: '*🎧  Need Urgent Help?*\n_Contact IT Support Team directly_' }
+   ]
  });
- }
+ blocks.push({
+   type: 'actions',
+   elements: [
+     { type: 'button', text: { type: 'plain_text', text: '✨  Chat with AI Assistant', emoji: true }, action_id: 'home_chat_ai', value: 'chat_ai', style: 'primary' },
+     { type: 'button', text: { type: 'plain_text', text: '🎧  Contact IT Support', emoji: true }, action_id: 'home_contact_it', value: 'contact_it', style: 'danger' }
+   ]
+ });
 
- // ── FOOTER ─────────────────────────────────────────────────────────────
- blocks.push({ type: 'divider' });
- blocks.push({
- type: 'context',
- elements: [{ type: 'mrkdwn', text: `_Can't find your issue? Type your problem in DM. I'll help you out! 😊_ &nbsp;&nbsp;|&nbsp;&nbsp; _Made with ❤️ by WIOM IT Team_` }]
- });
+ // ── EMPLOYEE FOOTER ───────────────────────────────────────────────────────
+ if (emp?.empId) {
+   blocks.push({
+     type: 'context',
+     elements: [{ type: 'mrkdwn', text: `👤 *${emp.empName||emp.empId}* · 🏢 ${dept||'—'} · 💻 ${laptop||'—'} · 🏷️ \`${laptopSN||'—'}\` · ${openCnt > 0 ? `🔔 ${openCnt} open ticket(s)` : '✅ No open tickets'}` }]
+   });
+ }
+ blocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: '_Made with ❤️ by WIOM IT Team  |  Powered by Zivon AI_' }] });
 
  return blocks;
  };
@@ -1625,40 +1507,44 @@ app.listen(PORT, async () => {
 
  // Send greeting DM once per session when user opens Home Tab
  if (!greetedUsers.has(userId)) {
- greetedUsers.add(userId);
- const firstName = emp?.name?.split(' ')[0] || 'there';
- try {
- const dm = await client.conversations.open({ users: userId });
- await client.chat.postMessage({
- channel: dm.channel.id,
- text: `Hello ${firstName}! Main Zivon hoon — aapki kya help karu? 😊`,
- blocks: [
- {
- type: 'section',
- text: {
- type: 'mrkdwn',
- text: `*Hello ${firstName}! 👋*\n*Main Zivon hoon ⚡ — aapki kya help karu?* 😊\n\nKoi bhi IT problem ho — laptop, WiFi, software — batao, turant help karunga!`
- },
- accessory: {
- type: 'image',
- image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif',
- alt_text: 'Zivon'
- }
- },
- {
- type: 'actions',
- elements: [
- { type: 'button', style: 'primary', text: { type: 'plain_text', text: '💻 Laptop Issue', emoji: true }, action_id: 'dm_cat_laptop', value: 'laptop' },
- { type: 'button', text: { type: 'plain_text', text: '🌐 WiFi / Net', emoji: true }, action_id: 'dm_cat_network', value: 'network' },
- { type: 'button', text: { type: 'plain_text', text: '⚙️ Software', emoji: true }, action_id: 'dm_cat_software', value: 'software' },
- { type: 'button', style: 'danger', text: { type: 'plain_text', text: '🆘 SOS', emoji: true }, action_id: 'home_sos', value: 'sos' }
- ]
- }
- ]
- });
- } catch (dmErr) {
- console.error('Greeting DM error:', dmErr.message);
- }
+   greetedUsers.add(userId);
+   const firstName = (emp?.empName || emp?.name || 'there').split(' ')[0];
+   try {
+     const dm = await client.conversations.open({ users: userId });
+     // Build same flat category view for DM greeting
+     const dmBlocks = [
+       { type: 'header', text: { type: 'plain_text', text: `👋  Hello ${firstName}!  Welcome to WIOM IT Helpdesk`, emoji: true } },
+       { type: 'section', text: { type: 'mrkdwn', text: `*How can we help you today?* 😊\n🟢 *Zivon is Online* — Instant IT support, 24/7` }, accessory: { type: 'image', image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif', alt_text: 'Zivon AI' } },
+       { type: 'divider' },
+       { type: 'section', text: { type: 'mrkdwn', text: '*📂   Select a Category*\n_Apni problem select karo — Zivon turant help karega!_ 👇' } },
+     ];
+     for (const cat of CATEGORIES) {
+       const cfg = CAT_COLORS[cat.key] || { icon: '⚪ 📁', label: cat.label, desc: cat.desc };
+       dmBlocks.push({ type: 'section', text: { type: 'mrkdwn', text: `${cfg.icon}  *${cfg.label}*\n_${cfg.desc}_` } });
+       for (const row of cat.rows) {
+         dmBlocks.push({
+           type: 'actions',
+           elements: row.map(btn => ({
+             type: 'button',
+             text: { type: 'plain_text', text: btn.text, emoji: true },
+             value: btn.value,
+             action_id: btn.id
+           }))
+         });
+       }
+       dmBlocks.push({ type: 'divider' });
+     }
+     dmBlocks.push({
+       type: 'actions',
+       elements: [
+         { type: 'button', text: { type: 'plain_text', text: '✨  Chat with AI Assistant', emoji: true }, action_id: 'home_chat_ai', value: 'chat_ai', style: 'primary' },
+         { type: 'button', text: { type: 'plain_text', text: '🎧  Contact IT Support', emoji: true }, action_id: 'home_contact_it', value: 'contact_it', style: 'danger' }
+       ]
+     });
+     await client.chat.postMessage({ channel: dm.channel.id, text: `Hello ${firstName}! WIOM IT Helpdesk mein aapka swagat hai 👋`, blocks: dmBlocks });
+   } catch (dmErr) {
+     console.error('Greeting DM error:', dmErr.message);
+   }
  }
  } catch (err) {
  console.error('App Home error:', err.message);
@@ -1724,6 +1610,28 @@ app.listen(PORT, async () => {
  });
 
  // ── Contact IT button → show phone number modal ──────────────────────
+ // ── "Chat with AI" button → open DM with category picker ────────────
+ slackApp.action('home_chat_ai', async ({ body, ack, client }) => {
+   await ack();
+   const userId = body.user.id;
+   try {
+     await client.chat.postMessage({
+       channel: userId,
+       text: 'Kya problem hai? Batao!',
+       blocks: [
+         { type: 'section', text: { type: 'mrkdwn', text: `*Hey! 👋 Kya problem hai?*\n_Seedha apna issue type karo ya category choose karo:_` }},
+         { type: 'actions', elements: [
+           { type: 'button', text: { type: 'plain_text', text: '💻 Laptop Issue', emoji: true }, action_id: 'vague_pick_laptop_other', value: 'laptop hardware issue', style: 'primary' },
+           { type: 'button', text: { type: 'plain_text', text: '📶 WiFi / Internet', emoji: true }, action_id: 'vague_pick_wifi_not_connect', value: 'wifi not connecting' },
+           { type: 'button', text: { type: 'plain_text', text: '🔑 Password / Login', emoji: true }, action_id: 'vague_pick_password_reset', value: 'forgot laptop password' },
+           { type: 'button', text: { type: 'plain_text', text: '💿 Software / App', emoji: true }, action_id: 'vague_pick_software_other', value: 'software issue' }
+         ]},
+         { type: 'context', elements: [{ type: 'mrkdwn', text: '_Ya seedha apna issue type karo — Zivon samjhega! 😊_' }]}
+       ]
+     });
+   } catch (err) { console.error('home_chat_ai error:', err.message); }
+ });
+
  slackApp.action('home_contact_it', async ({ body, ack, client }) => {
  await ack();
  try {
