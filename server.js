@@ -324,9 +324,10 @@ app.listen(PORT, async () => {
  });
 
  // ── In-memory store for pending ticket confirmations (short-lived) ─────
- const pendingTickets = new Map(); // slackUserId -> ticketData (with createdAt)
+ const pendingTickets  = new Map(); // slackUserId -> ticketData (with createdAt)
  const processingUsers = new Set(); // Fix 8: per-user lock — prevents race conditions
  const expandedHomeMap = new Map(); // slackUserId -> Set<categoryKey>
+ const failedAttempts  = new Map(); // slackUserId -> { count, lastTime } — tracks "Nahi hua" clicks
 
  // ── Brand detection helpers ───────────────────────────────────────────
  const detectBrand = (laptopName) => {
@@ -925,7 +926,7 @@ app.listen(PORT, async () => {
  .trim();
  };
 
- // ── Build DM response blocks: script FIRST, numbered answer, ticket button ALWAYS ──
+ // ── Build DM response blocks: script FIRST, answer, resolution check ALWAYS ──
  const buildDMBlocks = (problemText, formattedAnswer, urgency = 'Medium') => {
    const blocks = [];
 
@@ -938,7 +939,9 @@ app.listen(PORT, async () => {
          type: 'button',
          text: { type: 'plain_text', text: script.label, emoji: true },
          url: `${PORTAL}/scripts/${script.file}`,
-         style: 'primary'
+         action_id: 'script_download_btn',
+         style: 'primary',
+         value: problemText.substring(0, 100)
        }]
      });
    }
@@ -946,27 +949,63 @@ app.listen(PORT, async () => {
    // 2️⃣ ANSWER TEXT — numbered steps
    blocks.push({ type: 'section', text: { type: 'mrkdwn', text: formattedAnswer }});
 
-   // 3️⃣ TICKET BUTTON — ALWAYS at bottom
+   // 3️⃣ RESOLUTION CHECK — 3 buttons always at bottom
    blocks.push({ type: 'divider' });
    blocks.push({
+     type: 'section',
+     text: { type: 'mrkdwn', text: '_Ye try kiya? Kya hua batao_ 👇' }
+   });
+   blocks.push({
      type: 'actions',
-     elements: [{
-       type: 'button',
-       text: { type: 'plain_text', text: '🎫 IT Ticket Banao', emoji: true },
-       action_id: 'quick_ticket_btn',
-       style: 'danger',
-       value: urgency,
-       confirm: {
-         title: { type: 'plain_text', text: 'Ticket Create Karein?' },
-         text: { type: 'mrkdwn', text: '_IT team ko alert bheja jayega aur woh directly aapke paas aayegi._' },
-         confirm: { type: 'plain_text', text: '✅ Ha, Banao!' },
-         deny: { type: 'plain_text', text: 'Nahi, Try Karta Hoon' }
+     elements: [
+       {
+         type: 'button',
+         text: { type: 'plain_text', text: '✅ Ho gaya!', emoji: true },
+         action_id: 'resolved_yes_btn',
+         style: 'primary',
+         value: urgency
+       },
+       {
+         type: 'button',
+         text: { type: 'plain_text', text: '❌ Nahi hua, aur steps', emoji: true },
+         action_id: 'not_resolved_btn',
+         value: urgency
+       },
+       {
+         type: 'button',
+         text: { type: 'plain_text', text: '🎫 Seedha Ticket Banao', emoji: true },
+         action_id: 'quick_ticket_btn',
+         style: 'danger',
+         value: urgency,
+         confirm: {
+           title: { type: 'plain_text', text: 'Ticket Create Karein?' },
+           text: { type: 'mrkdwn', text: '_IT team ko alert bheja jayega aur woh directly aapke paas aayegi._' },
+           confirm: { type: 'plain_text', text: '✅ Ha, Banao!' },
+           deny: { type: 'plain_text', text: 'Nahi, Try Karta Hoon' }
+         }
        }
-     }]
+     ]
    });
 
    return blocks;
  };
+
+ // ── Build ticket-only prompt blocks (after 2+ failures) ─────────────────────
+ const buildAutoTicketBlocks = (msg) => ([
+   { type: 'section', text: { type: 'mrkdwn', text: msg }},
+   { type: 'actions', elements: [{
+     type: 'button',
+     text: { type: 'plain_text', text: '🎫 IT Ticket Create Karo', emoji: true },
+     action_id: 'quick_ticket_btn',
+     style: 'danger',
+     confirm: {
+       title: { type: 'plain_text', text: 'Ticket Create Karein?' },
+       text: { type: 'mrkdwn', text: '_IT team directly aayegi — confirm karo._' },
+       confirm: { type: 'plain_text', text: '✅ Ha, Banao!' },
+       deny: { type: 'plain_text', text: 'Ruko' }
+     }
+   }]}
+ ]);
 
  // ── FEATURE 1: Load/create MongoDB conversation session ───────────────
  const getSlackSession = async (slackUserId, emp) => {
@@ -2980,6 +3019,123 @@ app.listen(PORT, async () => {
  // Fix 8: Always release lock when processing finishes
  processingUsers.delete(userId);
  }
+ });
+
+ // ── ✅ Resolved — user says it worked ────────────────────────────────────────
+ slackApp.action('resolved_yes_btn', async ({ body, ack, client }) => {
+   await ack();
+   const userId = body.user.id;
+   const channelId = body.channel?.id || body.container?.channel_id;
+   failedAttempts.delete(userId); // reset failure count
+   pendingTickets.delete(userId); // no ticket needed
+
+   const replies = [
+     `✅ *Bahut badhiya!* Sahi ho gaya 😊\n\nKoi aur IT problem ho toh seedha batao — main hoon! 🚀`,
+     `✅ *Ho gaya* 🎉 Mast!\n\nKoi aur problem aaye toh yahan type karo — main 24/7 hoon! 😄`,
+     `*Nice!* Lagta hai issue solve ho gayi 😊\n\nAur kuch chahiye? Batao!`
+   ];
+   const msg = replies[Math.floor(Math.random() * replies.length)];
+
+   await client.chat.postMessage({
+     channel: channelId,
+     text: '✅ Problem solve ho gayi!',
+     blocks: [{ type:'section', text:{ type:'mrkdwn', text: msg }}]
+   });
+ });
+
+ // ── ❌ Not resolved — give next steps, escalate on 2nd failure ───────────────
+ slackApp.action('not_resolved_btn', async ({ body, ack, client }) => {
+   await ack();
+   const userId = body.user.id;
+   const channelId = body.channel?.id || body.container?.channel_id;
+
+   // Track failure count
+   const prev = failedAttempts.get(userId) || { count: 0, lastTime: 0 };
+   // Reset if last attempt was >30 min ago (fresh issue)
+   const isStale = Date.now() - prev.lastTime > 30 * 60 * 1000;
+   const count = isStale ? 1 : prev.count + 1;
+   failedAttempts.set(userId, { count, lastTime: Date.now() });
+
+   // ── After 2 failures → auto ticket ─────────────────────────────────────────
+   if (count >= 2) {
+     failedAttempts.delete(userId);
+     await client.chat.postMessage({
+       channel: channelId,
+       text: 'Steps se nahi hua — IT ticket raise karte hain!',
+       blocks: buildAutoTicketBlocks(
+         `No worries 👍\n\nLagta hai ye steps se theek nahi ho raha. *IT team physically aayegi* — woh direct fix karegi!\n\n_Ek click mein ticket create karo:_`
+       )
+     });
+     return;
+   }
+
+   // ── First failure → AI gives next different step ────────────────────────────
+   const thinkMsg = await client.chat.postMessage({
+     channel: channelId,
+     text: '🤖 Next fix dhundh raha hoon...',
+     blocks: [{ type:'context', elements:[{ type:'mrkdwn', text:'_🤖 Next troubleshooting step dhundh raha hoon..._' }]}]
+   });
+
+   try {
+     const emp = await Employee.findOne({ slackUserId: userId }).catch(() => null);
+     const empInfo = {
+       empId: emp?.empId || userId, empName: emp?.name || emp?.empName || 'User',
+       source: 'slack', laptop: emp?.laptop, laptopSN: emp?.laptopSN,
+       dept: emp?.dept || emp?.department, floor: emp?.floor
+     };
+
+     const conv = await getSlackSession(userId, emp || { empId: userId, empName: 'User' });
+     // Tell AI explicitly what was tried and that it didn't work
+     conv.messages.push({ role: 'user', content: 'nahi hua. ye steps se kaam nahi chala. koi alag step batao — SAME steps repeat mat karo.' });
+     if (conv.messages.length > 20) conv.messages = conv.messages.slice(-20);
+
+     const { reply } = await claudeSvc.chat(conv.messages, empInfo);
+     conv.messages.push({ role: 'assistant', content: reply });
+     conv.save().catch(e => console.error('conv save error:', e.message));
+
+     const formattedReply = formatForSlack(reply);
+     const recentUserText = conv.messages.filter(m=>m.role==='user').slice(-3).map(m=>m.content).join(' ');
+     const nextBlocks = buildDMBlocks(recentUserText, formattedReply);
+
+     await client.chat.update({
+       channel: thinkMsg.channel, ts: thinkMsg.ts, text: reply, blocks: nextBlocks
+     });
+   } catch(err) {
+     console.error('not_resolved_btn AI error:', err.message);
+     await client.chat.update({
+       channel: thinkMsg.channel, ts: thinkMsg.ts,
+       text: 'Ek aur step try karo!',
+       blocks: buildDMBlocks('', `No worries 👍\n\nEk aur cheez try karo:\n\n1. Laptop restart karo\n2. Dobara check karo\n3. Koi error message aa raha? Bol batao!`)
+     });
+   }
+ });
+
+ // ── ⚡ Script Download — track that user downloaded script ───────────────────
+ slackApp.action('script_download_btn', async ({ body, ack, client }) => {
+   await ack();
+   const userId = body.user.id;
+   const channelId = body.channel?.id || body.container?.channel_id;
+   const problemText = body.actions?.[0]?.value || '';
+
+   // Small delay then ask if script worked
+   setTimeout(async () => {
+     try {
+       await client.chat.postMessage({
+         channel: channelId,
+         text: '⚡ Script download ho gayi!',
+         blocks: [
+           { type:'section', text:{ type:'mrkdwn',
+             text:`⚡ *Script download ho gayi!*\n\nScript run karo (Double-click ya Admin mode mein) aur 1-2 min wait karo.\n\n_Ho gaya ya nahi? Batao 👇_` }},
+           { type:'actions', elements: [
+             { type:'button', text:{ type:'plain_text', text:'✅ Script se ho gaya!', emoji:true },
+               action_id:'resolved_yes_btn', style:'primary', value:'script' },
+             { type:'button', text:{ type:'plain_text', text:'❌ Script se bhi nahi hua', emoji:true },
+               action_id:'not_resolved_btn', value:'script' }
+           ]}
+         ]
+       });
+     } catch(e) { console.error('script followup error:', e.message); }
+   }, 8000); // 8 sec delay — give user time to download
  });
 
  // ── 🎫 Quick Ticket Button — shown at bottom of every DM answer ──────
