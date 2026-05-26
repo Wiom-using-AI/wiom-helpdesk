@@ -306,6 +306,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 @keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.4;}
   30%{transform:translateY(-7px);opacity:1;}}
 
+/* ── STREAMING CURSOR (ChatGPT-style) ── */
+.stream-cursor{
+  display:inline-block;width:2px;height:1.1em;
+  background:var(--pink);border-radius:1px;
+  vertical-align:middle;margin-left:1px;
+  animation:cursor-blink .6s step-end infinite;
+}
+@keyframes cursor-blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.bubble.streaming{min-height:24px;}
+
 /* ── QUICK CHIPS ── */
 .chips-bar{
   padding:10px 20px 8px;border-top:1px solid rgba(232,25,125,0.07);
@@ -1019,19 +1029,78 @@ function quickSend(t) {
   sendMsg();
 }
 
+// ══ STREAMING sendMsg — ChatGPT-style character-by-character ══
 async function sendMsg() {
-  const input = document.getElementById('chatInput');
-  const text  = input.value.trim(); if (!text) return;
-  input.value = ''; autoResize(input);
+  const input   = document.getElementById('chatInput');
+  const text    = input.value.trim(); if (!text) return;
+  input.value   = ''; autoResize(input);
   const sendBtn = document.getElementById('sendBtn');
   sendBtn.disabled = true;
 
   addUserMsg(text);
   chatHistory.push({ role:'user', content:text });
+  showChatArea();
   showTyping();
 
+  const wrap = document.getElementById('chatMessages');
+  let streamRow    = null;   // the DOM row being built
+  let streamBubble = null;   // the .bubble element
+  let streamedText = '';     // raw text received so far
+  let firstChunk   = true;
+
+  // ── helper: create live streaming row (replaces typing indicator) ────────
+  function startStreamingRow() {
+    hideTyping();
+    const initial = (empData.name||'Z').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+    streamRow = document.createElement('div');
+    streamRow.className = 'msg-row';
+    streamRow.innerHTML = `
+      <div class="bot-ava"><img src="/wiom-logo.webp" onerror="this.outerHTML='⚡'"/></div>
+      <div class="msg-col">
+        <div class="msg-meta">Zivon · ${now()}</div>
+        <div class="bubble bot streaming" id="streamBubble"><span class="stream-cursor"></span></div>
+      </div>`;
+    wrap.appendChild(streamRow);
+    streamBubble = streamRow.querySelector('#streamBubble');
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  // ── helper: append chunk to live bubble ─────────────────────────────────
+  function appendChunk(chunk) {
+    if (firstChunk) { startStreamingRow(); firstChunk = false; }
+    streamedText += chunk;
+    // Render with cursor blinking at end
+    streamBubble.innerHTML = streamedText.replace(/\n/g,'<br/>') + '<span class="stream-cursor"></span>';
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  // ── helper: finalize the bubble after stream ends ────────────────────────
+  function finalizeRow(finalText, shouldCreateTicket, ticketData) {
+    if (!streamRow) { addBotMsg(finalText); return; }
+    streamBubble.classList.remove('streaming');
+    // Replace with final post-processed text (no cursor)
+    let extra = '';
+    if (shouldCreateTicket) {
+      const btnId = 'tb_' + Date.now();
+      extra = `<div class="tkt-confirm-box">
+        <div class="tkt-confirm-q">🎫 Kya IT ticket banana chahoge?</div>
+        <div class="tkt-confirm-btns">
+          <button class="tkt-yes" id="${btnId}_y" onclick="confirmTicket('${btnId}',true)">✅ Ha, banao</button>
+          <button class="tkt-no"  id="${btnId}_n" onclick="confirmTicket('${btnId}',false)">Nahi, try karta hoon</button>
+        </div></div>`;
+      streamRow._ptd  = ticketData || { category:'Other', priority:'Medium', description: text };
+      streamRow._orig = text;
+      streamRow.id    = btnId + '_row';
+    }
+    streamBubble.innerHTML = finalText.replace(/\n/g,'<br/>') + extra;
+    wrap.scrollTop = wrap.scrollHeight;
+    chatHistory.push({ role:'assistant', content: finalText });
+    updateCtx();
+  }
+
+  // ── SSE fetch ────────────────────────────────────────────────────────────
   try {
-    const res = await fetch(`${API}/api/ai/chat`, {
+    const res = await fetch(`${API}/api/ai/stream`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         message:text, messages:chatHistory,
@@ -1040,25 +1109,42 @@ async function sendMsg() {
         laptopSN:empData.laptopSN, dept:empData.dept, floor:empData.floor
       })
     });
-    const data = await res.json();
-    hideTyping();
 
-    const reply = data.reply || 'Kuch error aa gaya. IT Helpdesk: 9654244281';
-    chatHistory.push({ role:'assistant', content:reply });
+    if (!res.ok || !res.body) throw new Error('Stream unavailable');
 
-    if (data.shouldCreateTicket && data.ticketData) {
-      addBotMsg(reply, data.ticketData, text);
-    } else {
-      addBotMsg(reply);
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer    = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep partial line
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const ev = JSON.parse(line.slice(6));
+          if (ev.chunk !== undefined) appendChunk(ev.chunk);
+          if (ev.done || ev.error) {
+            hideTyping();
+            const finalTxt = ev.finalText || streamedText || (ev.error ? `❌ ${ev.error}` : '');
+            finalizeRow(finalTxt, ev.shouldCreateTicket, ev.ticketData);
+          }
+        } catch {}
+      }
     }
-  } catch(e) {
+
+  } catch (e) {
     hideTyping();
-    addBotMsg('❌ Server se connect nahi ho pa raha.\n\n📞 IT Helpdesk: <b>9654244281</b>');
+    if (!streamRow) addBotMsg('❌ Server se connect nahi ho pa raha.\n\n📞 IT Helpdesk: <b>9654244281</b>');
+    else finalizeRow('❌ Connection lost. IT Helpdesk: 9654244281', false, null);
   }
 
   sendBtn.disabled = false;
   input.focus();
-  updateCtx();
 }
 
 async function createTicket(td, orig) {

@@ -503,6 +503,67 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
 };
 
 
+// ── Streaming chat — sends chunks via onChunk callback, returns fullText ─────
+const chatStream = async (messages, { empId, empName, source, laptop, laptopSN, dept, floor }, onChunk) => {
+  const history = messages.slice(-30).map(m => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: m.content
+  }));
+
+  const userContext = [
+    `Employee: ${empName || empId} (ID: ${empId})`,
+    dept      ? `Department: ${dept}`       : null,
+    floor     ? `Floor: ${floor}`           : null,
+    laptop    ? `Laptop: ${laptop}`         : null,
+    laptopSN  ? `Serial: ${laptopSN}`       : null,
+  ].filter(Boolean).join(' | ');
+
+  const triedSteps   = extractTriedSteps(messages);
+  const intent       = detectIntent(messages);
+  const intentCtx    = `\n\n⚡ DETECTED: ${intent.category}\n🎯 INSTRUCTION: ${intent.hint}`;
+  const systemPrompt = SYSTEM_PROMPT + `\n\nUSER CONTEXT: ${userContext}` + intentCtx + triedSteps;
+
+  // ── KB instant answer — simulate streaming word-by-word ─────────────────
+  const lastUserMsg = history.filter(m => m.role === 'user').pop()?.content || '';
+  const kbAnswer = getKBAnswer(lastUserMsg);
+  if (kbAnswer) {
+    const words = kbAnswer.split('');
+    for (const ch of words) {
+      onChunk(ch);
+      await new Promise(r => setTimeout(r, 8));
+    }
+    return kbAnswer;
+  }
+
+  // ── Groq streaming ────────────────────────────────────────────────────────
+  try {
+    const stream = await groq.chat.completions.create({
+      model      : 'llama-3.3-70b-versatile',
+      messages   : [{ role: 'system', content: systemPrompt }, ...history],
+      temperature: 0.3,
+      max_tokens : 300,
+      stream     : true
+    });
+
+    let fullText = '';
+    for await (const chunk of stream) {
+      const delta = chunk.choices?.[0]?.delta?.content || '';
+      if (delta) { fullText += delta; onChunk(delta); }
+    }
+    return fullText || getKBFallback(lastUserMsg);
+
+  } catch (err) {
+    console.error('Groq stream failed:', err.message);
+    // Fallback: simulate streaming with KB fallback text
+    const fallback = getKBFallback(lastUserMsg);
+    for (const ch of fallback.split('')) {
+      onChunk(ch);
+      await new Promise(r => setTimeout(r, 6));
+    }
+    return fallback;
+  }
+};
+
 // ── Quick single reply (for Slack notifications) ─────────────────────────────
 const quickReply = async (userMessage, empName = 'Employee', laptop = null, laptopSN = null) => {
   const laptopCtx = laptop ? ` | Laptop: ${laptop}${laptopSN ? ` (SN: ${laptopSN})` : ''}` : '';
@@ -602,5 +663,5 @@ const getKBAnswer = (problem) => {
   return null; // Everything else → Claude handles with follow-up questions
 };
 
-module.exports = { chat, quickReply, getKBAnswer };
+module.exports = { chat, chatStream, quickReply, getKBAnswer };
 

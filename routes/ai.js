@@ -69,6 +69,88 @@ router.post('/chat', async (req, res) => {
   }
 });
 
+// ── POST /api/ai/stream  — Server-Sent Events streaming endpoint ─────────────
+router.post('/stream', async (req, res) => {
+  const { message: msgSingle, messages: msgHistory, sessionId, empId, empName,
+          source = 'web', laptop, laptopSN, dept, floor } = req.body;
+
+  const message = msgSingle || (Array.isArray(msgHistory) && msgHistory.length
+    ? msgHistory[msgHistory.length - 1]?.content : null);
+
+  if (!message || !empId) {
+    res.status(400).json({ error: 'message and empId required' });
+    return;
+  }
+
+  // ── SSE headers — disable all buffering so chunks arrive instantly ──────
+  res.setHeader('Content-Type',  'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection',    'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');   // disable nginx buffering
+  res.flushHeaders();
+
+  const send = (obj) => {
+    try { res.write(`data: ${JSON.stringify(obj)}\n\n`); } catch {}
+  };
+
+  try {
+    // Get or create conversation
+    let conv = sessionId ? await Conversation.findOne({ sessionId }) : null;
+    if (!conv) {
+      conv = await Conversation.create({
+        sessionId: sessionId || `${empId}-${Date.now()}`,
+        empId, empName: empName || empId, source, messages: []
+      });
+    }
+
+    conv.messages.push({ role: 'user', content: message });
+    const historyToUse = (Array.isArray(msgHistory) && msgHistory.length > conv.messages.length)
+      ? msgHistory : conv.messages;
+
+    // ── Stream AI response chunk by chunk ────────────────────────────────
+    let streamedRaw = '';
+    streamedRaw = await claudeSvc.chatStream(
+      historyToUse,
+      { empId, empName, source, laptop, laptopSN, dept, floor },
+      (chunk) => send({ chunk })
+    );
+
+    // ── Post-process full text (same as /chat) ────────────────────────────
+    let reply = (streamedRaw || '').trim();
+
+    // Detect leaked system prompt
+    const isLeaked = /❌\s*(Bot|Step)|✅\s*Real:|BANNED:|━━━|TICKET RULES/i.test(reply);
+    if (isLeaked) {
+      const lastUser = historyToUse.filter(m => m.role === 'user').pop()?.content || '';
+      reply = claudeSvc.getKBAnswer ? (claudeSvc.getKBAnswer(lastUser) || reply) : reply;
+    }
+
+    // Clean banned words
+    reply = reply
+      .replace(/\barre\s+yaar\b/gi, 'Haan').replace(/\barre\s+bhai\b/gi, 'Haan')
+      .replace(/\barre\b/gi, '').replace(/\byaar\b/gi, '').replace(/\bbhai\b/gi, '')
+      .replace(/\s{2,}/g, ' ').replace(/^[\s,!]+/, '').trim();
+
+    // Ticket detection
+    const shouldCreateTicket =
+      /type\s*karo[:\s]*\*?ha(an|a|n)?\*?/i.test(reply) ||
+      (reply.toLowerCase().includes('ticket') && /ticket\s*(bana|raise|create|banana)/i.test(reply));
+
+    // Save to DB
+    conv.messages.push({ role: 'assistant', content: reply });
+    await conv.save();
+
+    // Send done signal with final (post-processed) text
+    send({ done: true, finalText: reply, sessionId: conv.sessionId, shouldCreateTicket });
+    res.end();
+
+  } catch (err) {
+    console.error('Stream error:', err.message);
+    send({ error: 'AI unavailable. IT Helpdesk: 9654244281', done: true });
+    res.end();
+  }
+});
+
 // ── GET /api/ai/history/:empId  — Get chat history for employee ───────────────
 router.get('/history/:empId', async (req, res) => {
   try {
