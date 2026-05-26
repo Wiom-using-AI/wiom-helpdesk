@@ -171,7 +171,8 @@ const detectIntent = (messages) => {
     return { category: 'SOFTWARE_SPECIFIC', hint: 'User gave specific app + error detail. SKIP question. Give app-specific fix: Outlook: outlook /safe → repair. Teams: system tray quit → reopen → cache clear.' };
 
   // ── GENERAL NETWORK — ask diagnostic question ──
-  if (/\bnet\b|\bwifi\b|wi-fi|internet|network|connect(ion)?|hotspot|broadband|no internet|nahi chal raha|chal nahi|nahi chal|net band|data nahi|signal nahi|connection nahi/.test(recentText))
+  // NOTE: "nahi chal" alone is NOT here — too broad, matches "steps nahi chale" etc.
+  if (/\bnet\b|\bwifi\b|wi-fi|internet|network|connect(ion)?|hotspot|broadband|no internet|net band|data nahi|signal nahi|connection nahi/.test(recentText))
     return { category: 'NETWORK', hint: 'NETWORK ISSUE. Your FIRST message MUST be: "WiFi icon taskbar mein dikh raha hai? Connected hai ya \'No Internet\' likh raha?" — ABSOLUTELY DO NOT say restart laptop. Ask this exact question first, then wait.' };
 
   // PERFORMANCE — slow, hang, freeze
@@ -260,8 +261,7 @@ const getKBFallback = (problem) => {
   if (p.includes('slow') || p.includes('hang') || p.includes('freez') || p.includes('dheema'))
     return `Acha, laptop slow/hang hai? 🔧\nPehle ye karo: Ctrl+Shift+Esc dabao → Task Manager mein jo process sabse zyada CPU le raha ho → End Task karo.\nKaro batao ho gaya ya nahi!`;
   if (p.includes('wifi') || p.includes('internet') || p.includes('network') ||
-      /\bnet\b/.test(p) || p.includes('nahi chal') || p.includes('chal nahi') ||
-      p.includes('net band') || p.includes('signal nahi') || p.includes('no internet'))
+      /\bnet\b/.test(p) || p.includes('net band') || p.includes('signal nahi') || p.includes('no internet'))
     return `WiFi/Net issue — ye steps try karo:\n\n1. Taskbar WiFi click → OFF karo → ON karo → try karo\n2. "Wiom office 5g-Test" select karo → Password: spartans500\n3. Win+R → cmd → netsh winsock reset → Enter → restart karo\n\nAgar nahi hua → IT ticket banao 🎫`;
   if (p.includes('sound') || p.includes('audio') || p.includes('speaker') || p.includes('headphone'))
     return `Sound fix! 🔊\n1. Taskbar speaker icon Right-click → Sound settings.\n2. Output device → sahi device select karo.\n3. Volume 0% nahi honi chahiye — check karo.\nClick the script button below! ⬇️`;

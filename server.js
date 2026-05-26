@@ -2999,7 +2999,7 @@ app.listen(PORT, async () => {
 
      const conv = await getSlackSession(userId, emp || { empId: userId, empName: 'User' });
      // Tell AI explicitly what was tried and that it didn't work
-     conv.messages.push({ role: 'user', content: 'nahi hua. ye steps se kaam nahi chala. koi alag step batao — SAME steps repeat mat karo.' });
+     conv.messages.push({ role: 'user', content: 'steps try kiye but problem same hai. please koi alag method batao — jo pehle suggest kiya wo dobara mat batao.' });
      if (conv.messages.length > 20) conv.messages = conv.messages.slice(-20);
 
      const { reply } = await claudeSvc.chat(conv.messages, empInfo);
@@ -3007,8 +3007,11 @@ app.listen(PORT, async () => {
      conv.save().catch(e => console.error('conv save error:', e.message));
 
      const formattedReply = formatForSlack(reply);
-     const recentUserText = conv.messages.filter(m=>m.role==='user').slice(-3).map(m=>m.content).join(' ');
-     const nextBlocks = buildDMBlocks(recentUserText, formattedReply);
+     // Use ORIGINAL issue (pendingTickets or first user msg) — NOT recent msgs which contain "nahi hua" text
+     const originalIssue = pendingTickets.get(userId)?.description
+       || conv.messages.find(m => m.role === 'user')?.content
+       || '';
+     const nextBlocks = buildDMBlocks(originalIssue, formattedReply);
 
      await client.chat.update({
        channel: thinkMsg.channel, ts: thinkMsg.ts, text: reply, blocks: nextBlocks
