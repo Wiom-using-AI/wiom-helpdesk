@@ -919,10 +919,53 @@ app.listen(PORT, async () => {
  // ── FEATURE 2: Format reply for Slack mrkdwn ─────────────────────────
  const formatForSlack = (text) => {
  return text
- .replace(/\bStep (\d+):\s*/gi, '\n*Step $1:* ') // Bold step numbers
- .replace(/^\n+/, '') // Remove leading newline
- .replace(/\n{3,}/g, '\n\n') // Max 2 blank lines
+ .replace(/\bStep (\d+):\s*/gi, '\n$1. ')  // "Step 1:" → "1." numbered format
+ .replace(/^[\n\s]+/, '')                   // Remove leading whitespace
+ .replace(/\n{3,}/g, '\n\n')               // Max 2 blank lines
  .trim();
+ };
+
+ // ── Build DM response blocks: script FIRST, numbered answer, ticket button ALWAYS ──
+ const buildDMBlocks = (problemText, formattedAnswer, urgency = 'Medium') => {
+   const blocks = [];
+
+   // 1️⃣ SCRIPT BUTTON — shown at TOP if available
+   const script = getScriptForText(problemText);
+   if (script) {
+     blocks.push({
+       type: 'actions',
+       elements: [{
+         type: 'button',
+         text: { type: 'plain_text', text: script.label, emoji: true },
+         url: `${PORTAL}/scripts/${script.file}`,
+         style: 'primary'
+       }]
+     });
+   }
+
+   // 2️⃣ ANSWER TEXT — numbered steps
+   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: formattedAnswer }});
+
+   // 3️⃣ TICKET BUTTON — ALWAYS at bottom
+   blocks.push({ type: 'divider' });
+   blocks.push({
+     type: 'actions',
+     elements: [{
+       type: 'button',
+       text: { type: 'plain_text', text: '🎫 IT Ticket Banao', emoji: true },
+       action_id: 'quick_ticket_btn',
+       style: 'danger',
+       value: urgency,
+       confirm: {
+         title: { type: 'plain_text', text: 'Ticket Create Karein?' },
+         text: { type: 'mrkdwn', text: '_IT team ko alert bheja jayega aur woh directly aapke paas aayegi._' },
+         confirm: { type: 'plain_text', text: '✅ Ha, Banao!' },
+         deny: { type: 'plain_text', text: 'Nahi, Try Karta Hoon' }
+       }
+     }]
+   });
+
+   return blocks;
  };
 
  // ── FEATURE 1: Load/create MongoDB conversation session ───────────────
@@ -2820,49 +2863,37 @@ app.listen(PORT, async () => {
  // ── SPEED: Try KB first — instant answer, no API call ─────────────
  const kbReply = claudeSvc.getKBAnswer ? claudeSvc.getKBAnswer(text) : null;
  if (kbReply) {
- const formattedKB = formatForSlack(kbReply);
- const kbBlocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedKB }}];
- // Check if ticket suggestion needed
- if (/type karo \*ha\*|ticket|IT ko bhej/i.test(kbReply)) {
- kbBlocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? type karo: *ha*_ ✅` }]});
- pendingTickets.set(userId, {
- empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
- empDept: emp.dept, empFloor: emp.floor,
- laptop: emp.laptop, laptopSN: emp.laptopSN,
- category: 'Other', priority: 'Medium',
- description: text, source: 'slack', slackUserId: userId,
- createdAt: Date.now()
- });
- }
- // Add script download button if relevant
- // Script button ONLY for troubleshooting answers — NOT for password/identity/resolved/thanks
- const isInfoOnlyReply = /password|spartans|kaun\s*hoon|Zivon|IT Admin|sajan kumar|khushi hui|resolve ho gaya|koi baat nahi|theek hoon|IT problems mein help/i.test(kbReply);
- if (!isInfoOnlyReply) {
- const kbScript = getScriptForText(text);
- if (kbScript) {
- kbBlocks.push({
- type: 'actions',
- elements: [{
- type: 'button',
- text: { type: 'plain_text', text: kbScript.label, emoji: true },
- url: `${PORTAL}/scripts/${kbScript.file}`,
- style: 'primary'
- }]
- });
- }
- }
- // Update "Checking..." → actual KB answer
- try {
- await client.chat.update({ channel: thinkingMsg.channel, ts: thinkingMsg.ts, text: kbReply, blocks: kbBlocks });
- } catch { await say({ text: kbReply, blocks: kbBlocks }); }
- // Fix 2: Save KB reply into conv history so AI doesn't repeat same steps next message
- getSlackSession(userId, emp).then(kbConv => {
-   kbConv.messages.push({ role: 'user', content: text });
-   kbConv.messages.push({ role: 'assistant', content: kbReply });
-   if (kbConv.messages.length > 20) kbConv.messages = kbConv.messages.slice(-20);
-   kbConv.save().catch(e => console.error('KB conv save error:', e.message));
- }).catch(e => console.error('KB session get error:', e.message));
- return;
+   const formattedKB = formatForSlack(kbReply);
+
+   // Always set pendingTickets so ticket button works
+   pendingTickets.set(userId, {
+     empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
+     empDept: emp.dept, empFloor: emp.floor,
+     laptop: emp.laptop, laptopSN: emp.laptopSN,
+     category: 'Other', priority: 'Medium',
+     description: text, source: 'slack', slackUserId: userId,
+     createdAt: Date.now()
+   });
+
+   // Build blocks: script FIRST → answer → ticket button ALWAYS
+   const isInfoOnly = /password|spartans|kaun\s*hoon|Zivon|IT Admin|sajan kumar|khushi hui|koi baat nahi|theek hoon|IT problems mein help/i.test(kbReply);
+   const kbBlocks = isInfoOnly
+     ? [{ type:'section', text:{ type:'mrkdwn', text: formattedKB }}]
+     : buildDMBlocks(text, formattedKB);
+
+   // Update "Checking..." → actual KB answer
+   try {
+     await client.chat.update({ channel: thinkingMsg.channel, ts: thinkingMsg.ts, text: kbReply, blocks: kbBlocks });
+   } catch { await say({ text: kbReply, blocks: kbBlocks }); }
+
+   // Fix 2: Save KB reply into conv history so AI doesn't repeat same steps next message
+   getSlackSession(userId, emp).then(kbConv => {
+     kbConv.messages.push({ role: 'user', content: text });
+     kbConv.messages.push({ role: 'assistant', content: kbReply });
+     if (kbConv.messages.length > 20) kbConv.messages = kbConv.messages.slice(-20);
+     kbConv.save().catch(e => console.error('KB conv save error:', e.message));
+   }).catch(e => console.error('KB session get error:', e.message));
+   return;
  }
 
  // KB miss → AI call (thinkingMsg already showing)
@@ -2889,35 +2920,14 @@ app.listen(PORT, async () => {
  conv.messages.push({ role: 'assistant', content: reply });
  await conv.save();
 
- // ── FEATURE 2: Format for Slack ───────────────────────────────────
+ // ── Format reply + build blocks ───────────────────────────────────
  const formattedReply = formatForSlack(reply);
-
- const blocks = [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}];
-
- // ── Script button: ONLY for troubleshooting replies, NOT info/resolved/ticket/greeting ─
- const isInfoReply = /password|spartans|Zivon|IT Admin|resolve ho gaya|khushi hui|theek hoon|koi baat nahi|ticket.*ha.*type|type.*ha.*ticket|IT problems mein|aur koi.*help/i.test(reply);
- if (!isInfoReply && !shouldCreateTicket) {
  const recentUserText = conv.messages.filter(m=>m.role==='user').slice(-2).map(m=>m.content).join(' ');
- const aiScript = getScriptForText(recentUserText);
- if (aiScript) {
- blocks.push({
- type: 'actions',
- elements: [{
- type: 'button',
- text: { type: 'plain_text', text: aiScript.label, emoji: true },
- url: `${PORTAL}/scripts/${aiScript.file}`,
- style: 'primary'
- }]
- });
- }
- }
 
- // ── Auto-detect ticket context when AI suggests raising a ticket ──
- if (shouldCreateTicket) {
- // Extract category from conversation
+ // ── Auto-detect ticket context from conversation ──────────────────
  const allUserText = conv.messages.filter(m=>m.role==='user').map(m=>m.content).join(' ').toLowerCase();
  let autoCategory = 'Other';
- if (/wifi|internet|network|connection|hotspot|broadband/i.test(allUserText)) autoCategory = 'Network';
+ if (/wifi|internet|network|connection|hotspot|broadband|\bnet\b/i.test(allUserText)) autoCategory = 'Network';
  else if (/teams|zoom|outlook|email|browser|chrome|word|excel|office|app|software|windows|update|onedrive|pdf|virus|storage|2fa|otp|antivirus/i.test(allUserText)) autoCategory = 'Software';
  else if (/laptop|screen|keyboard|mouse|battery|charg|touchpad|usb|bluetooth|camera|mic|headphone|sound|speaker|display|monitor|fan|overheat|blue screen|bsod|freeze|hang|slow|boot|startup/i.test(allUserText)) autoCategory = 'Hardware';
  else if (/password|account|login|locked|access|2fa|otp|email.*reset|reset.*email/i.test(allUserText)) autoCategory = 'Account';
@@ -2927,32 +2937,36 @@ app.listen(PORT, async () => {
  if (/urgent|critical|emergency|immediately|stop.*work|can.*t work|completely|floor down/i.test(allUserText)) autoPriority = 'High';
  else if (/minor|small|little|low|whenever/i.test(allUserText)) autoPriority = 'Low';
 
- // Use last user message as description (most recent problem statement)
  const lastUserMsg = conv.messages.filter(m=>m.role==='user').slice(-3).map(m=>m.content).join('; ');
 
+ // Always set pendingTickets so ticket button always works
  pendingTickets.set(userId, {
- empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
- empDept: emp.dept, empFloor: emp.floor,
- laptop: emp.laptop, laptopSN: emp.laptopSN,
- category: ticketData?.category || autoCategory,
- priority: ticketData?.priority || autoPriority,
- description: ticketData?.description || lastUserMsg || text,
- source: 'slack', slackUserId: userId,
- createdAt: Date.now()
+   empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
+   empDept: emp.dept, empFloor: emp.floor,
+   laptop: emp.laptop, laptopSN: emp.laptopSN,
+   category: ticketData?.category || autoCategory,
+   priority: ticketData?.priority || autoPriority,
+   description: ticketData?.description || lastUserMsg || text,
+   source: 'slack', slackUserId: userId,
+   createdAt: Date.now()
  });
- blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? *"Ha"* ya *"Nahi"* type karo_ ` }]});
- }
 
- // Replace "Soch raha hoon..." with actual reply
+ // Build blocks: script FIRST → answer → ticket button ALWAYS
+ const isInfoOnly = /password|spartans|Zivon|IT Admin|khushi hui|koi baat nahi|theek hoon|IT problems mein|aur koi.*help/i.test(reply);
+ const blocks = isInfoOnly
+   ? [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}]
+   : buildDMBlocks(recentUserText, formattedReply, ticketData?.priority || autoPriority);
+
+ // Replace "Checking issue..." with actual reply
  try {
- await client.chat.update({
- channel: thinkingMsg.channel,
- ts: thinkingMsg.ts,
- text: reply,
- blocks
- });
+   await client.chat.update({
+     channel: thinkingMsg.channel,
+     ts: thinkingMsg.ts,
+     text: reply,
+     blocks
+   });
  } catch {
- await say({ text: reply, blocks });
+   await say({ text: reply, blocks });
  }
 
  } catch (err) {
@@ -2966,6 +2980,58 @@ app.listen(PORT, async () => {
  // Fix 8: Always release lock when processing finishes
  processingUsers.delete(userId);
  }
+ });
+
+ // ── 🎫 Quick Ticket Button — shown at bottom of every DM answer ──────
+ slackApp.action('quick_ticket_btn', async ({ body, ack, client }) => {
+   await ack();
+   const userId = body.user.id;
+   const channelId = body.channel?.id || body.container?.channel_id;
+   try {
+     const emp = await Employee.findOne({ slackUserId: userId });
+     if (!emp) {
+       await client.chat.postEphemeral({ channel: channelId, user: userId,
+         text: '❌ Employee profile nahi mila. Pehle /helpdesk use karo.' });
+       return;
+     }
+
+     // Get pendingTickets data (set by KB/AI path) or fallback to message text
+     let pending = pendingTickets.get(userId);
+     if (!pending) {
+       const msgText = body.message?.text || 'IT support required';
+       pending = {
+         empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
+         empDept: emp.dept, empFloor: emp.floor,
+         laptop: emp.laptop, laptopSN: emp.laptopSN,
+         category: 'Other', priority: 'Medium',
+         description: msgText, source: 'slack', slackUserId: userId,
+         createdAt: Date.now()
+       };
+     }
+
+     const result = await createTicketSlack(pending);
+     if (result?._duplicate) {
+       await client.chat.postEphemeral({ channel: channelId, user: userId,
+         text: `⚠️ ${result.message}` });
+     } else if (result) {
+       pendingTickets.delete(userId);
+       const priEmoji2 = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
+       await client.chat.postMessage({
+         channel: channelId,
+         text: `✅ Ticket Created: ${result.ticketId}`,
+         blocks: [
+           { type:'section', text:{ type:'mrkdwn',
+             text:`✅ *Ticket Created!* \`${result.ticketId}\`\n${priEmoji2[result.priority]||'🟡'} Priority: *${result.priority}* | Category: *${result.category}*\n_IT team jald aapke paas aayegi!_ 🚀` }},
+           { type:'context', elements:[{ type:'mrkdwn', text:`_${(result.description||'').substring(0,80)}_` }]}
+         ]
+       });
+       await notifyAdmin(client, result, emp);
+     }
+   } catch(err) {
+     console.error('quick_ticket_btn error:', err.message);
+     await client.chat.postEphemeral({ channel: channelId, user: userId,
+       text: '❌ Ticket nahi ban saka. /ticket command try karo ya IT ko directly call karo: 9654244281' });
+   }
  });
 
  // ── Start Slack App ───────────────────────────────────────────────────
