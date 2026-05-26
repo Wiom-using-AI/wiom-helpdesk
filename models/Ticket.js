@@ -61,6 +61,9 @@ const ticketSchema = new mongoose.Schema({
   aiSessionId   : { type: String },           // Linked conversation session
   aiTried       : { type: Boolean, default: false },
   aiSteps       : [{ type: String }],         // Steps AI suggested
+  screenshots   : [{ type: String }],         // Base64 images attached by employee
+  escalated     : { type: Boolean, default: false }, // Employee clicked "Talk to Human"
+  escalatedAt   : { type: Date },
 
   // ── Comments / Updates ───────────────────────────────────────────────────────
   comments      : [commentSchema],

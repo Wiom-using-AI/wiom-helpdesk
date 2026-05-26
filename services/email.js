@@ -177,9 +177,41 @@ const sendSLABreachAlert = async (ticket) => {
   });
 };
 
+const sendEscalationAlert = async ({ empId, empName, empEmail, dept, floor, laptop, issue }) => {
+  const html = wrap(`
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin-bottom:16px;text-align:center">
+      <strong style="color:#92400e">🧑‍💼 Employee wants to TALK TO A HUMAN</strong>
+    </div>
+    <p style="color:#374151">Ek employee ne AI se help lene ke baad human support request kiya hai:</p>
+    <div style="background:#f9fafb;border-radius:8px;padding:16px;border-left:4px solid #f59e0b">
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;width:120px">Employee</td>
+            <td style="padding:4px 0;font-weight:700;color:#1f2937">${empName || empId} (${empId})</td></tr>
+        <tr><td style="padding:4px 0;color:#6b7280;font-size:13px">Email</td>
+            <td style="padding:4px 0;color:#1f2937">${empEmail || 'N/A'}</td></tr>
+        <tr><td style="padding:4px 0;color:#6b7280;font-size:13px">Department</td>
+            <td style="padding:4px 0;color:#1f2937">${dept || 'N/A'} — Floor ${floor || 'N/A'}</td></tr>
+        <tr><td style="padding:4px 0;color:#6b7280;font-size:13px">Laptop</td>
+            <td style="padding:4px 0;color:#1f2937">${laptop || 'N/A'}</td></tr>
+        ${issue ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;vertical-align:top">Issue</td>
+            <td style="padding:4px 0;color:#1f2937">${issue}</td></tr>` : ''}
+      </table>
+    </div>
+    <p style="margin-top:16px;color:#374151;font-size:13px">Please contact this employee directly for support.</p>
+  `);
+
+  await transporter.sendMail({
+    from   : FROM,
+    to     : ADMIN_EMAIL,
+    subject: `🧑‍💼 Human Support Request — ${empName || empId} (${dept || 'Unknown Dept'})`,
+    html
+  });
+};
+
 module.exports = {
   sendTicketConfirmation,
   sendAdminAlert,
   sendResolutionEmail,
-  sendSLABreachAlert
+  sendSLABreachAlert,
+  sendEscalationAlert
 };

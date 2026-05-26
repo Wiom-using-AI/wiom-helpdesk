@@ -2,6 +2,7 @@ const router       = require('express').Router();
 const Conversation = require('../models/Conversation');
 const Ticket       = require('../models/Ticket');
 const claudeSvc    = require('../services/claude');
+const emailSvc     = require('../services/email');
 
 // ── POST /api/ai/chat  — Main AI chat endpoint ────────────────────────────────
 router.post('/chat', async (req, res) => {
@@ -87,6 +88,22 @@ router.get('/session/:sessionId', async (req, res) => {
     if (!conv) return res.status(404).json({ error: 'Session not found' });
     res.json({ conversation: conv });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/ai/escalate  — Employee requests human support ─────────────────
+router.post('/escalate', async (req, res) => {
+  try {
+    const { empId, empName, empEmail, dept, floor, laptop, issue } = req.body;
+    if (!empId) return res.status(400).json({ error: 'empId required' });
+
+    // Send email to IT admin
+    await emailSvc.sendEscalationAlert({ empId, empName, empEmail, dept, floor, laptop, issue });
+
+    res.json({ success: true, message: 'IT Admin ko alert bhej diya gaya!' });
+  } catch (err) {
+    console.error('Escalation error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

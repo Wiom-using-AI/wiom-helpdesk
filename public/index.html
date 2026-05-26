@@ -411,6 +411,86 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
 /* Overflow ellipsis for long text */
 .ellipsis{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:160px;}
+
+/* ── SCREENSHOT ATTACH ── */
+.attach-btn{
+  width:38px;height:38px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--surface2);color:var(--muted2);font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all var(--transition);flex-shrink:0;
+}
+.attach-btn:hover{background:var(--pink-soft);color:var(--pink);border-color:var(--pink);}
+.attach-btn.active{background:var(--pink-soft);color:var(--pink);border-color:var(--pink);}
+.screenshot-preview-bubble{
+  max-width:240px;border-radius:12px;overflow:hidden;border:2px solid var(--border2);
+  margin-top:6px;cursor:pointer;transition:border-color var(--transition);
+}
+.screenshot-preview-bubble:hover{border-color:var(--pink);}
+.screenshot-preview-bubble img{width:100%;display:block;}
+.screenshot-label{
+  font-size:11px;color:var(--success);margin-top:4px;
+  display:flex;align-items:center;gap:4px;
+}
+
+/* ── TALK TO HUMAN ── */
+.human-btn{
+  padding:6px 12px;border-radius:9px;border:1px solid rgba(251,191,36,0.35);
+  background:rgba(251,191,36,0.08);color:#fbbf24;font-size:12px;font-weight:600;
+  cursor:pointer;font-family:var(--font);transition:all var(--transition);
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.human-btn:hover{background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.5);}
+.human-card{
+  background:linear-gradient(135deg,rgba(251,191,36,0.08),rgba(251,191,36,0.04));
+  border:1px solid rgba(251,191,36,0.25);border-radius:14px;padding:14px 16px;margin-top:6px;
+}
+.human-card-title{font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:10px;}
+.human-card-info{display:flex;flex-direction:column;gap:6px;}
+.human-info-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text);}
+.human-info-row a{color:var(--pink);text-decoration:none;}
+.human-info-row a:hover{text-decoration:underline;}
+.human-escalate-btn{
+  margin-top:12px;width:100%;padding:9px;border-radius:9px;
+  background:linear-gradient(135deg,#fbbf24,#f59e0b);border:none;
+  color:#1a1000;font-size:12.5px;font-weight:700;cursor:pointer;
+  font-family:var(--font);transition:all var(--transition);
+}
+.human-escalate-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(251,191,36,0.35);}
+.human-escalate-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+
+/* ── SEARCH BAR (tickets view) ── */
+.search-wrap{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:11px;
+  padding:8px 13px;margin-bottom:14px;
+  transition:border-color var(--transition);
+}
+.search-wrap:focus-within{border-color:var(--border2);}
+.search-wrap span{font-size:14px;color:var(--muted);}
+.search-input{
+  flex:1;background:none;border:none;outline:none;color:var(--text);
+  font-size:13px;font-family:var(--font);
+}
+.search-input::placeholder{color:var(--muted);}
+.search-clear{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:13px;padding:0;display:none;
+}
+.search-clear.show{display:block;}
+.no-results{text-align:center;padding:40px 20px;color:var(--muted);}
+.no-results div:first-child{font-size:36px;margin-bottom:10px;}
+
+/* Screenshot thumbnail in ticket card */
+.tfc-screenshots{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.tfc-thumb{width:60px;height:45px;border-radius:7px;object-fit:cover;
+  border:1px solid var(--border2);cursor:pointer;transition:transform var(--transition);}
+.tfc-thumb:hover{transform:scale(1.05);}
+
+/* Lightbox */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);
+  z-index:999;align-items:center;justify-content:center;cursor:zoom-out;}
+#lightbox.open{display:flex;}
+#lightbox img{max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 0 80px rgba(0,0,0,0.8);}
 </style>
 </head>
 <body>
@@ -552,11 +632,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
           <div class="ctx-dot"></div>
           <span id="ctxText">0 messages — Zivon yaad rakh raha hai</span>
         </div>
-        <button class="ctx-clear" onclick="clearChat()" title="Nayi baat shuru karo">🔄 Reset</button>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="human-btn" onclick="talkToHuman()" title="IT se baat karo">🧑‍💼 IT se Baat Karo</button>
+          <button class="ctx-clear" onclick="clearChat()" title="Nayi baat shuru karo">🔄 Reset</button>
+        </div>
       </div>
 
       <!-- Input -->
       <div class="input-row">
+        <input type="file" id="screenshotInput" accept="image/*" style="display:none" onchange="handleScreenshot(this)"/>
+        <button class="attach-btn" id="attachBtn" onclick="document.getElementById('screenshotInput').click()" title="Screenshot attach karo">📎</button>
         <textarea class="chat-input" id="chatInput"
           placeholder="Apni problem likho — Hindi ya English dono chalega... (Enter to send)"
           rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
@@ -566,9 +651,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
     <!-- ── Tickets View ── -->
     <div class="chat-area" id="ticketsView" style="display:none;overflow-y:auto;padding:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div style="font-size:16px;font-weight:700;">🎫 Mere Tickets</div>
         <button onclick="loadMyTickets()" style="padding:7px 14px;background:var(--pink-soft);border:1px solid var(--border2);border-radius:9px;color:var(--pink);font-size:12px;cursor:pointer;font-family:var(--font);">🔄 Refresh</button>
+      </div>
+      <!-- Search bar -->
+      <div class="search-wrap">
+        <span>🔍</span>
+        <input class="search-input" id="ticketSearch" type="text" placeholder="Ticket ID, category, ya problem search karo..." oninput="filterTickets(this.value)" autocomplete="off"/>
+        <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
       </div>
       <div id="ticketsList">
         <div style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading...</div>
@@ -578,10 +669,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
   </div><!-- /body-row -->
 </div><!-- /app -->
 
+<!-- Lightbox for screenshots -->
+<div id="lightbox" onclick="this.classList.remove('open')">
+  <img id="lightboxImg" src="" alt="Screenshot"/>
+</div>
+
 <script>
 const API = '';
 let empData = {}, chatHistory = [], myTickets = [];
 let _diagUrl = '';
+let pendingScreenshot = null; // base64 string of attached screenshot
+let _humanEscalated = false;  // prevent duplicate escalation alerts
 
 // ══ LOGIN ══
 document.getElementById('empIdInput').addEventListener('keypress', e => { if(e.key==='Enter') document.getElementById('empNameInput').focus(); });
@@ -635,6 +733,8 @@ function showErr(msg) {
 
 function doLogout() {
   empData={}; chatHistory=[]; myTickets=[]; _diagUrl='';
+  pendingScreenshot=null; _humanEscalated=false;
+  document.getElementById('attachBtn').classList.remove('active');
   document.getElementById('chatMessages').innerHTML='';
   document.getElementById('emptyState').style.display='flex';
   document.getElementById('chatMessages').style.display='none';
@@ -882,16 +982,21 @@ async function sendMsg() {
 
 async function createTicket(td, orig) {
   try {
+    const screenshots = pendingScreenshot ? [pendingScreenshot] : [];
     const res = await fetch(`${API}/api/tickets`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         empId:empData.empId, empName:empData.name, empEmail:empData.email,
         empDept:empData.dept, empFloor:empData.floor, laptop:empData.laptop,
         category:td.category||'Other', priority:td.priority||'Medium',
-        description:td.description||orig, source:'web', aiTried:true, aiSteps:td.steps||[]
+        description:td.description||orig, source:'web', aiTried:true,
+        aiSteps:td.steps||[], screenshots
       })
     });
     const json = await res.json();
+    // Clear pending screenshot after ticket created
+    pendingScreenshot = null;
+    document.getElementById('attachBtn').classList.remove('active');
     if (res.status===409) return { ...json.ticket, _duplicate:true, _dupMsg:json.message };
     return json.ticket || null;
   } catch { return null; }
@@ -940,8 +1045,10 @@ function refreshSbTickets() {
     </div>`).join('');
 }
 
-function renderFullTickets() {
+function renderFullTickets(list, searchQ) {
   const el = document.getElementById('ticketsList');
+  const tickets = list !== undefined ? list : myTickets;
+
   if (!myTickets.length) {
     el.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--muted);">
       <div style="font-size:44px;margin-bottom:12px;">🎉</div>
@@ -950,18 +1057,38 @@ function renderFullTickets() {
     </div>`;
     return;
   }
-  el.innerHTML = myTickets.map(t => `
+
+  if (!tickets.length && searchQ) {
+    el.innerHTML = `<div class="no-results"><div>🔍</div><div style="font-size:14px;color:var(--text);">Koi result nahi mila</div><div style="font-size:12px;margin-top:6px;">"${searchQ}" se koi ticket match nahi hua</div></div>`;
+    return;
+  }
+
+  // Highlight matching text in search results
+  const hl = (txt) => {
+    if (!searchQ || !txt) return txt || '—';
+    const rx = new RegExp(`(${searchQ.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    return txt.replace(rx, '<mark style="background:rgba(232,25,125,0.25);color:var(--pink);border-radius:3px;padding:0 2px;">$1</mark>');
+  };
+
+  el.innerHTML = tickets.map(t => {
+    const screens = (t.screenshots||[]).slice(0,5);
+    const screenHtml = screens.length
+      ? `<div class="tfc-screenshots">${screens.map(s=>`<img class="tfc-thumb" src="${s}" alt="screenshot" onclick="openLightbox('${s}')">`).join('')}</div>`
+      : '';
+    return `
     <div class="ticket-full-card">
       <div class="tfc-top">
-        <span class="tfc-id">${t.ticketId}</span>
+        <span class="tfc-id">${hl(t.ticketId)}</span>
         <div class="tfc-badges">
           <span class="badge b-${t.priority}">${t.priority}</span>
           <span class="badge b-${(t.status||'Open').replace(' ','-')}">${t.status}</span>
         </div>
       </div>
-      <div class="tfc-desc">${t.description||'—'}</div>
-      <div class="tfc-meta">📂 ${t.category||'Other'} &nbsp;·&nbsp; 🕐 ${timeAgo(t.createdAt)}${t.resolution ? `<br/>✅ Resolution: ${t.resolution}` : ''}</div>
-    </div>`).join('');
+      <div class="tfc-desc">${hl(t.description||'—')}</div>
+      <div class="tfc-meta">📂 ${hl(t.category||'Other')} &nbsp;·&nbsp; 🕐 ${timeAgo(t.createdAt)}${t.resolution ? `<br/>✅ Resolution: ${t.resolution}` : ''}</div>
+      ${screenHtml}
+    </div>`;
+  }).join('');
 }
 
 function timeAgo(d) {
@@ -1002,6 +1129,129 @@ function showDiagBanner() {
       </div>
       <a href="${diag.url}" target="_blank" class="diag-btn">▶ Run Diagnostics</a>
     </div>`;
+}
+
+// ══ SCREENSHOT UPLOAD ══
+function handleScreenshot(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert('Image bahut badi hai! 10MB se chhoti image lo.'); return; }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      // Resize to max 900px width using canvas
+      const MAX = 900;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const base64 = canvas.toDataURL('image/jpeg', 0.75);
+
+      pendingScreenshot = base64;
+      document.getElementById('attachBtn').classList.add('active');
+      input.value = ''; // reset so same file can be re-selected
+
+      // Show preview in chat
+      showChatArea();
+      const wrap = document.getElementById('chatMessages');
+      const initial = (empData.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+      const row = document.createElement('div'); row.className = 'msg-row user';
+      row.innerHTML = `
+        <div class="user-ava">${initial}</div>
+        <div class="msg-col">
+          <div class="msg-meta" style="text-align:right;">${(empData.name||'').split(' ')[0]} · ${now()}</div>
+          <div class="bubble user" style="padding:10px;">
+            <div class="screenshot-preview-bubble" onclick="openLightbox('${base64}')">
+              <img src="${base64}" alt="Screenshot"/>
+            </div>
+            <div class="screenshot-label">📎 Screenshot attached — agle ticket mein lagega</div>
+          </div>
+        </div>`;
+      wrap.appendChild(row); wrap.scrollTop = wrap.scrollHeight;
+      addBotMsg('📎 Screenshot mil gaya! Ab apni problem batao — ticket banate waqt image bhi attach ho jayegi. 👍');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+// ══ TALK TO HUMAN ══
+async function talkToHuman() {
+  showChatArea();
+  const btnId = 'human_' + Date.now();
+  const already = _humanEscalated;
+
+  addBotMsg(
+    `🧑‍💼 <b>IT Human Support</b>\n\nMain samjha, kabhi kabhi human se baat zaroori hoti hai! 😊\n\n` +
+    `<div class="human-card">
+      <div class="human-card-title">👨‍💻 WIOM IT Team — Direct Contact</div>
+      <div class="human-card-info">
+        <div class="human-info-row">📞 <a href="tel:9654244281">9654244281</a> — Sajan Kumar (IT Admin)</div>
+        <div class="human-info-row">📧 <a href="mailto:sajan.kumar@wiom.in">sajan.kumar@wiom.in</a></div>
+        <div class="human-info-row">💬 Slack: <b>@sajan.kumar</b> pe DM karo</div>
+        <div class="human-info-row">🕐 Available: Mon–Sat, 9AM–7PM</div>
+      </div>
+      ${!already ? `<button class="human-escalate-btn" id="${btnId}" onclick="sendEscalation('${btnId}')">
+        🔔 IT Admin ko Alert Bhejo — Callback Request
+      </button>` : `<div style="text-align:center;font-size:12px;color:var(--success);padding:8px;">✅ Alert already bhej diya gaya hai!</div>`}
+    </div>`
+  );
+}
+
+async function sendEscalation(btnId) {
+  const btn = document.getElementById(btnId);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Bhej raha hoon...'; }
+
+  try {
+    await fetch(`${API}/api/ai/escalate`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        empId:empData.empId, empName:empData.name, empEmail:empData.email,
+        dept:empData.dept, floor:empData.floor, laptop:empData.laptop,
+        issue: chatHistory.length ? chatHistory[chatHistory.length-1]?.content : 'Human support requested'
+      })
+    });
+    _humanEscalated = true;
+    if (btn) btn.closest('.human-card').innerHTML +=
+      '<div style="margin-top:8px;text-align:center;font-size:12px;color:var(--success);">✅ IT Admin ko alert bhej diya! Woh jald contact karenge.</div>';
+    if (btn) btn.remove();
+    addSystemMsg('🔔 IT Admin ko callback request bhej diya gaya! Jald aapko contact karenge.');
+  } catch {
+    if (btn) { btn.disabled = false; btn.textContent = '🔔 IT Admin ko Alert Bhejo'; }
+    addSystemMsg('❌ Alert nahi bheja ja saka. Direct call karo: 9654244281');
+  }
+}
+
+// ══ SEARCH TICKETS ══
+function filterTickets(query) {
+  const clear = document.getElementById('searchClear');
+  clear.classList.toggle('show', query.length > 0);
+
+  if (!query.trim()) { renderFullTickets(myTickets); return; }
+
+  const q = query.toLowerCase();
+  const filtered = myTickets.filter(t =>
+    (t.ticketId||'').toLowerCase().includes(q) ||
+    (t.description||'').toLowerCase().includes(q) ||
+    (t.category||'').toLowerCase().includes(q) ||
+    (t.status||'').toLowerCase().includes(q) ||
+    (t.priority||'').toLowerCase().includes(q)
+  );
+  renderFullTickets(filtered, query);
+}
+
+function clearSearch() {
+  document.getElementById('ticketSearch').value = '';
+  document.getElementById('searchClear').classList.remove('show');
+  renderFullTickets(myTickets);
 }
 
 // ══ SOS ══

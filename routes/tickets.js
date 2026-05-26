@@ -10,7 +10,8 @@ router.post('/', async (req, res) => {
   try {
     const { empId, empName, empEmail, empDept, empFloor, laptop,
             category, priority, description, source, slackUserId,
-            slackChannelId, aiSessionId, aiSteps, skipDuplicateCheck } = req.body;
+            slackChannelId, aiSessionId, aiSteps, skipDuplicateCheck,
+            screenshots } = req.body;
 
     if (!empId || !description)
       return res.status(400).json({ error: 'empId and description required' });
@@ -39,8 +40,9 @@ router.post('/', async (req, res) => {
       description,
       source     : source     || 'web',
       slackUserId, slackChannelId, aiSessionId,
-      aiTried    : !!aiSteps,
-      aiSteps    : aiSteps    || []
+      aiTried      : !!aiSteps,
+      aiSteps      : aiSteps      || [],
+      screenshots  : Array.isArray(screenshots) ? screenshots.slice(0, 5) : []
     });
 
     // Update employee stats
