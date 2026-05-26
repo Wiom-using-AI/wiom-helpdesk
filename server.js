@@ -806,11 +806,15 @@ app.listen(PORT, async () => {
 
  // ── FEATURE 2: Format reply for Slack mrkdwn ─────────────────────────
  const formatForSlack = (text) => {
- return text
- .replace(/\bStep (\d+):\s*/gi, '\n$1. ')  // "Step 1:" → "1." numbered format
- .replace(/^[\n\s]+/, '')                   // Remove leading whitespace
- .replace(/\n{3,}/g, '\n\n')               // Max 2 blank lines
- .trim();
+   if (!text) return '';
+   return text
+     .replace(/\*\*(.*?)\*\*/g, '*$1*')          // **bold** → *bold* (markdown → Slack)
+     .replace(/^#{1,3}\s+(.+)$/gm, '*$1*')        // ### Header → *Header*
+     .replace(/\bStep (\d+):\s*/gi, '\n$1. ')     // "Step 1:" → "1." numbered format
+     .replace(/^[\n\s]+/, '')                      // Remove leading whitespace
+     .replace(/\n{3,}/g, '\n\n')                  // Max 2 blank lines
+     .slice(0, 2900)                               // Slack section block limit safety
+     .trim();
  };
 
  // ── Build DM response blocks: script FIRST, answer, resolution check ALWAYS ──
@@ -856,7 +860,7 @@ app.listen(PORT, async () => {
          type: 'button',
          text: { type: 'plain_text', text: '❌ Nahi hua, aur steps', emoji: true },
          action_id: 'not_resolved_btn',
-         value: urgency
+         value: (problemText && problemText.length > 5 ? problemText : urgency).substring(0, 100)
        },
        {
          type: 'button',
@@ -2869,8 +2873,10 @@ app.listen(PORT, async () => {
  if (kbReply) {
    const formattedKB = formatForSlack(kbReply);
 
-   // Only set pendingTickets for non-info replies (avoid stale ticket context for greetings/passwords)
-   const isInfoOnly = /password|spartans|kaun\s*hoon|Zivon|IT Admin|sajan kumar|khushi hui|koi baat nahi|theek hoon|IT problems mein help/i.test(kbReply);
+   // Only set pendingTickets for non-info replies (avoid stale ticket context for greetings/facts)
+   // IMPORTANT: if KB reply says "type karo *ha*" it needs pendingTickets → NOT info-only
+   const kbHasTicketAsk = /type\s*karo[:\s]*\*?ha(an|a|n)?\*?/i.test(kbReply);
+   const isInfoOnly = !kbHasTicketAsk && /spartans|kaun\s*hoon|Zivon|IT Admin|sajan kumar|khushi hui|koi baat nahi|theek hoon|IT problems mein help/i.test(kbReply);
    if (!isInfoOnly) {
      pendingTickets.set(userId, {
        empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
@@ -2950,7 +2956,9 @@ app.listen(PORT, async () => {
 
  // Build blocks: script FIRST → answer → ticket button ALWAYS
  // Use current message (text) for script detection — NOT recentUserText (avoids old WiFi context bleeding in)
- const isInfoOnly = /password|spartans|Zivon|IT Admin|khushi hui|koi baat nahi|theek hoon|IT problems mein|aur koi.*help/i.test(reply);
+ // Info-only = purely informational, user doesn't need to act (greeting, resolved confirm, identity)
+ // NEVER info-only if shouldCreateTicket = true — user needs to type "ha" to confirm
+ const isInfoOnly = !shouldCreateTicket && /khushi hui|koi baat nahi|theek hoon|aur koi.*IT help|IT problems mein help|Main Zivon|Zivon hoon|koi aur cheez/i.test(reply);
 
  // Only set pendingTickets for actionable replies (avoid stale ticket context for greetings/facts)
  if (!isInfoOnly) {
@@ -3068,9 +3076,12 @@ app.listen(PORT, async () => {
      conv.save().catch(e => console.error('conv save error:', e.message));
 
      const formattedReply = formatForSlack(reply);
-     // Use ORIGINAL issue (pendingTickets or first user msg) — NOT recent msgs which contain "nahi hua" text
+     // Use ORIGINAL issue — pendingTickets > button value > first user msg
+     // button value is problemText set by buildDMBlocks (not "Medium" which is old urgency)
+     const btnValue = body.actions?.[0]?.value || '';
      const originalIssue = pendingTickets.get(userId)?.description
-       || conv.messages.find(m => m.role === 'user')?.content
+       || (btnValue.length > 10 && !/^(Critical|High|Medium|Low|script)$/.test(btnValue) ? btnValue : null)
+       || conv.messages.filter(m => m.role === 'user').find(m => !/(nahi hua|try kiye|same hai)/i.test(m.content))?.content
        || '';
      const nextBlocks = buildDMBlocks(originalIssue, formattedReply);
 
@@ -3128,23 +3139,22 @@ app.listen(PORT, async () => {
    const userId = body.user.id;
    const channelId = body.channel?.id || body.container?.channel_id;
    try {
-     const emp = await Employee.findOne({ slackUserId: userId });
-     if (!emp) {
-       await client.chat.postEphemeral({ channel: channelId, user: userId,
-         text: '❌ Employee profile nahi mila. Pehle /helpdesk use karo.' });
-       return;
-     }
+     const emp = await lookupEmployee(userId, client);
 
      // Get pendingTickets data (set by KB/AI path) or fallback to message text
      let pending = pendingTickets.get(userId);
      if (!pending) {
-       const msgText = body.message?.text || 'IT support required';
+       // Build from button's parent message text or generic fallback
+       const msgText = body.message?.blocks?.[0]?.text?.text
+         || body.message?.text
+         || 'IT support required';
        pending = {
          empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
          empDept: emp.dept, empFloor: emp.floor,
          laptop: emp.laptop, laptopSN: emp.laptopSN,
          category: 'Other', priority: 'Medium',
-         description: msgText, source: 'slack', slackUserId: userId,
+         description: msgText.replace(/[*_`]/g, '').substring(0, 200),
+         source: 'slack', slackUserId: userId,
          createdAt: Date.now()
        };
      }
