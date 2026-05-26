@@ -83,7 +83,7 @@ Instead of: "Issue resolved successfully. Please follow these steps:"
 Say: "Ho gaya! 🎉 Koi aur cheez?"
 
 Instead of: "I have created a ticket for your issue."
-Say: "Theek hai, IT team bhejte hain. Type karo ha! 🎫"
+Say: "Theek hai, IT team ko bhejte hain — ticket ban jaayega 🎫"
 
 Instead of: "Please restart your laptop to resolve this issue."
 Say: "Ek kaam karo — WiFi taskbar se OFF karo phir ON. Try karo!"
@@ -210,9 +210,9 @@ const detectIntent = (messages) => {
   if (/virus|malware|hack|ransomware|suspicious|phishing/.test(recentText))
     return { category: 'SECURITY', hint: 'SECURITY ISSUE. Urgent — say "Windows Security → Quick Scan karo, aur internet disconnect karo agar serious lage." Then ticket.' };
 
-  // BATTERY / CHARGING
-  if (/battery|charg|charger|charging nahi|plug|power/.test(recentText))
-    return { category: 'BATTERY', hint: 'BATTERY/CHARGING ISSUE. First ask: "Charger ka LED on hai? Alag socket try kiya?" — replug both ends first.' };
+  // BATTERY / CHARGING — typo-tolerant: battry, battey, week=weak, backup kam
+  if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg|plug.*power|low.*power|backup\s*(nahi|low|kam)|draining|week.*batt|batt.*week/.test(recentText))
+    return { category: 'BATTERY', hint: 'BATTERY/CHARGING ISSUE. User may have typed "battry" or "week" (weak). Give steps directly:\n1. Charger dono taraf firmly lagao\n2. Alag power socket try karo\n3. Laptop band karo → charger lagao → 30 sec wait → on karo\n4. Agar battery 0% pe stuck hai → ticket raise karo\nDo NOT ask diagnostic question — give these steps now.' };
 
   return { category: 'GENERAL', hint: 'ISSUE UNCLEAR. Ask ONE specific diagnostic question: "Thoda aur batao — exactly kya ho raha hai? Koi error message aaya kya?" — do NOT give any solution before they answer.' };
 };
@@ -267,8 +267,8 @@ const getKBFallback = (problem) => {
     return `Sound fix! 🔊\n1. Taskbar speaker icon Right-click → Sound settings.\n2. Output device → sahi device select karo.\n3. Volume 0% nahi honi chahiye — check karo.\nClick the script button below! ⬇️`;
   if (p.includes('blue screen') || p.includes('bsod'))
     return `Blue Screen fix! 💙\n1. Error code note karo jo screen par tha.\n2. Laptop restart karo — akbar mein theek ho jata hai.\n3. 3 baar se zyada hua toh ticket raise karo.\nClick the script button below! ⬇️`;
-  if (p.includes('battery') || p.includes('charg'))
-    return `Battery fix! 🔋\n1. Charger dono taraf firmly lagao.\n2. Alag power socket try karo.\n3. Laptop band karo → charger lagao → 30 sec wait → on karo.\nClick the script button below! ⬇️`;
+  if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg/.test(p))
+    return `Battery/Charging fix! 🔋\n\n1. Charger dono taraf firmly lagao (laptop side + socket side)\n2. Alag power socket try karo\n3. Laptop band karo → charger nikalo → power button 30 sec hold karo → charger lagao → on karo\n\nAgar nahi hua → IT ticket banao 🎫`;
   if (p.includes('black screen') || p.includes('no display'))
     return `Black screen fix! 🖥️\n1. Fn+F5 ya Fn+F8 (brightness keys) dabao.\n2. Koi change nahi → power button 10sec hold → restart.\n3. Baad mein bhi kuch nahi → ticket raise karo.\nClick the script button below! ⬇️`;
   if (p.includes('keyboard') || p.includes('keys'))

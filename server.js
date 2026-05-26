@@ -669,7 +669,7 @@ app.listen(PORT, async () => {
    if (/usb|pendrive|pen drive|flash drive/.test(t)) return { file: 'fix-usb.bat', label: '🔌 Auto-Fix: USB' };
    if (/sd card|sdcard|memory card/.test(t)) return { file: 'fix-sdcard.bat', label: '💳 Auto-Fix: SD Card' };
    if (/fingerprint|finger print/.test(t)) return { file: 'fix-fingerprint.bat', label: '👆 Auto-Fix: Fingerprint' };
-   if (/battery|charg|charger|plug/.test(t)) return { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' };
+   if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg|plug/.test(t)) return { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' };
    if (/sleep|wake|hibernate|suspend/.test(t)) return { file: 'fix-sleep-wake.bat', label: '💤 Auto-Fix: Sleep/Wake' };
    if (/turn on|boot|start nahi|on nahi|won.?t turn/.test(t)) return { file: 'fix-wont-turn-on.bat', label: '⚡ Auto-Fix: Won\'t Turn On' };
    if (/sudden shutdown|shut.?down|band ho|band ho jata/.test(t)) return { file: 'fix-sudden-shutdown.bat', label: '⚡ Auto-Fix: Sudden Shutdown' };
@@ -2920,10 +2920,13 @@ app.listen(PORT, async () => {
      ? [{ type:'section', text:{ type:'mrkdwn', text: formattedKB }}]
      : buildDMBlocks(text, formattedKB);
 
-   // Update "Checking..." → actual KB answer
+   // Update "Checking..." → actual KB answer (delete first if update fails to avoid double message)
    try {
      await client.chat.update({ channel: thinkingMsg.channel, ts: thinkingMsg.ts, text: kbReply, blocks: kbBlocks });
-   } catch { await say({ text: kbReply, blocks: kbBlocks }); }
+   } catch {
+     try { await client.chat.delete({ channel: thinkingMsg.channel, ts: thinkingMsg.ts }); } catch {}
+     await say({ text: kbReply, blocks: kbBlocks });
+   }
 
    // Fix 2: Save KB reply into conv history so AI doesn't repeat same steps next message
    getSlackSession(userId, emp).then(kbConv => {
@@ -2991,12 +2994,13 @@ app.listen(PORT, async () => {
  });
 
  // Build blocks: script FIRST → answer → ticket button ALWAYS
+ // Use current message (text) for script detection — NOT recentUserText (avoids old WiFi context bleeding in)
  const isInfoOnly = /password|spartans|Zivon|IT Admin|khushi hui|koi baat nahi|theek hoon|IT problems mein|aur koi.*help/i.test(reply);
  const blocks = isInfoOnly
    ? [{ type:'section', text:{ type:'mrkdwn', text: formattedReply }}]
-   : buildDMBlocks(recentUserText, formattedReply, ticketData?.priority || autoPriority);
+   : buildDMBlocks(text, formattedReply, ticketData?.priority || autoPriority);
 
- // Replace "Checking issue..." with actual reply
+ // Replace "Checking issue..." with actual reply (delete first if update fails to avoid double message)
  try {
    await client.chat.update({
      channel: thinkingMsg.channel,
@@ -3005,6 +3009,7 @@ app.listen(PORT, async () => {
      blocks
    });
  } catch {
+   try { await client.chat.delete({ channel: thinkingMsg.channel, ts: thinkingMsg.ts }); } catch {}
    await say({ text: reply, blocks });
  }
 
