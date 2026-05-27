@@ -770,13 +770,6 @@ app.listen(PORT, async () => {
 
  // ── BOTTOM CTAs ──────────────────────────────────────────────────────────
  blocks.push({
-   type: 'section',
-   fields: [
-     { type: 'mrkdwn', text: "*🤖  Can't find your issue?*\n_Type your problem in DM — Zivon will help instantly!_" },
-     { type: 'mrkdwn', text: '*🎧  Need Urgent Help?*\n_Contact IT Support Team directly_' }
-   ]
- });
- blocks.push({
    type: 'actions',
    elements: [
      { type: 'button', text: { type: 'plain_text', text: '✨  Chat with AI Assistant', emoji: true }, action_id: 'home_chat_ai', value: 'chat_ai', style: 'primary' },
