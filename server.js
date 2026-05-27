@@ -729,7 +729,7 @@ app.listen(PORT, async () => {
  blocks.push({ type: 'header', text: { type: 'plain_text', text: `👋  Hello ${name}!  Welcome to WIOM IT Helpdesk`, emoji: true } });
  blocks.push({
    type: 'section',
-   text: { type: 'mrkdwn', text: `*How can we help you today?* 😊\n🟢 *Zivon is Online* — Instant IT support, 24/7${openCnt > 0 ? `   |   🔔 *${openCnt} Open Ticket${openCnt > 1 ? 's' : ''}*` : ''}` },
+   text: { type: 'mrkdwn', text: `*How can we help you today?* 😊\n🟢 *Zivon is Online* — Anytime, Anywhere${openCnt > 0 ? `   |   🔔 *${openCnt} Open Ticket${openCnt > 1 ? 's' : ''}*` : ''}` },
    accessory: { type: 'image', image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif', alt_text: 'Zivon AI' }
  });
  blocks.push({ type: 'divider' });
@@ -817,62 +817,58 @@ app.listen(PORT, async () => {
      .trim();
  };
 
- // ── Build DM response blocks: script FIRST, answer, resolution check ALWAYS ──
+ // ── Build DM response blocks — ChatGPT-style: clean answer + script + action row ──
  const buildDMBlocks = (problemText, formattedAnswer, urgency = 'Medium') => {
    const blocks = [];
 
-   // 1️⃣ SCRIPT BUTTON — shown at TOP if available
+   // 1️⃣ ANSWER TEXT — clean, like ChatGPT's response bubble
+   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: formattedAnswer } });
+
+   // 2️⃣ SCRIPT BUTTON — shown below answer if available (one-click fix)
    const script = getScriptForText(problemText);
    if (script) {
      blocks.push({
        type: 'actions',
        elements: [{
          type: 'button',
-         text: { type: 'plain_text', text: script.label, emoji: true },
+         text: { type: 'plain_text', text: `⬇️ ${script.label}`, emoji: true },
          url: `${PORTAL}/scripts/${script.file}`,
          action_id: 'script_download_btn',
          style: 'primary',
-         value: problemText.substring(0, 100)
+         value: (problemText || '').substring(0, 100)
        }]
      });
    }
 
-   // 2️⃣ ANSWER TEXT — numbered steps
-   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: formattedAnswer }});
-
-   // 3️⃣ RESOLUTION CHECK — 3 buttons always at bottom
+   // 3️⃣ FEEDBACK ROW — clean like ChatGPT's thumbs up/down row
    blocks.push({ type: 'divider' });
-   blocks.push({
-     type: 'section',
-     text: { type: 'mrkdwn', text: '_Ye try kiya? Kya hua batao_ 👇' }
-   });
    blocks.push({
      type: 'actions',
      elements: [
        {
          type: 'button',
-         text: { type: 'plain_text', text: '✅ Ho gaya!', emoji: true },
+         text: { type: 'plain_text', text: '✅  Ho gaya!', emoji: true },
          action_id: 'resolved_yes_btn',
          style: 'primary',
          value: urgency
        },
        {
          type: 'button',
-         text: { type: 'plain_text', text: '❌ Nahi hua, aur steps', emoji: true },
+         text: { type: 'plain_text', text: '❌  Nahi hua', emoji: true },
          action_id: 'not_resolved_btn',
          value: (problemText && problemText.length > 5 ? problemText : urgency).substring(0, 100)
        },
        {
          type: 'button',
-         text: { type: 'plain_text', text: '🎫 Seedha Ticket Banao', emoji: true },
+         text: { type: 'plain_text', text: '🎫  IT Ticket', emoji: true },
          action_id: 'quick_ticket_btn',
          style: 'danger',
          value: urgency,
          confirm: {
            title: { type: 'plain_text', text: 'Ticket Create Karein?' },
-           text: { type: 'mrkdwn', text: '_IT team ko alert bheja jayega aur woh directly aapke paas aayegi._' },
+           text: { type: 'mrkdwn', text: '_IT team ko alert bheja jayega — woh directly aapke paas aayegi._' },
            confirm: { type: 'plain_text', text: '✅ Ha, Banao!' },
-           deny: { type: 'plain_text', text: 'Nahi, Try Karta Hoon' }
+           deny: { type: 'plain_text', text: 'Ruko' }
          }
        }
      ]
@@ -884,18 +880,27 @@ app.listen(PORT, async () => {
  // ── Build ticket-only prompt blocks (after 2+ failures) ─────────────────────
  const buildAutoTicketBlocks = (msg) => ([
    { type: 'section', text: { type: 'mrkdwn', text: msg }},
-   { type: 'actions', elements: [{
-     type: 'button',
-     text: { type: 'plain_text', text: '🎫 IT Ticket Create Karo', emoji: true },
-     action_id: 'quick_ticket_btn',
-     style: 'danger',
-     confirm: {
-       title: { type: 'plain_text', text: 'Ticket Create Karein?' },
-       text: { type: 'mrkdwn', text: '_IT team directly aayegi — confirm karo._' },
-       confirm: { type: 'plain_text', text: '✅ Ha, Banao!' },
-       deny: { type: 'plain_text', text: 'Ruko' }
+   { type: 'divider' },
+   { type: 'actions', elements: [
+     {
+       type: 'button',
+       text: { type: 'plain_text', text: '🎫  IT Ticket Create Karo', emoji: true },
+       action_id: 'quick_ticket_btn',
+       style: 'danger',
+       confirm: {
+         title: { type: 'plain_text', text: 'Ticket Create Karein?' },
+         text: { type: 'mrkdwn', text: '_IT team directly aayegi — woh personally fix karegi._' },
+         confirm: { type: 'plain_text', text: '✅ Ha, Banao!' },
+         deny: { type: 'plain_text', text: 'Ruko' }
+       }
+     },
+     {
+       type: 'button',
+       text: { type: 'plain_text', text: '🔄  Phir Try Karo', emoji: true },
+       action_id: 'not_resolved_btn',
+       value: 'retry'
      }
-   }]}
+   ]}
  ]);
 
  // ── FEATURE 1: Load/create MongoDB conversation session ───────────────
@@ -1570,37 +1575,34 @@ app.listen(PORT, async () => {
    const firstName = (emp?.empName || emp?.name || 'there').split(' ')[0];
    try {
      const dm = await client.conversations.open({ users: userId });
-     // Build same flat category view for DM greeting
+     // ChatGPT-style clean greeting DM
      const dmBlocks = [
-       { type: 'header', text: { type: 'plain_text', text: `👋  Hello ${firstName}!  Welcome to WIOM IT Helpdesk`, emoji: true } },
-       { type: 'section', text: { type: 'mrkdwn', text: `*How can we help you today?* 😊\n🟢 *Zivon is Online* — Instant IT support, 24/7` }, accessory: { type: 'image', image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif', alt_text: 'Zivon AI' } },
+       {
+         type: 'section',
+         text: { type: 'mrkdwn', text: `*Hey ${firstName}! 👋*\n\nMain *Zivon* hoon — WIOM ka IT assistant.\nLaptop, WiFi, software, password — koi bhi problem batao, abhi fix karunga!\n\n_Category choose karo ya seedha type karo_ 👇` },
+         accessory: { type: 'image', image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif', alt_text: 'Zivon AI' }
+       },
        { type: 'divider' },
-       { type: 'section', text: { type: 'mrkdwn', text: '*📂   Select a Category*\n_Apni problem select karo — Zivon turant help karega!_ 👇' } },
+       {
+         type: 'actions',
+         elements: [
+           { type: 'button', text: { type: 'plain_text', text: '💻  Laptop', emoji: true }, action_id: 'dm_cat_laptop', value: 'laptop', style: 'primary' },
+           { type: 'button', text: { type: 'plain_text', text: '📶  WiFi / Net', emoji: true }, action_id: 'dm_cat_network', value: 'network' },
+           { type: 'button', text: { type: 'plain_text', text: '⚙️  Software', emoji: true }, action_id: 'dm_cat_software', value: 'software' },
+           { type: 'button', text: { type: 'plain_text', text: '🔑  Password', emoji: true }, action_id: 'dm_cat_access', value: 'access' },
+         ]
+       },
+       {
+         type: 'actions',
+         elements: [
+           { type: 'button', text: { type: 'plain_text', text: '🖨️  Printer', emoji: true }, action_id: 'dm_cat_printer', value: 'printer' },
+           { type: 'button', text: { type: 'plain_text', text: '📦  Replacement', emoji: true }, action_id: 'dm_cat_replacement', value: 'replacement' },
+           { type: 'button', text: { type: 'plain_text', text: '🆘  SOS Emergency', emoji: true }, action_id: 'home_sos', value: 'sos', style: 'danger' },
+         ]
+       },
+       { type: 'context', elements: [{ type: 'mrkdwn', text: '_Ya seedha apni problem type karo — Zivon samjhega! ✦  Anytime, Anywhere_' }] }
      ];
-     for (const cat of CATEGORIES) {
-       const cfg = CAT_COLORS[cat.key] || { icon: '⚪ 📁', label: cat.label, desc: cat.desc };
-       dmBlocks.push({ type: 'section', text: { type: 'mrkdwn', text: `${cfg.icon}  *${cfg.label}*\n_${cfg.desc}_` } });
-       for (const row of cat.rows) {
-         dmBlocks.push({
-           type: 'actions',
-           elements: row.map(btn => ({
-             type: 'button',
-             text: { type: 'plain_text', text: btn.text, emoji: true },
-             value: btn.value,
-             action_id: btn.id
-           }))
-         });
-       }
-       dmBlocks.push({ type: 'divider' });
-     }
-     dmBlocks.push({
-       type: 'actions',
-       elements: [
-         { type: 'button', text: { type: 'plain_text', text: '✨  Chat with AI Assistant', emoji: true }, action_id: 'home_chat_ai', value: 'chat_ai', style: 'primary' },
-         { type: 'button', text: { type: 'plain_text', text: '🎧  Contact IT Support', emoji: true }, action_id: 'home_contact_it', value: 'contact_it', style: 'danger' }
-       ]
-     });
-     await client.chat.postMessage({ channel: dm.channel.id, text: `Hello ${firstName}! WIOM IT Helpdesk mein aapka swagat hai 👋`, blocks: dmBlocks });
+     await client.chat.postMessage({ channel: dm.channel.id, text: `Hey ${firstName}! Main Zivon hoon — WIOM IT Assistant ⚡`, blocks: dmBlocks });
    } catch (dmErr) {
      console.error('Greeting DM error:', dmErr.message);
    }
@@ -2554,21 +2556,33 @@ app.listen(PORT, async () => {
  failedAttempts.delete(userId); // reset failure count on fresh greeting
  const firstName = (emp.empName || 'there').split(' ')[0];
  await say({
- text: `Hey ${firstName}! Main Zivon hoon ⚡`,
- blocks: [
- { type:'section', text:{ type:'mrkdwn', text:`*Hey ${firstName}!* 👋 Main *Zivon* hoon — WIOM ka IT helpdesk assistant!\n_Kya problem hai? Category select karo ya seedha type karo:_` }},
- { type:'divider' },
- ...CATEGORIES.map(cat => ({
- type: 'actions',
- elements: [{
- type : 'button',
- text : { type: 'plain_text', text: cat.label, emoji: true },
- style : 'primary',
- action_id: `dm_cat_${cat.key}`,
- value : cat.key
- }]
- }))
- ]
+   text: `Hey ${firstName}! Main Zivon hoon ⚡`,
+   blocks: [
+     {
+       type: 'section',
+       text: { type: 'mrkdwn', text: `*Hey ${firstName}! 👋*\n\nMain *Zivon* hoon — WIOM ka IT assistant.\nLaptop, WiFi, software, password — koi bhi IT problem batao, abhi fix karunga!\n\n_Category choose karo ya seedha type karo_ 👇` },
+       accessory: { type: 'image', image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif', alt_text: 'Zivon' }
+     },
+     { type: 'divider' },
+     {
+       type: 'actions',
+       elements: [
+         { type: 'button', text: { type: 'plain_text', text: '💻  Laptop', emoji: true }, action_id: 'dm_cat_laptop', value: 'laptop', style: 'primary' },
+         { type: 'button', text: { type: 'plain_text', text: '📶  WiFi / Net', emoji: true }, action_id: 'dm_cat_network', value: 'network' },
+         { type: 'button', text: { type: 'plain_text', text: '⚙️  Software', emoji: true }, action_id: 'dm_cat_software', value: 'software' },
+         { type: 'button', text: { type: 'plain_text', text: '🔑  Password', emoji: true }, action_id: 'dm_cat_access', value: 'access' },
+       ]
+     },
+     {
+       type: 'actions',
+       elements: [
+         { type: 'button', text: { type: 'plain_text', text: '🖨️  Printer', emoji: true }, action_id: 'dm_cat_printer', value: 'printer' },
+         { type: 'button', text: { type: 'plain_text', text: '📦  Replacement', emoji: true }, action_id: 'dm_cat_replacement', value: 'replacement' },
+         { type: 'button', text: { type: 'plain_text', text: '🆘  SOS Emergency', emoji: true }, action_id: 'home_sos', value: 'sos', style: 'danger' },
+       ]
+     },
+     { type: 'context', elements: [{ type: 'mrkdwn', text: '_Ya seedha apni problem type karo — Zivon samjhega! ✦_' }] }
+   ]
  });
  return;
  }
@@ -2862,10 +2876,11 @@ app.listen(PORT, async () => {
 
  // ── Normal AI chat ────────────────────────────────────────────────
 
- // Show "🤖 Checking issue..." immediately for ALL messages (KB + AI)
+ // Typing indicator — ChatGPT style, shows user's issue being analyzed
+ const shortIssue = text.length > 55 ? text.substring(0, 52) + '...' : text;
  const thinkingMsg = await say({
- text: '🤖 Checking issue...',
- blocks: [{ type:'context', elements:[{ type:'mrkdwn', text:'🤖  _Checking issue..._' }] }]
+   text: 'Zivon soch raha hai...',
+   blocks: [{ type: 'context', elements: [{ type: 'mrkdwn', text: `_✦  Zivon: "${shortIssue}" — check kar raha hoon..._` }] }]
  });
 
  // ── SPEED: Try KB first — instant answer, no API call ─────────────
@@ -3054,8 +3069,8 @@ app.listen(PORT, async () => {
    // ── First failure → AI gives next different step ────────────────────────────
    const thinkMsg = await client.chat.postMessage({
      channel: channelId,
-     text: '🤖 Next fix dhundh raha hoon...',
-     blocks: [{ type:'context', elements:[{ type:'mrkdwn', text:'_🤖 Next troubleshooting step dhundh raha hoon..._' }]}]
+     text: 'Zivon alag approach dhundh raha hai...',
+     blocks: [{ type: 'context', elements: [{ type: 'mrkdwn', text: '_✦  Zivon: Different approach dhundh raha hoon..._' }] }]
    });
 
    try {
