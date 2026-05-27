@@ -826,7 +826,7 @@ app.listen(PORT, async () => {
      type: 'actions',
      elements: [
        { type: 'button', text: { type: 'plain_text', text: '📦  Replacement', emoji: true }, action_id: 'dm_cat_replacement', value: 'replacement' },
-       { type: 'button', text: { type: 'plain_text', text: '📋  My Tickets', emoji: true }, action_id: 'home_open_dm', value: 'my_tickets' },
+       { type: 'button', text: { type: 'plain_text', text: '📋  My Tickets', emoji: true }, action_id: 'dm_my_tickets', value: 'my_tickets' },
        { type: 'button', text: { type: 'plain_text', text: '📞  Contact IT', emoji: true }, action_id: 'home_contact_it', value: 'contact_it' },
      ]
    },
@@ -1621,6 +1621,60 @@ app.listen(PORT, async () => {
  } catch (err) {
  console.error('home_open_dm error:', err.message);
  }
+ });
+
+ // ── My Tickets button — show pending tickets with IT urgency message ────────
+ slackApp.action('dm_my_tickets', async ({ body, ack, client }) => {
+   await ack();
+   const userId = body.user.id;
+   const channelId = body.channel?.id || userId;
+   try {
+     const emp = await lookupEmployee(userId, client);
+     const tickets = await Ticket.find({
+       $or: [{ empId: emp.empId }, { slackUserId: userId }],
+       status: { $nin: ['Closed', 'Resolved'] }
+     }).sort({ createdAt: -1 }).limit(5);
+
+     if (!tickets.length) {
+       await client.chat.postMessage({
+         channel: channelId,
+         text: 'Koi pending ticket nahi hai!',
+         blocks: [
+           { type: 'section', text: { type: 'mrkdwn', text: `✅ *Koi pending ticket nahi hai!*\n\nSab theek chal raha hai — koi nayi problem ho toh seedha batao! 😊` } },
+           { type: 'context', elements: [{ type: 'mrkdwn', text: '_Zivon 24/7 available hai — Anytime, Anywhere ✦_' }] }
+         ]
+       });
+       return;
+     }
+
+     const priEmoji = { Critical: '🔴', High: '🟠', Medium: '🟡', Low: '🟢' };
+     const statEmoji = { Open: '⏳', 'In Progress': '🔧', Waiting: '⏸️', Resolved: '✅' };
+     let ticketText = `*📋 Aapke Pending Tickets (${tickets.length}):*\n\n`;
+     tickets.forEach(t => {
+       const hrs = Math.round((Date.now() - new Date(t.createdAt)) / 3600000);
+       const days = hrs >= 24 ? `${Math.floor(hrs/24)}d ${hrs%24}h` : `${hrs}h`;
+       ticketText += `${priEmoji[t.priority] || '🟡'} *\`${t.ticketId}\`*  ${statEmoji[t.status] || '⏳'} *${t.status}*  _${days} pehle_\n`;
+       ticketText += `> ${(t.description || '').replace(/\n/g, ' ').substring(0, 70)}...\n\n`;
+     });
+
+     const hasCritical = tickets.some(t => t.priority === 'Critical' || t.priority === 'High');
+     const urgencyMsg = hasCritical
+       ? `_🚨 Aapka ek *High/Critical* ticket hai — IT team turant dekh rahi hai!_`
+       : `_IT team inhe jaldi resolve karegi — agar urgent lage toh seedha batao!_`;
+
+     await client.chat.postMessage({
+       channel: channelId,
+       text: `Aapke ${tickets.length} pending ticket(s)`,
+       blocks: [
+         { type: 'section', text: { type: 'mrkdwn', text: ticketText } },
+         { type: 'divider' },
+         { type: 'context', elements: [{ type: 'mrkdwn', text: urgencyMsg }] }
+       ]
+     });
+   } catch (err) {
+     console.error('dm_my_tickets error:', err.message);
+     await client.chat.postMessage({ channel: channelId, text: '❌ Tickets load nahi ho sake. Dobara try karo.' });
+   }
  });
 
  // ── Contact IT button → show phone number modal ──────────────────────
