@@ -844,13 +844,17 @@ app.listen(PORT, async () => {
  // 'ticket'   → AI wants user to confirm ticket with "ha"
  // 'steps'    → AI gave actual fix steps, show Ho gaya + Ticket
  const detectReplyMode = (reply, shouldCreateTicket) => {
-   if (shouldCreateTicket) return 'ticket';
    const lines = reply.trim().split('\n').filter(l => l.trim());
    const hasNumberedSteps = /^\d+[\.\)]\s/m.test(reply);
    const hasBullets = /^[•\-\*]\s/m.test(reply);
    const hasSteps = hasNumberedSteps || hasBullets || lines.length >= 4;
-   // Question mode: short reply, ends with ?, no steps
-   const isQuestion = !hasSteps && /\?/.test(reply) && lines.length <= 3;
+   // If reply has actual steps → always 'steps' mode (script + Ho gaya + IT Ticket)
+   // Even if shouldCreateTicket is true, steps get full treatment
+   if (hasSteps) return 'steps';
+   // No steps: pure ticket confirm (only IT Ticket button)
+   if (shouldCreateTicket) return 'ticket';
+   // Short reply with question mark → diagnostic question (no buttons)
+   const isQuestion = /\?/.test(reply) && lines.length <= 3;
    return isQuestion ? 'question' : 'steps';
  };
 
