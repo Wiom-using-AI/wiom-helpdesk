@@ -1,14 +1,14 @@
-const Groq      = require('groq-sdk');
-const Anthropic = require('@anthropic-ai/sdk');
+const Groq                              = require('groq-sdk');
+const { GoogleGenerativeAI }            = require('@google/generative-ai');
 
-const groq      = new Groq({ apiKey: process.env.GROQ_API_KEY });
-const anthropic = process.env.ANTHROPIC_API_KEY
-  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const groq   = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const gemini = process.env.GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null;
 
 // ── Active model display (logged on first call) ──────────────────────────────
 let modelLogged = false;
-const activeModel = () => anthropic ? 'claude-3-5-sonnet-20241022 (Anthropic)' : 'llama-3.3-70b-versatile (Groq)';
+const activeModel = () => 'llama-3.3-70b-versatile (Groq PRIMARY) → gemini-1.5-flash (Backup) → KB';
 
 // ── WIOM IT System Prompt ─────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are Zivon — WIOM's friendly IT support assistant. Talk like a real, warm colleague — not a robot script.
@@ -337,17 +337,23 @@ const getKBFallback = (problem) => {
   return `Haan batao! 😊 Thoda detail mein bolo — exactly kya ho raha hai? Koi error message aa raha kya screen pe? Jitna detail doge, utni jaldi fix karunga!`;
 };
 
-// ── Call Claude (Anthropic) ───────────────────────────────────────────────────
-const callClaude = async (systemPrompt, history) => {
-  if (!anthropic) throw new Error('Anthropic client not initialized');
-  const response = await anthropic.messages.create({
-    model     : 'claude-3-5-sonnet-20241022',  // upgraded: ChatGPT-level intelligence
-    max_tokens: 400,                             // shorter = faster + more natural
-    system    : systemPrompt,
-    messages  : history
+// ── Call Gemini (Google FREE fallback) ───────────────────────────────────────
+const callGemini = async (systemPrompt, history) => {
+  if (!gemini) throw new Error('Gemini client not initialized — GEMINI_API_KEY missing');
+  const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  // Build chat history for Gemini format
+  const geminiHistory = history.slice(0, -1).map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }]
+  }));
+  const chat = model.startChat({
+    history: geminiHistory,
+    generationConfig: { maxOutputTokens: 350, temperature: 0.3 }
   });
-  const text = response.content?.[0]?.text?.trim();
-  if (!text) throw new Error('Empty response from Claude');
+  const lastMsg = history[history.length - 1]?.content || '';
+  const result = await chat.sendMessage(systemPrompt + '\n\n' + lastMsg);
+  const text = result.response.text()?.trim();
+  if (!text) throw new Error('Empty response from Gemini');
   return text;
 };
 
@@ -414,20 +420,22 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     + intentContext
     + triedSteps;
 
-  // Use Groq directly (fast) — Claude only if ANTHROPIC_API_KEY set
+  // ── Routing: Groq PRIMARY → Gemini FREE backup → KB always ─────────────
   let raw;
+  const lastMsg = history.filter(m => m.role === 'user').pop()?.content || '';
+
   try {
-    raw = anthropic ? await callClaude(systemPrompt, history) : await callGroq(systemPrompt, history);
-    console.log('✅ AI responded OK');
+    raw = await callGroq(systemPrompt, history);
+    console.log('✅ Groq (PRIMARY) responded OK');
   } catch (err) {
-    console.error('❌ AI failed:', err.message);
+    console.warn('⚠️ Groq failed:', err.message, '— trying Gemini...');
     try {
-      raw = await callGroq(systemPrompt, history);
-      console.log('✅ Groq fallback OK');
-    } catch {
-      const lastMsg = history.filter(m => m.role === 'user').pop()?.content || '';
+      raw = await callGemini(systemPrompt, history);
+      console.log('✅ Gemini (BACKUP) responded OK');
+    } catch (err2) {
+      console.error('❌ Gemini also failed:', err2.message, '— using KB fallback');
       raw = getKBFallback(lastMsg);
-      console.log('⚠️ Using static KB fallback');
+      console.log('⚠️ Using KB fallback');
     }
   }
 
@@ -579,14 +587,26 @@ const chatStream = async (messages, { empId, empName, source, laptop, laptopSN, 
     return fullText || getKBFallback(lastUserMsg);
 
   } catch (err) {
-    console.error('Groq stream failed:', err.message);
-    // Fallback: simulate streaming with KB fallback text
-    const fallback = getKBFallback(lastUserMsg);
-    for (const ch of fallback.split('')) {
-      onChunk(ch);
-      await new Promise(r => setTimeout(r, 6));
+    console.warn('⚠️ Groq stream failed:', err.message, '— trying Gemini...');
+    // Gemini fallback (non-streaming, simulate with char-by-char)
+    try {
+      const geminiReply = await callGemini(systemPrompt, history);
+      const text = geminiReply || getKBFallback(lastUserMsg);
+      console.log('✅ Gemini stream-fallback OK');
+      for (const ch of text.split('')) {
+        onChunk(ch);
+        await new Promise(r => setTimeout(r, 6));
+      }
+      return text;
+    } catch (err2) {
+      console.error('❌ Gemini also failed:', err2.message, '— using KB');
+      const fallback = getKBFallback(lastUserMsg);
+      for (const ch of fallback.split('')) {
+        onChunk(ch);
+        await new Promise(r => setTimeout(r, 6));
+      }
+      return fallback;
     }
-    return fallback;
   }
 };
 
@@ -598,14 +618,9 @@ const quickReply = async (userMessage, empName = 'Employee', laptop = null, lapt
 
   let raw;
   try {
-    raw = anthropic ? await callClaude(sys, history) : await callGroq(sys, history);
+    raw = await callGroq(sys, history);
   } catch {
-    // Only try Groq as fallback if Claude was primary (avoid retrying same provider)
-    if (anthropic) {
-      try { raw = await callGroq(sys, history); } catch { raw = getKBFallback(userMessage) || userMessage; }
-    } else {
-      raw = getKBFallback(userMessage) || userMessage;
-    }
+    try { raw = await callGemini(sys, history); } catch { raw = getKBFallback(userMessage) || userMessage; }
   }
 
   const parsed = parseOutput(raw);
