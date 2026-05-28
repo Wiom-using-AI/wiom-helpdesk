@@ -593,6 +593,42 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
   transition:color var(--transition);}
 .cat-card:hover .cat-label{color:var(--text);}
 
+/* ── SLACK-STYLE BUTTONS ── */
+.slack-btn-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.slack-cat-btn{
+  padding:8px 16px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.06);color:#e8e8e8;font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--font);transition:all .18s;white-space:nowrap;
+}
+.slack-cat-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.35);color:#fff;transform:translateY(-1px);}
+.slack-cat-btn:active{transform:translateY(0);}
+.slack-cat-btn.primary{background:rgba(232,25,125,0.18);border-color:rgba(232,25,125,0.5);color:var(--pink);}
+.slack-cat-btn.primary:hover{background:rgba(232,25,125,0.28);border-color:var(--pink);}
+.slack-cat-btn.success{background:rgba(45,212,160,0.12);border-color:rgba(45,212,160,0.4);color:var(--success);}
+.slack-cat-btn.success:hover{background:rgba(45,212,160,0.22);}
+.slack-cat-btn.danger{background:rgba(248,113,113,0.12);border-color:rgba(248,113,113,0.4);color:var(--danger);}
+.slack-cat-btn.danger:hover{background:rgba(248,113,113,0.22);}
+.slack-cat-btn.disabled{opacity:.45;cursor:not-allowed;transform:none!important;}
+.slack-cat-btn.ticket-btn{
+  background:linear-gradient(135deg,rgba(232,25,125,0.2),rgba(192,20,106,0.2));
+  border-color:rgba(232,25,125,0.5);color:var(--pink);font-weight:700;
+}
+.slack-cat-btn.ticket-btn:hover{background:linear-gradient(135deg,rgba(232,25,125,0.35),rgba(192,20,106,0.35));}
+.slack-script-btn{
+  padding:8px 16px;border-radius:6px;border:1px solid rgba(96,165,250,0.4);
+  background:rgba(96,165,250,0.1);color:#60a5fa;font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--font);transition:all .18s;white-space:nowrap;
+  text-decoration:none;display:inline-block;
+}
+.slack-script-btn:hover{background:rgba(96,165,250,0.2);border-color:#60a5fa;transform:translateY(-1px);}
+.slack-divider{height:1px;background:rgba(255,255,255,0.08);margin:12px 0;}
+.slack-back-btn{
+  padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);
+  background:transparent;color:var(--muted2);font-size:12px;cursor:pointer;
+  font-family:var(--font);transition:all .18s;margin-top:8px;
+}
+.slack-back-btn:hover{border-color:rgba(255,255,255,0.25);color:var(--text);}
+
 /* ── MOBILE ── */
 @media(max-width:680px){
   :root{--sidebar:0px;}
@@ -600,9 +636,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
   .chat-messages{padding:16px 0;}
   .gpt-content{padding:0 14px;}
   .gpt-user-bubble{margin-right:14px;max-width:88%;}
-  .chips-bar{padding:8px 14px 6px;}
-  .input-row{padding:10px 14px 12px;}
-  .input-inner{border-radius:14px;}
 }
 </style>
 </head>
@@ -692,34 +725,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
       <div class="sb-section" style="margin-top:4px;">
         <div class="sb-label">📂 Categories</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
-          <button class="cat-card" onclick="quickSend('Laptop slow hai, hang ho raha hai')" data-color="blue">
-            <span class="cat-icon">💻</span>
-            <span class="cat-label">Laptop</span>
+          <button class="cat-card" onclick="selectCategory('laptop')">
+            <span class="cat-icon">💻</span><span class="cat-label">Laptop</span>
           </button>
-          <button class="cat-card" onclick="quickSend('Net nahi chal raha, WiFi issue hai')" data-color="green">
-            <span class="cat-icon">🌐</span>
-            <span class="cat-label">Network</span>
+          <button class="cat-card" onclick="selectCategory('wifi')">
+            <span class="cat-icon">🌐</span><span class="cat-label">WiFi/Net</span>
           </button>
-          <button class="cat-card" onclick="quickSend('Software ya app mein problem aa rahi hai')" data-color="purple">
-            <span class="cat-icon">⚙️</span>
-            <span class="cat-label">Software</span>
+          <button class="cat-card" onclick="selectCategory('software')">
+            <span class="cat-icon">⚙️</span><span class="cat-label">Software</span>
           </button>
-          <button class="cat-card" onclick="quickSend('Password bhool gaya, account lock ho gaya')" data-color="orange">
-            <span class="cat-icon">🔑</span>
-            <span class="cat-label">Account</span>
+          <button class="cat-card" onclick="selectCategory('password')">
+            <span class="cat-icon">🔑</span><span class="cat-label">Password</span>
           </button>
-          <button class="cat-card" onclick="quickSend('Teams ya Outlook mein problem hai')" data-color="teal">
-            <span class="cat-icon">📹</span>
-            <span class="cat-label">Teams/Email</span>
+          <button class="cat-card" onclick="selectCategory('screen')">
+            <span class="cat-icon">🖥️</span><span class="cat-label">Screen</span>
           </button>
-          <button class="cat-card" onclick="quickSend('Printer kaam nahi kar raha')" data-color="red">
-            <span class="cat-icon">🖨️</span>
-            <span class="cat-label">Printer</span>
+          <button class="cat-card" onclick="selectCategory('battery')">
+            <span class="cat-icon">🔋</span><span class="cat-label">Battery</span>
           </button>
         </div>
-        <button class="qa-btn" onclick="requestSOS()" style="margin-top:5px;color:#f87171;border-color:rgba(248,113,113,0.2);">
-          <span class="qa-icon">🆘</span> SOS Emergency
-        </button>
       </div>
 
       <!-- Recent Tickets -->
@@ -738,62 +762,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
     <!-- ── Chat Area ── -->
     <div class="chat-area" id="chatView">
-
-      <!-- Diag banner -->
-      <div id="diagBannerWrap" style="display:none;padding-top:14px;">
-        <div id="diagBanner"></div>
-      </div>
-
-      <!-- Empty state -->
-      <div class="empty-chat" id="emptyState">
-        <div class="empty-icon">Z</div>
-        <div class="empty-title">Main Zivon hoon!</div>
-        <div class="empty-sub">Koi bhi IT samasya batao — laptop, WiFi, password, software — main turant help karunga.</div>
-        <div class="empty-chips">
-          <span class="chip" onclick="quickSend('Laptop bahut slow ho gaya hai')">💻 Laptop Slow</span>
-          <span class="chip" onclick="quickSend('WiFi nahi chal raha bilkul bhi')">📶 WiFi Band</span>
-          <span class="chip" onclick="quickSend('Password bhool gaya account lock ho gaya')">🔑 Password</span>
-          <span class="chip" onclick="quickSend('Teams me audio nahi aa raha')">📹 Teams</span>
-          <span class="chip" onclick="quickSend('Laptop screen black ho gayi hai')">🖥️ Screen</span>
-          <span class="chip" onclick="quickSend('Laptop ki battery bahut jaldi khatam ho jati hai')">🔋 Battery</span>
-        </div>
-      </div>
-
-      <!-- Messages -->
-      <div class="chat-messages" id="chatMessages" style="display:none;"></div>
-
-      <!-- Chips bar -->
-      <div class="chips-bar" id="chipsBar" style="display:none;">
-        <div class="chips-label">⚡ Jaldi select karo:</div>
-        <span class="chip" onclick="quickSend('Nahi hua abhi bhi same problem hai')">❌ Fix nahi hua</span>
-        <span class="chip" onclick="quickSend('Ho gaya shukriya')">✅ Ho gaya!</span>
-        <span class="chip" onclick="quickSend('Ticket banana hai')">🎫 Ticket Banao</span>
-        <span class="chip" onclick="quickSend('Kuch aur steps batao')">🔄 Aur steps?</span>
-      </div>
-
-      <!-- Context bar -->
-      <div class="ctx-bar" id="ctxBar" style="display:none;">
-        <div class="ctx-info">
-          <div class="ctx-dot"></div>
-          <span id="ctxText">0 messages — Zivon yaad rakh raha hai</span>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <button class="human-btn" onclick="talkToHuman()" title="IT se baat karo">🧑‍💼 IT se Baat Karo</button>
-          <button class="ctx-clear" onclick="clearChat()" title="Nayi baat shuru karo">🔄 Reset</button>
-        </div>
-      </div>
-
-      <!-- Input -->
-      <div class="input-row">
-        <input type="file" id="screenshotInput" accept="image/*" style="display:none" onchange="handleScreenshot(this)"/>
-        <div class="input-inner">
-          <button class="attach-btn" id="attachBtn" onclick="document.getElementById('screenshotInput').click()" title="Screenshot attach karo">📎</button>
-          <textarea class="chat-input" id="chatInput"
-            placeholder="Apni problem likho — Hindi ya English dono chalega..."
-            rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-          <button class="send-btn" id="sendBtn" onclick="sendMsg()" title="Send">➤</button>
-        </div>
-      </div>
+      <!-- Messages only — no input bar -->
+      <div class="chat-messages" id="chatMessages"></div>
     </div>
 
     <!-- ── Tickets View ── -->
@@ -801,12 +771,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div style="font-size:16px;font-weight:700;">🎫 Mere Tickets</div>
         <button onclick="loadMyTickets()" style="padding:7px 14px;background:var(--pink-soft);border:1px solid var(--border2);border-radius:9px;color:var(--pink);font-size:12px;cursor:pointer;font-family:var(--font);">🔄 Refresh</button>
-      </div>
-      <!-- Search bar -->
-      <div class="search-wrap">
-        <span>🔍</span>
-        <input class="search-input" id="ticketSearch" type="text" placeholder="Ticket ID, category, ya problem search karo..." oninput="filterTickets(this.value)" autocomplete="off"/>
-        <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
       </div>
       <div id="ticketsList">
         <div style="text-align:center;padding:40px;color:var(--muted);">⏳ Loading...</div>
@@ -822,11 +786,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 </div>
 
 <script>
-const API = '';
 let empData = {}, chatHistory = [], myTickets = [];
-let _diagUrl = '';
 let pendingScreenshot = null;
-let _humanEscalated = false;
 
 // ── Markdown renderer ──
 function renderMarkdown(text) {
@@ -873,7 +834,6 @@ async function doLogin() {
 
     document.getElementById('app').classList.add('show');
     populateSidebar();
-    showDiagBanner();
     loadMyTickets();
     addWelcome();
 
@@ -889,15 +849,8 @@ function showErr(msg) {
 }
 
 function doLogout() {
-  empData={}; chatHistory=[]; myTickets=[]; _diagUrl='';
-  pendingScreenshot=null; _humanEscalated=false;
-  document.getElementById('attachBtn').classList.remove('active');
+  empData={}; chatHistory=[]; myTickets=[];
   document.getElementById('chatMessages').innerHTML='';
-  document.getElementById('emptyState').style.display='flex';
-  document.getElementById('chatMessages').style.display='none';
-  document.getElementById('chipsBar').style.display='none';
-  document.getElementById('ctxBar').style.display='none';
-  document.getElementById('diagBannerWrap').style.display='none';
   document.getElementById('loginPage').style.display='flex';
   document.getElementById('loginPage').classList.remove('hide');
   document.getElementById('app').classList.remove('show');
@@ -945,63 +898,458 @@ function switchView(view, btn) {
   if (view==='tickets') loadMyTickets();
 }
 
-// ══ WELCOME MESSAGE ══
+// ══ WELCOME / HOME ══
 function addWelcome() {
-  const firstName = empData.name.split(' ')[0];
-  const hour = new Date().getHours();
-  const greet = hour<12 ? 'Good Morning' : hour<17 ? 'Good Afternoon' : 'Good Evening';
-  const laptopLine = empData.laptop
-    ? `\n\n💻 **Aapka Laptop:** ${empData.laptop}${empData.laptopSN ? ` (S/N: ${empData.laptopSN})` : ''}`
-    : '';
-
-  addBotMsg(
-    `${greet}! 👋 Main **Zivon** hoon — aapka WIOM IT Assistant!\n\n` +
-    `**${firstName} ji**, aaj kaisi problem aa rahi hai? Koi bhi cheez batao — laptop, WiFi, software, password — main yahan hoon! 😊` +
-    laptopLine
-  );
+  showHome();
 }
 
-// ══ CHAT ══
-function now() {
-  return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+const PORTAL = '';
+
+// Sub-categories map
+const SUB_CATS = {
+  laptop: [
+    ['💻 Laptop Slow/Hang', 'Laptop bahut slow hai, hang ho raha hai, freeze ho jaata hai'],
+    ['🖥️ Screen Problem', 'Laptop ki screen mein problem hai'],
+    ['🔋 Battery Issue', 'Laptop battery nahi chal rahi ya jaldi khatam ho jaati hai'],
+    ['📷 Camera Nahi Chal Raha', 'Camera work nahi kar raha — Teams ya Zoom mein nahi aa raha pura setup bata do'],
+    ['🔊 Audio/Sound Nahi', 'Sound nahi aa raha, audio band hai, speaker kaam nahi kar raha'],
+    ['⌨️ Keyboard/Mouse', 'Keyboard ya mouse kaam nahi kar raha'],
+    ['⚡ Laptop On Nahi Ho Raha', 'Laptop start nahi ho raha, on nahi ho raha'],
+    ['🌡️ Laptop Garam Ho Raha', 'Laptop bahut garam ho raha hai, overheating hai'],
+    ['💙 Blue Screen Error', 'Blue screen aa raha hai, BSOD error'],
+    ['🖥️ Black Screen', 'Screen black ho gayi hai, display nahi aa rahi'],
+  ],
+  wifi: [
+    ['📶 WiFi Nahi Chal Raha', 'WiFi nahi chal raha bilkul bhi, internet band hai'],
+    ['🐌 Internet Slow', 'Internet bahut slow chal raha hai'],
+    ['🔗 WiFi Connect Nahi Ho Raha', 'WiFi se connect nahi ho raha, password sahi hai par nahi lag raha'],
+    ['🌐 Website Open Nahi Ho Rahi', 'Website open nahi ho rahi, block ho rahi hai'],
+    ['🔑 WiFi Password Chahiye', 'WiFi ka password chahiye'],
+  ],
+  software: [
+    ['📹 Teams Problem', 'Microsoft Teams mein problem hai, nahi khul raha ya crash ho raha hai'],
+    ['📧 Outlook Problem', 'Outlook nahi khul raha ya email nahi aa rahi'],
+    ['💥 App Crash Ho Raha', 'Application crash ho rahi hai, band ho jaati hai'],
+    ['🦠 Virus/Malware', 'Laptop mein virus hai ya malware attack hua hai'],
+    ['💾 Storage Full', 'Laptop ki storage full ho gayi hai, jagah nahi hai'],
+    ['🔄 Windows Update Issue', 'Windows update mein problem aa rahi hai'],
+    ['📄 Word/Excel Problem', 'Microsoft Word ya Excel kaam nahi kar raha'],
+    ['🌐 Browser Problem', 'Chrome ya Edge theek se nahi chal raha'],
+  ],
+  password: [
+    ['🔑 Windows Password Bhool Gaya', 'Windows ka login password bhool gaya, reset karna hai'],
+    ['📧 Email Password Reset', 'Email ka password bhool gaya ya reset karna hai'],
+    ['🔒 Account Lock Ho Gaya', 'Account lock ho gaya, login nahi ho pa raha'],
+    ['🔐 Google Account Issue', 'Google account mein problem hai, password ya access issue'],
+  ],
+  screen: [
+    ['🖥️ Screen Black', 'Screen bilkul black ho gayi hai, kuch nahi dikh raha'],
+    ['💫 Screen Blinking/Flickering', 'Screen blink kar rahi hai ya flicker kar rahi hai'],
+    ['🔆 Screen Dark/Dim', 'Screen bahut dark ya dim hai, brightness kam hai'],
+    ['🌈 Color ya Lines Problem', 'Screen mein lines aa rahi hain ya color issue hai'],
+    ['💙 Blue Screen Error', 'Blue screen aa raha hai BSOD error'],
+    ['🖥️ Display Nahi Aa Raha', 'Screen par kuch bhi display nahi ho raha'],
+  ],
+  audio: [
+    ['🔇 Sound Bilkul Nahi', 'Sound/audio bilkul nahi aa raha'],
+    ['🎤 Mic Kaam Nahi Kar Raha', 'Microphone kaam nahi kar raha, awaz nahi ja rahi'],
+    ['🎧 Headphone Issue', 'Headphone/earphone detect nahi ho raha'],
+    ['📢 Speaker Problem', 'Laptop speaker kaam nahi kar raha ya distorted hai'],
+  ],
+  battery: [
+    ['🔋 Battery Charge Nahi Ho Rahi', 'Laptop battery charge nahi ho rahi, plug karne par bhi nahi'],
+    ['⚡ Battery Jaldi Khatam Hoti', 'Battery bahut jaldi drain ho jaati hai'],
+    ['🔌 Charger Problem', 'Charger kaam nahi kar raha ya detect nahi ho raha'],
+  ],
+  keyboard: [
+    ['⌨️ Keyboard Kaam Nahi Kar Raha', 'Keyboard par type nahi ho raha, keys respond nahi kar rahi'],
+    ['🖱️ Mouse/Touchpad Problem', 'Mouse ya touchpad kaam nahi kar raha'],
+    ['🔤 Keys Galat Type Ho Rahi', 'Wrong characters type ho rahe hain keyboard se'],
+  ],
+  replacement: [
+    ['💻 Laptop Replacement Chahiye', 'Naya laptop chahiye, purana kharab ho gaya hai'],
+    ['🖱️ Mouse Replacement', 'Naya mouse chahiye'],
+    ['⌨️ Keyboard Replacement', 'Naya keyboard chahiye'],
+    ['🖥️ Monitor/Screen Replacement', 'External monitor ya screen replace karni hai'],
+    ['🔌 Charger Replacement', 'Naya laptop charger chahiye'],
+    ['🎧 Headset Replacement', 'Naya headset chahiye'],
+  ],
+};
+
+const CAT_LABELS = {
+  laptop:'💻 Laptop', wifi:'🌐 WiFi / Net', software:'⚙️ Software',
+  password:'🔑 Password', screen:'🖥️ Screen', audio:'🔊 Audio',
+  battery:'🔋 Battery', keyboard:'⌨️ Keyboard', replacement:'🔄 Replacement',
+};
+
+function showHome() {
+  const firstName = (empData.name||'there').split(' ')[0];
+  const msgEl = document.getElementById('chatMessages');
+  msgEl.innerHTML = '';
+  chatHistory = [];
+
+  const row = document.createElement('div');
+  row.className = 'msg-row gpt-bot';
+  row.innerHTML = `
+    <div class="gpt-content">
+      <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+      <div class="gpt-text">
+        <p><strong>Hey ${firstName}! 👋</strong></p>
+        <p>Main <strong>Zivon</strong> hoon — WIOM ka IT assistant.<br/>
+        Laptop, WiFi, software, password — koi bhi problem batao, abhi fix karunga!</p>
+        <p><em>Category choose karo 👇</em></p>
+        <div class="slack-btn-row">
+          <button class="slack-cat-btn" onclick="selectCategory('laptop')">💻 Laptop</button>
+          <button class="slack-cat-btn" onclick="selectCategory('wifi')">🌐 WiFi / Net</button>
+          <button class="slack-cat-btn" onclick="selectCategory('software')">⚙️ Software</button>
+          <button class="slack-cat-btn" onclick="selectCategory('password')">🔑 Password</button>
+        </div>
+        <div class="slack-btn-row">
+          <button class="slack-cat-btn" onclick="selectCategory('screen')">🖥️ Screen</button>
+          <button class="slack-cat-btn" onclick="selectCategory('audio')">🔊 Audio</button>
+          <button class="slack-cat-btn" onclick="selectCategory('battery')">🔋 Battery</button>
+          <button class="slack-cat-btn" onclick="selectCategory('keyboard')">⌨️ Keyboard</button>
+          <button class="slack-cat-btn" onclick="selectCategory('replacement')">🔄 Replacement</button>
+        </div>
+        <div class="slack-btn-row">
+          <button class="slack-cat-btn primary" onclick="viewMyTicketsInline()">📋 My Tickets</button>
+          <button class="slack-cat-btn danger" onclick="contactIT()">📞 Contact IT</button>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted2);">✦ Anytime, Anywhere</div>
+      </div>
+    </div>`;
+  msgEl.appendChild(row);
+  msgEl.scrollTop = 0;
 }
 
-function addBotMsg(text, pendingTicketData, origText, dupMsg, ticketInfo) {
-  showChatArea();
-  const wrap = document.getElementById('chatMessages');
+function selectCategory(cat) {
+  const label = CAT_LABELS[cat] || cat;
+  addUserMsg(label);
+
+  const subs = SUB_CATS[cat];
+  if (!subs) return;
+
   const row = document.createElement('div');
   row.className = 'msg-row gpt-bot';
 
-  let extra = '';
-  if (dupMsg) {
-    extra = `<div class="tkt-result" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25);color:#fbbf24;">⚠️ ${dupMsg}</div>`;
-  } else if (ticketInfo) {
-    extra = `<div class="tkt-result">✅ <b>${ticketInfo.ticketId}</b> create ho gaya! Priority: <b>${ticketInfo.priority}</b><br/>IT team jald resolve karegi. 👍</div>`;
-  } else if (pendingTicketData) {
-    const btnId = 'tb_' + Date.now();
-    extra = `<div class="tkt-confirm-box">
-      <div class="tkt-confirm-q">🎫 Kya IT support ticket banana chahoge?</div>
-      <div class="tkt-confirm-btns">
-        <button class="tkt-yes" id="${btnId}_y" onclick="confirmTicket('${btnId}',true)">✅ Ha, banao</button>
-        <button class="tkt-no"  id="${btnId}_n" onclick="confirmTicket('${btnId}',false)">Nahi, try karta hoon</button>
-      </div>
-    </div>`;
-    row._ptd = pendingTicketData;
-    row._orig = origText;
-    row.id = btnId + '_row';
-  }
-
-  const rendered = renderMarkdown(text);
+  const btnHtml = subs.map(([lbl, val]) =>
+    `<button class="slack-cat-btn" onclick="selectSubCategory('${val.replace(/'/g,"\\'")}','${lbl.replace(/'/g,"\\'")}',this)">${lbl}</button>`
+  ).join('');
 
   row.innerHTML = `
     <div class="gpt-content">
       <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
-      <div class="gpt-text"><p>${rendered}</p>${extra}</div>
+      <div class="gpt-text">
+        <p><strong>${label}</strong> — exact problem select karo:</p>
+        <div class="slack-btn-row">${btnHtml}</div>
+        <div class="slack-btn-row"><button class="slack-back-btn" onclick="showHome()">← Wapas</button></div>
+      </div>
     </div>`;
+  const msgEl = document.getElementById('chatMessages');
+  msgEl.appendChild(row); msgEl.scrollTop = msgEl.scrollHeight;
+}
 
-  if (pendingTicketData) { row._ptd = pendingTicketData; row._orig = origText; }
+async function selectSubCategory(problemText, label, btnEl) {
+  // Disable all buttons in this row
+  if (btnEl) {
+    btnEl.closest('.gpt-text').querySelectorAll('button').forEach(b => { b.classList.add('disabled'); b.disabled = true; });
+  }
+  addUserMsg(label);
+  chatHistory.push({ role:'user', content: problemText });
+  await runAI(problemText);
+}
+
+async function runAI(text) {
+  const wrap = document.getElementById('chatMessages');
+  showTyping();
+
+  let streamRow = null, streamText = null, streamedText = '', firstChunk = true;
+
+  function startStreamRow() {
+    hideTyping();
+    streamRow = document.createElement('div');
+    streamRow.className = 'msg-row gpt-bot';
+    streamRow.innerHTML = `
+      <div class="gpt-content">
+        <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+        <div class="gpt-text" id="sText"><span class="stream-cursor"></span></div>
+      </div>`;
+    wrap.appendChild(streamRow);
+    streamText = streamRow.querySelector('#sText');
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function appendChunk(chunk) {
+    if (firstChunk) { startStreamRow(); firstChunk = false; }
+    streamedText += chunk;
+    streamText.innerHTML = '<p>' + renderMarkdown(streamedText) + '</p><span class="stream-cursor"></span>';
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function finalizeRow(finalText, shouldCreateTicket, ticketData) {
+    if (!streamRow) { streamRow = document.createElement('div'); streamRow.className='msg-row gpt-bot'; wrap.appendChild(streamRow); }
+    hideTyping();
+
+    // Detect if script exists for this problem
+    const scriptInfo = getScriptInfo(text);
+
+    let actionHtml = '';
+    const btnId = 'ab_' + Date.now();
+    streamRow.id = btnId + '_row';
+    streamRow._orig = text;
+    streamRow._ptd = ticketData || { category:'Other', priority:'Medium', description:text };
+
+    if (shouldCreateTicket) {
+      actionHtml = `
+        <div class="slack-divider"></div>
+        ${scriptInfo ? `<div class="slack-btn-row"><a class="slack-script-btn" href="${scriptInfo.url}" target="_blank" download>⬇️ ${scriptInfo.label}</a></div>` : ''}
+        <div class="slack-btn-row">
+          <button class="slack-cat-btn ticket-btn" onclick="confirmTicketInline('${btnId}',this)">🎫 IT Ticket Banao</button>
+        </div>`;
+    } else {
+      actionHtml = `
+        <div class="slack-divider"></div>
+        ${scriptInfo ? `<div class="slack-btn-row"><a class="slack-script-btn" href="${scriptInfo.url}" target="_blank" download>⬇️ ${scriptInfo.label}</a></div>` : ''}
+        <div class="slack-btn-row">
+          <button class="slack-cat-btn success" onclick="markResolved('${btnId}',this)">✅ Ho gaya!</button>
+          <button class="slack-cat-btn ticket-btn" onclick="confirmTicketInline('${btnId}',this)">🎫 IT Ticket Banao</button>
+        </div>`;
+    }
+    actionHtml += `<div class="slack-btn-row"><button class="slack-back-btn" onclick="showHome()">🏠 Home</button></div>`;
+
+    streamText.innerHTML = '<p>' + renderMarkdown(finalText) + '</p>' + actionHtml;
+    wrap.scrollTop = wrap.scrollHeight;
+    chatHistory.push({ role:'assistant', content: finalText });
+  }
+
+  try {
+    const res = await fetch(`${PORTAL}/api/ai/stream`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        message:text, messages:chatHistory,
+        empId:empData.empId, empName:empData.name,
+        source:'web', laptop:empData.laptop,
+        laptopSN:empData.laptopSN, dept:empData.dept, floor:empData.floor
+      })
+    });
+    if (!res.ok || !res.body) throw new Error('Stream unavailable');
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream:true });
+      const lines = buffer.split('\n'); buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const ev = JSON.parse(line.slice(6));
+          if (ev.chunk !== undefined) appendChunk(ev.chunk);
+          if (ev.done || ev.error) {
+            const ft = ev.finalText || streamedText || (ev.error ? `❌ ${ev.error}` : '');
+            finalizeRow(ft, ev.shouldCreateTicket, ev.ticketData);
+          }
+        } catch {}
+      }
+    }
+  } catch(e) {
+    hideTyping();
+    finalizeRow('❌ Server se connect nahi ho pa raha.\n\n📞 IT Helpdesk: **9654244281**', false, null);
+  }
+}
+
+// Script info for portal (mirrors Slack getScriptForText)
+function getScriptInfo(text) {
+  if (!text) return null;
+  const t = text.toLowerCase();
+  const BASE = '/scripts/';
+  if (/\bfan\b/.test(t)) return { file:'fix-fan-noise.bat', label:'🌬️ Auto-Fix: Fan Noise', url: BASE+'fix-fan-noise.bat' };
+  if (/blue.?screen|bsod/.test(t)) return { file:'fix-bluescreen.bat', label:'💙 Auto-Fix: Blue Screen', url: BASE+'fix-bluescreen.bat' };
+  if (/black.?screen|no display|blank screen/.test(t)) return { file:'fix-black-screen.bat', label:'🖥️ Auto-Fix: Black Screen', url: BASE+'fix-black-screen.bat' };
+  if (/flicker|blink/.test(t)) return { file:'fix-screen-flicker.bat', label:'📺 Auto-Fix: Screen Flicker', url: BASE+'fix-screen-flicker.bat' };
+  if (/overheat|garam/.test(t)) return { file:'fix-overheating.bat', label:'🌡️ Auto-Fix: Overheating', url: BASE+'fix-overheating.bat' };
+  if (/camera|camra|webcam|\bcam\b/.test(t)) return { file:'fix-camera.bat', label:'📷 Auto-Fix: Camera', url: BASE+'fix-camera.bat' };
+  if (/mic|microphone/.test(t)) return { file:'fix-mic.bat', label:'🎤 Auto-Fix: Microphone', url: BASE+'fix-mic.bat' };
+  if (/headphone|earphone/.test(t)) return { file:'fix-headphone.bat', label:'🎧 Auto-Fix: Headphone', url: BASE+'fix-headphone.bat' };
+  if (/sound|audio|speaker|awaaz/.test(t)) return { file:'fix-sound.bat', label:'🔊 Auto-Fix: Sound', url: BASE+'fix-sound.bat' };
+  if (/keyboard|keys/.test(t)) return { file:'fix-keyboard.bat', label:'⌨️ Auto-Fix: Keyboard', url: BASE+'fix-keyboard.bat' };
+  if (/touchpad|trackpad|cursor/.test(t)) return { file:'fix-touchpad.bat', label:'🖱️ Auto-Fix: Touchpad', url: BASE+'fix-touchpad.bat' };
+  if (/bluetooth/.test(t)) return { file:'fix-bluetooth.bat', label:'🔵 Auto-Fix: Bluetooth', url: BASE+'fix-bluetooth.bat' };
+  if (/batter[yi]?|charg/.test(t)) return { file:'fix-battery.bat', label:'🔋 Auto-Fix: Battery', url: BASE+'fix-battery.bat' };
+  if (/\bteams\b/.test(t)) return { file:'fix-teams.bat', label:'📹 Auto-Fix: Teams', url: BASE+'fix-teams.bat' };
+  if (/\bzoom\b/.test(t)) return { file:'fix-zoom.bat', label:'🎥 Auto-Fix: Zoom', url: BASE+'fix-zoom.bat' };
+  if (/outlook/.test(t)) return { file:'fix-outlook.bat', label:'📧 Auto-Fix: Outlook', url: BASE+'fix-outlook.bat' };
+  if (/wifi|wi-fi|internet|\bnet\b/.test(t)) return { file:'fix-wifi.bat', label:'📶 Auto-Fix: WiFi', url: BASE+'fix-wifi.bat' };
+  if (/word|excel|office/.test(t)) return { file:'fix-word-excel.bat', label:'📄 Auto-Fix: Word/Excel', url: BASE+'fix-word-excel.bat' };
+  if (/chrome|browser|edge/.test(t)) return { file:'fix-browser.bat', label:'🌐 Auto-Fix: Browser', url: BASE+'fix-browser.bat' };
+  if (/storage|disk full|space/.test(t)) return { file:'fix-storage.bat', label:'💾 Auto-Fix: Storage', url: BASE+'fix-storage.bat' };
+  if (/slow|hang|lagg|freez/.test(t)) return { file:'fix-slow-laptop.bat', label:'⚡ Auto-Fix: Slow Laptop', url: BASE+'fix-slow-laptop.bat' };
+  return null;
+}
+
+function markResolved(btnId, btn) {
+  const row = document.getElementById(btnId + '_row');
+  if (btn) btn.closest('.gpt-text').querySelectorAll('.slack-cat-btn,.slack-script-btn').forEach(b => { b.disabled=true; b.classList.add('disabled'); });
+  addSystemMsg('✅ Great! Problem solve ho gayi!');
+  const wrap = document.getElementById('chatMessages');
+  const thanksRow = document.createElement('div');
+  thanksRow.className = 'msg-row gpt-bot';
+  thanksRow.innerHTML = `
+    <div class="gpt-content">
+      <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+      <div class="gpt-text">
+        <p>🎉 <strong>Sahi hua!</strong> Khushi hui madad karne mein 😊</p>
+        <p><em>Koi aur IT problem ho toh batao!</em></p>
+        <div class="slack-btn-row"><button class="slack-cat-btn primary" onclick="showHome()">🏠 Home Par Wapas Jao</button></div>
+      </div>
+    </div>`;
+  wrap.appendChild(thanksRow); wrap.scrollTop = wrap.scrollHeight;
+}
+
+async function confirmTicketInline(btnId, btn) {
+  const row = document.getElementById(btnId + '_row');
+  const td = row?._ptd;
+  const orig = row?._orig || '';
+  if (btn) { btn.disabled = true; btn.classList.add('disabled'); btn.textContent = '⏳ Ban raha hai...'; }
+
+  const ticket = await createTicket(td, orig);
+  const wrap = document.getElementById('chatMessages');
+  const resultRow = document.createElement('div');
+  resultRow.className = 'msg-row gpt-bot';
+
+  if (ticket && !ticket._duplicate) {
+    myTickets.unshift(ticket);
+    refreshSbTickets();
+    resultRow.innerHTML = `
+      <div class="gpt-content">
+        <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+        <div class="gpt-text">
+          <div class="tkt-result">✅ <b>${ticket.ticketId}</b> create ho gaya!<br/>Priority: <b>${ticket.priority}</b> — IT team jald aayegi 🚀</div>
+          <div class="slack-btn-row" style="margin-top:10px;">
+            <button class="slack-cat-btn" onclick="switchView('tickets',null)">📋 My Tickets Dekho</button>
+            <button class="slack-cat-btn primary" onclick="showHome()">🏠 Home</button>
+          </div>
+        </div>
+      </div>`;
+  } else if (ticket?._duplicate) {
+    resultRow.innerHTML = `
+      <div class="gpt-content">
+        <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+        <div class="gpt-text">
+          <div class="tkt-result" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25);color:#fbbf24;">⚠️ ${ticket._dupMsg}</div>
+          <div class="slack-btn-row" style="margin-top:10px;"><button class="slack-cat-btn primary" onclick="showHome()">🏠 Home</button></div>
+        </div>
+      </div>`;
+  } else {
+    resultRow.innerHTML = `
+      <div class="gpt-content">
+        <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+        <div class="gpt-text">
+          <p>❌ Ticket nahi ban paya. Direct call karo: <strong>9654244281</strong></p>
+          <div class="slack-btn-row"><button class="slack-cat-btn primary" onclick="showHome()">🏠 Home</button></div>
+        </div>
+      </div>`;
+  }
+  wrap.appendChild(resultRow); wrap.scrollTop = wrap.scrollHeight;
+}
+
+async function viewMyTicketsInline() {
+  addUserMsg('📋 My Tickets');
+  showTyping();
+  try {
+    const res = await fetch(`${PORTAL}/api/tickets/my`, {
+      headers: empData.token ? { 'Authorization': `Bearer ${empData.token}` } : {}
+    });
+    const data = await res.json();
+    myTickets = data.tickets || [];
+    hideTyping();
+    refreshSbTickets();
+    const wrap = document.getElementById('chatMessages');
+    const row = document.createElement('div');
+    row.className = 'msg-row gpt-bot';
+
+    const open = myTickets.filter(t => !['Closed','Resolved'].includes(t.status));
+    if (!open.length) {
+      row.innerHTML = `
+        <div class="gpt-content">
+          <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+          <div class="gpt-text">
+            <p>🎉 <strong>Koi pending ticket nahi hai!</strong><br/>Sab theek chal raha hai.</p>
+            <div class="slack-btn-row"><button class="slack-back-btn" onclick="showHome()">🏠 Home</button></div>
+          </div>
+        </div>`;
+    } else {
+      const priEmoji = {Critical:'🔴',High:'🟠',Medium:'🟡',Low:'🟢'};
+      const statEmoji = {Open:'⏳','In Progress':'🔧',Pending:'⏸️',Resolved:'✅'};
+      const ticketHtml = open.slice(0,5).map(t => {
+        const age = timeAgo(t.createdAt);
+        return `<div style="padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.1);margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="color:var(--pink);font-weight:700;font-size:12px;">${t.ticketId}</span>
+            <span style="font-size:11px;">${priEmoji[t.priority]||'🟡'} ${t.priority} &nbsp; ${statEmoji[t.status]||'⏳'} ${t.status}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted2);">${t.description||'—'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">🕐 ${age}</div>
+        </div>`;
+      }).join('');
+      const isUrgent = open.some(t => ['Critical','High'].includes(t.priority));
+      row.innerHTML = `
+        <div class="gpt-content">
+          <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+          <div class="gpt-text">
+            <p><strong>${open.length} pending ticket${open.length>1?'s':''}</strong> ${isUrgent ? '— <span style="color:#f87171;">IT jaldi resolve karegi!</span>' : '— IT team par hai 👍'}</p>
+            ${ticketHtml}
+            <div class="slack-btn-row">
+              <button class="slack-cat-btn" onclick="switchView('tickets',null)">📋 Saare Tickets Dekho</button>
+              <button class="slack-back-btn" onclick="showHome()">🏠 Home</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    wrap.appendChild(row); wrap.scrollTop = wrap.scrollHeight;
+  } catch {
+    hideTyping();
+    addBotMsg('❌ Tickets load nahi ho sake. Refresh karo.');
+  }
+}
+
+function contactIT() {
+  const wrap = document.getElementById('chatMessages');
+  const row = document.createElement('div');
+  row.className = 'msg-row gpt-bot';
+  row.innerHTML = `
+    <div class="gpt-content">
+      <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+      <div class="gpt-text">
+        <div class="human-card">
+          <div class="human-card-title">👨‍💻 WIOM IT Team — Direct Contact</div>
+          <div class="human-card-info">
+            <div class="human-info-row">📞 <a href="tel:9654244281">9654244281</a> — Sajan Kumar (IT Admin)</div>
+            <div class="human-info-row">📧 <a href="mailto:sajan.kumar@wiom.in">sajan.kumar@wiom.in</a></div>
+            <div class="human-info-row">💬 Slack: <b>@sajan.kumar</b> pe DM karo</div>
+            <div class="human-info-row">🕐 Available: Mon–Sat, 9AM–7PM</div>
+          </div>
+        </div>
+        <div class="slack-btn-row" style="margin-top:10px;"><button class="slack-back-btn" onclick="showHome()">🏠 Home</button></div>
+      </div>
+    </div>`;
   wrap.appendChild(row); wrap.scrollTop = wrap.scrollHeight;
-  updateCtx();
+}
+
+// ══ CHAT HELPERS ══
+function addBotMsg(text) {
+  const wrap = document.getElementById('chatMessages');
+  const row = document.createElement('div');
+  row.className = 'msg-row gpt-bot';
+  row.innerHTML = `
+    <div class="gpt-content">
+      <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
+      <div class="gpt-text"><p>${renderMarkdown(text)}</p></div>
+    </div>`;
+  wrap.appendChild(row); wrap.scrollTop = wrap.scrollHeight;
 }
 
 function addUserMsg(text) {
@@ -1014,25 +1362,11 @@ function addUserMsg(text) {
 }
 
 function addSystemMsg(text) {
-  showChatArea();
   const wrap = document.getElementById('chatMessages');
   const row = document.createElement('div');
   row.className = 'msg-row gpt-system';
   row.innerHTML = `<div class="gpt-system-text">${text}</div>`;
   wrap.appendChild(row); wrap.scrollTop = wrap.scrollHeight;
-}
-
-function showChatArea() {
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('chatMessages').style.display = 'flex';
-  document.getElementById('chipsBar').style.display = 'flex';
-  document.getElementById('ctxBar').style.display = 'flex';
-}
-
-function updateCtx() {
-  const count = chatHistory.length;
-  document.getElementById('ctxText').textContent =
-    count > 0 ? `${count} messages — Zivon context yaad rakh raha hai 🧠` : 'Zivon ready hai — kuch bhi pucho!';
 }
 
 function showTyping() {
@@ -1043,180 +1377,12 @@ function showTyping() {
     <div class="typing-inner">
       <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
       <div class="typing-dots">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
       </div>
     </div>`;
   wrap.appendChild(row); wrap.scrollTop = wrap.scrollHeight;
 }
 function hideTyping() { document.getElementById('typRow')?.remove(); }
-
-function clearChat() {
-  chatHistory = [];
-  document.getElementById('chatMessages').innerHTML = '';
-  document.getElementById('emptyState').style.display = 'flex';
-  document.getElementById('chatMessages').style.display = 'none';
-  document.getElementById('chipsBar').style.display = 'none';
-  document.getElementById('ctxBar').style.display = 'none';
-  updateCtx();
-  addSystemMsg('Nayi baat shuru ho gayi! 🔄');
-  showChatArea();
-}
-
-// ══ TICKET CONFIRM ══
-async function confirmTicket(btnId, confirmed) {
-  const row = document.getElementById(btnId + '_row');
-  const td  = row?._ptd;
-  const orig= row?._orig || '';
-  const yBtn = document.getElementById(btnId+'_y');
-  const nBtn = document.getElementById(btnId+'_n');
-  if (yBtn) yBtn.disabled = nBtn.disabled = true;
-
-  if (!confirmed) {
-    if (nBtn) nBtn.closest('.tkt-confirm-box').innerHTML =
-      `<span style="font-size:13px;color:var(--muted2);">👍 Theek hai! Koi aur problem ho toh batao.</span>`;
-    return;
-  }
-  if (yBtn) yBtn.textContent = '⏳ Ban raha hai...';
-  const ticket = await createTicket(td, orig);
-  if (ticket && !ticket._duplicate) {
-    myTickets.unshift(ticket);
-    refreshSbTickets();
-    if (nBtn) nBtn.closest('.tkt-confirm-box').outerHTML =
-      `<div class="tkt-result">✅ <b>${ticket.ticketId}</b> create ho gaya! Priority: <b>${ticket.priority}</b><br/>IT team jald aayegi. 🚀</div>`;
-  } else if (ticket?._duplicate) {
-    if (nBtn) nBtn.closest('.tkt-confirm-box').outerHTML =
-      `<div class="tkt-result" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25);color:#fbbf24;">⚠️ ${ticket._dupMsg}</div>`;
-  }
-}
-
-// ══ SEND MESSAGE ══
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
-}
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
-}
-function quickSend(t) {
-  document.getElementById('chatInput').value = t;
-  autoResize(document.getElementById('chatInput'));
-  sendMsg();
-}
-
-// ══ STREAMING sendMsg — ChatGPT-style character-by-character ══
-async function sendMsg() {
-  const input   = document.getElementById('chatInput');
-  const text    = input.value.trim(); if (!text) return;
-  input.value   = ''; autoResize(input);
-  const sendBtn = document.getElementById('sendBtn');
-  sendBtn.disabled = true;
-
-  addUserMsg(text);
-  chatHistory.push({ role:'user', content:text });
-  showChatArea();
-  showTyping();
-
-  const wrap = document.getElementById('chatMessages');
-  let streamRow    = null;
-  let streamText   = null;  // the .gpt-text element
-  let streamedText = '';
-  let firstChunk   = true;
-
-  // ── helper: create live streaming row ──
-  function startStreamingRow() {
-    hideTyping();
-    streamRow = document.createElement('div');
-    streamRow.className = 'msg-row gpt-bot';
-    streamRow.innerHTML = `
-      <div class="gpt-content">
-        <div class="gpt-avatar"><img src="/wiom-logo.webp" onerror="this.outerHTML='Z'"/></div>
-        <div class="gpt-text" id="streamText"><span class="stream-cursor"></span></div>
-      </div>`;
-    wrap.appendChild(streamRow);
-    streamText = streamRow.querySelector('#streamText');
-    wrap.scrollTop = wrap.scrollHeight;
-  }
-
-  // ── helper: append chunk to live row ──
-  function appendChunk(chunk) {
-    if (firstChunk) { startStreamingRow(); firstChunk = false; }
-    streamedText += chunk;
-    streamText.innerHTML = '<p>' + renderMarkdown(streamedText) + '</p><span class="stream-cursor"></span>';
-    wrap.scrollTop = wrap.scrollHeight;
-  }
-
-  // ── helper: finalize the row after stream ends ──
-  function finalizeRow(finalText, shouldCreateTicket, ticketData) {
-    if (!streamRow) { addBotMsg(finalText); return; }
-    let extra = '';
-    if (shouldCreateTicket) {
-      const btnId = 'tb_' + Date.now();
-      extra = `<div class="tkt-confirm-box">
-        <div class="tkt-confirm-q">🎫 Kya IT ticket banana chahoge?</div>
-        <div class="tkt-confirm-btns">
-          <button class="tkt-yes" id="${btnId}_y" onclick="confirmTicket('${btnId}',true)">✅ Ha, banao</button>
-          <button class="tkt-no"  id="${btnId}_n" onclick="confirmTicket('${btnId}',false)">Nahi, try karta hoon</button>
-        </div></div>`;
-      streamRow._ptd  = ticketData || { category:'Other', priority:'Medium', description: text };
-      streamRow._orig = text;
-      streamRow.id    = btnId + '_row';
-    }
-    streamText.innerHTML = '<p>' + renderMarkdown(finalText) + '</p>' + extra;
-    wrap.scrollTop = wrap.scrollHeight;
-    chatHistory.push({ role:'assistant', content: finalText });
-    updateCtx();
-  }
-
-  // ── SSE fetch ──
-  try {
-    const res = await fetch(`${API}/api/ai/stream`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        message:text, messages:chatHistory,
-        empId:empData.empId, empName:empData.name,
-        source:'web', laptop:empData.laptop,
-        laptopSN:empData.laptopSN, dept:empData.dept, floor:empData.floor
-      })
-    });
-
-    if (!res.ok || !res.body) throw new Error('Stream unavailable');
-
-    const reader  = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer    = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        try {
-          const ev = JSON.parse(line.slice(6));
-          if (ev.chunk !== undefined) appendChunk(ev.chunk);
-          if (ev.done || ev.error) {
-            hideTyping();
-            const finalTxt = ev.finalText || streamedText || (ev.error ? `❌ ${ev.error}` : '');
-            finalizeRow(finalTxt, ev.shouldCreateTicket, ev.ticketData);
-          }
-        } catch {}
-      }
-    }
-
-  } catch (e) {
-    hideTyping();
-    if (!streamRow) addBotMsg('❌ Server se connect nahi ho pa raha.\n\n📞 IT Helpdesk: **9654244281**');
-    else finalizeRow('❌ Connection lost. IT Helpdesk: 9654244281', false, null);
-  }
-
-  sendBtn.disabled = false;
-  input.focus();
-}
 
 async function createTicket(td, orig) {
   try {
@@ -1335,7 +1501,7 @@ function timeAgo(d) {
   return Math.floor(s/86400) + 'd pehle';
 }
 
-// ══ DIAGNOSTICS ══
+// ══ DIAGNOSTICS (sidebar banner only) ══
 const DIAG_MAP = [
   { brand:'lenovo',  icon:'🔵', name:'Lenovo Vantage',       url:'https://apps.microsoft.com/detail/9WZDNCRFJ4MV' },
   { brand:'dell',    icon:'🔵', name:'Dell SupportAssist',   url:'https://www.dell.com/support/home' },
@@ -1347,172 +1513,14 @@ const DIAG_MAP = [
   { brand:'acer',    icon:'🔵', name:'Acer Care Center',     url:'https://www.acer.com/in-en/support' },
 ];
 
-function showDiagBanner() {
-  if (!empData.laptop) return;
-  const l = empData.laptop.toLowerCase();
-  const diag = DIAG_MAP.find(d => l.includes(d.brand));
-  if (!diag) return;
-  _diagUrl = diag.url;
-  document.getElementById('diagBannerWrap').style.display = 'block';
-  document.getElementById('diagBanner').innerHTML = `
-    <div class="diag-banner">
-      <div class="diag-left">
-        <span style="font-size:20px;">${diag.icon}</span>
-        <div>
-          <div class="diag-title">🔍 ${diag.name} — Laptop Diagnostics</div>
-          <div class="diag-sub">Laptop: <b style="color:var(--pink)">${empData.laptop}</b> — Ek click mein hardware check karo</div>
-        </div>
-      </div>
-      <a href="${diag.url}" target="_blank" class="diag-btn">▶ Run Diagnostics</a>
-    </div>`;
-}
+function showDiagBanner() { /* No banner in button-only portal */ }
 
-// ══ SCREENSHOT UPLOAD ══
-function handleScreenshot(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { alert('Image bahut badi hai! 10MB se chhoti image lo.'); return; }
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      const MAX = 900;
-      let w = img.width, h = img.height;
-      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const base64 = canvas.toDataURL('image/jpeg', 0.75);
-
-      pendingScreenshot = base64;
-      document.getElementById('attachBtn').classList.add('active');
-      input.value = '';
-
-      showChatArea();
-      const wrap = document.getElementById('chatMessages');
-      const row = document.createElement('div');
-      row.className = 'msg-row gpt-user';
-      row.innerHTML = `
-        <div class="gpt-user-bubble" style="padding:10px;">
-          <div class="screenshot-preview-bubble" onclick="openLightbox('${base64}')">
-            <img src="${base64}" alt="Screenshot"/>
-          </div>
-          <div class="screenshot-label">📎 Screenshot attached — agle ticket mein lagega</div>
-        </div>`;
-      wrap.appendChild(row); wrap.scrollTop = wrap.scrollHeight;
-      addBotMsg('📎 Screenshot mil gaya! Ab apni problem batao — ticket banate waqt image bhi attach ho jayegi. 👍');
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
 
 function openLightbox(src) {
   document.getElementById('lightboxImg').src = src;
   document.getElementById('lightbox').classList.add('open');
 }
 
-// ══ TALK TO HUMAN ══
-async function talkToHuman() {
-  showChatArea();
-  const btnId = 'human_' + Date.now();
-  const already = _humanEscalated;
-
-  addBotMsg(
-    `🧑‍💼 **IT Human Support**\n\nMain samjha, kabhi kabhi human se baat zaroori hoti hai! 😊\n\n` +
-    `<div class="human-card">
-      <div class="human-card-title">👨‍💻 WIOM IT Team — Direct Contact</div>
-      <div class="human-card-info">
-        <div class="human-info-row">📞 <a href="tel:9654244281">9654244281</a> — Sajan Kumar (IT Admin)</div>
-        <div class="human-info-row">📧 <a href="mailto:sajan.kumar@wiom.in">sajan.kumar@wiom.in</a></div>
-        <div class="human-info-row">💬 Slack: <b>@sajan.kumar</b> pe DM karo</div>
-        <div class="human-info-row">🕐 Available: Mon–Sat, 9AM–7PM</div>
-      </div>
-      ${!already ? `<button class="human-escalate-btn" id="${btnId}" onclick="sendEscalation('${btnId}')">
-        🔔 IT Admin ko Alert Bhejo — Callback Request
-      </button>` : `<div style="text-align:center;font-size:12px;color:var(--success);padding:8px;">✅ Alert already bhej diya gaya hai!</div>`}
-    </div>`
-  );
-}
-
-async function sendEscalation(btnId) {
-  const btn = document.getElementById(btnId);
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Bhej raha hoon...'; }
-
-  try {
-    await fetch(`${API}/api/ai/escalate`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        empId:empData.empId, empName:empData.name, empEmail:empData.email,
-        dept:empData.dept, floor:empData.floor, laptop:empData.laptop,
-        issue: chatHistory.length ? chatHistory[chatHistory.length-1]?.content : 'Human support requested'
-      })
-    });
-    _humanEscalated = true;
-    if (btn) btn.closest('.human-card').innerHTML +=
-      '<div style="margin-top:8px;text-align:center;font-size:12px;color:var(--success);">✅ IT Admin ko alert bhej diya! Woh jald contact karenge.</div>';
-    if (btn) btn.remove();
-    addSystemMsg('🔔 IT Admin ko callback request bhej diya gaya! Jald aapko contact karenge.');
-  } catch {
-    if (btn) { btn.disabled = false; btn.textContent = '🔔 IT Admin ko Alert Bhejo'; }
-    addSystemMsg('❌ Alert nahi bheja ja saka. Direct call karo: 9654244281');
-  }
-}
-
-// ══ SEARCH TICKETS ══
-function filterTickets(query) {
-  const clear = document.getElementById('searchClear');
-  clear.classList.toggle('show', query.length > 0);
-
-  if (!query.trim()) { renderFullTickets(myTickets); return; }
-
-  const q = query.toLowerCase();
-  const filtered = myTickets.filter(t =>
-    (t.ticketId||'').toLowerCase().includes(q) ||
-    (t.description||'').toLowerCase().includes(q) ||
-    (t.category||'').toLowerCase().includes(q) ||
-    (t.status||'').toLowerCase().includes(q) ||
-    (t.priority||'').toLowerCase().includes(q)
-  );
-  renderFullTickets(filtered, query);
-}
-
-function clearSearch() {
-  document.getElementById('ticketSearch').value = '';
-  document.getElementById('searchClear').classList.remove('show');
-  renderFullTickets(myTickets);
-}
-
-// ══ SOS ══
-async function requestSOS() {
-  const issue = prompt('SOS Emergency! Kya hua hai? (Brief mein batao):');
-  if (!issue) return;
-  addUserMsg('🆘 SOS: ' + issue);
-  chatHistory.push({ role:'user', content:'SOS EMERGENCY: ' + issue });
-  addSystemMsg('🆘 SOS raise ho raha hai — IT Admin ko turant alert ja raha hai!');
-  try {
-    await fetch(`${API}/api/tickets`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        empId:empData.empId, empName:empData.name, empEmail:empData.email,
-        empDept:empData.dept, empFloor:empData.floor, laptop:empData.laptop,
-        category:'Hardware', priority:'Critical',
-        description:`🆘 SOS EMERGENCY: ${issue}`,
-        source:'web-sos', aiTried:false
-      })
-    });
-    addBotMsg(
-      `🆘 **SOS Register Ho Gaya!**\n\n` +
-      `IT Admin ko **turant** alert bhej diya gaya hai!\n\n` +
-      `📞 **Direct Call:** 9654244281\n` +
-      `📧 sajan.kumar@wiom.in\n\n` +
-      `_Kuch minute mein IT team aapke paas aayegi._`
-    );
-  } catch {
-    addBotMsg(`🆘 SOS bhejne mein problem aayi.\n\n📞 **Abhi call karo: 9654244281**`);
-  }
-}
 </script>
 </body>
 </html>
