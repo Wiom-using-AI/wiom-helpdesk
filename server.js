@@ -3038,9 +3038,12 @@ app.listen(PORT, async () => {
  else if (/laptop|screen|keyboard|mouse|battery|charg|touchpad|usb|bluetooth|camera|mic|headphone|sound|speaker|display|monitor|fan|overheat|blue screen|bsod|freeze|hang|slow|boot|startup/i.test(allUserText)) autoCategory = 'Hardware';
  else if (/password|account|login|locked|access|2fa|otp|email.*reset|reset.*email/i.test(allUserText)) autoCategory = 'Account';
  else if (/replace|replacement|new mouse|new keyboard|new monitor|new laptop/i.test(allUserText)) autoCategory = 'Purchase';
+ else if (/chori|stolen|theft|gum\s*ho|gum\s*gaya|missing|kho\s*gaya/i.test(allUserText)) autoCategory = 'Theft/Loss';
 
  let autoPriority = 'Medium';
- if (/urgent|critical|emergency|immediately|stop.*work|can.*t work|completely|floor down/i.test(allUserText)) autoPriority = 'High';
+ // Theft/loss = ALWAYS High priority
+ if (/chori|cori|stolen|theft|gum\s*ho|gum\s*gaya|missing|kho\s*gaya|kho\s*gayi/i.test(allUserText)) autoPriority = 'High';
+ else if (/urgent|critical|emergency|immediately|stop.*work|can.*t work|completely|floor down/i.test(allUserText)) autoPriority = 'High';
  else if (/minor|small|little|low|whenever/i.test(allUserText)) autoPriority = 'Low';
 
  const lastUserMsg = conv.messages.filter(m=>m.role==='user').slice(-3).map(m=>m.content).join('; ');

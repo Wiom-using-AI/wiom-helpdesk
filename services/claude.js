@@ -66,6 +66,12 @@ Sirf tab ek question pucho jab message mein ZERO information ho:
 
 Agar KUCH BHI symptom diya hai → seedha SAARE steps do, question mat pucho.
 
+━━━ 🚨 EMERGENCY RULE — THEFT / LOSS ━━━
+Agar employee bole "chori ho gya", "gum ho gya", "laptop nahi mila", "missing hai" — YEH IT troubleshooting NAHI hai.
+KABHI MAT BOLNA "resolve ho gaya" ya "Great! Khushi hui"!
+Seedha bolna:
+"🚨 Yeh serious matter hai! ABHI Sajan Kumar ko call karo: 9654244281. HR ko bhi inform karo. Main HIGH PRIORITY ticket bana raha hoon — type karo *ha*."
+
 ━━━ CONVERSATION RULES ━━━
 
 RULE 1: SAARE STEPS EK SAATH
@@ -78,7 +84,8 @@ RULE 3: NATURAL LANGUAGE
 Vary openers: "Acha", "Haan", "Got it", "Dekho", "Oh 😅", "No worries 👍"
 
 RULE 4: WHEN FIXED
-"ho gaya" → "Nice! Sahi hua 😊 Koi aur cheez?" — aur steps mat do!
+ONLY "sahi ho gaya", "fix ho gaya", "theek ho gaya", "chal gaya" → "Nice! Sahi hua 😊 Koi aur cheez?"
+⚠️ "ho gya" alone (jaise "chori ho gya") = PROBLEM REPORT, NOT success! Kabhi "resolve" mat bolna.
 
 RULE 5: STAY ON TOPIC
 Network issue → network fix only. Laptop issue → laptop fix only.
@@ -622,14 +629,22 @@ const getKBAnswer = (problem) => {
   if (!problem) return null;
   const p = problem.toLowerCase().trim();
 
+  // ── 🚨 THEFT / LOSS — HIGHEST PRIORITY — check BEFORE anything else ────
+  // "chori", "gum", "missing", "stolen", "lost" → NEVER say "resolved"
+  if (/\b(chori|cori|churai|churaya|churaye|stolen|theft|gum\s*ho|gum\s*gaya|missing|khoya|khoyi|kho\s*gaya|kho\s*gayi|nahi\s*mila|nahi\s*mili|gum\s*gyi|gum\s*gaya)\b/i.test(p) &&
+      /\b(laptop|device|phone|mobile|tab|bag|charger)\b/i.test(p)) {
+    return `🚨 *URGENT — Laptop Chori/Gum Report*\n\nYeh bahut serious matter hai! Abhi yeh karo:\n\n1. *IT Admin ko call karo ABHI* → Sajan Kumar: *9654244281*\n2. *HR ko bhi batao* → Formal report ke liye\n3. *Security desk* → Building security ko inform karo\n4. *Note karo* → Kahan tha laptop? Kab se missing? Koi witness?\n\n*Main aapke liye HIGH PRIORITY ticket bana raha hoon.*\nType karo *ha* — main IT Admin ko alert karunga iska ticket banata hoon 🎫`;
+  }
+
   // ── User saying issue is resolved / working fine now ───────────────────
   // STRICT: only if NO negative word present AND message is short status update
   // Fix 1: Added nhai/nha (common typos of nahi that users actually type)
   const hasNegative = /\b(not|nahi|nahin|nai|nhi|mahi|nhai|nha|mat|na\b|band|kharab|problem|issue|error|chal nahi|kaam nahi|nahi chal|nahi ho|ho nahi|abhi bhi|still|phir bhi|chal nahi|nai chal|mahi chal|nhai chal|ho nahi rha|nahi ho rha|nahi rha)\b/i.test(p);
   // "chal raha hai" ONLY counts as positive if NOT preceded by nahi/mahi/na etc.
   const chalRahaPositive = /chal\s*raha\s*hai|chal\s*rhi\s*hai/.test(p) && !/(\bmahi\b|\bnahi\b|\bnai\b|\bnhi\b|\bnot\b).{0,15}chal/i.test(p);
-  // Note: "connected" and "working" removed — too broad (e.g. "connected but not working" should NOT trigger resolved)
-  const hasPositive = chalRahaPositive || /\b(normal|noraml|norml|theek|thik|sahi|ho gaya|ho gya|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|theek ho|thik ho|chal gaya|chal gyi|on ho gaya|work kar raha|charged|charge ho|connect ho gaya|sorted|done|complete|ho gayi|mil gaya|mil gayi)\b/i.test(p);
+  // IMPORTANT: "ho gya" / "ho gaya" alone are too vague — only count if paired with fix/solve/theek/sahi
+  // "chori ho gya" / "kharab ho gya" must NOT trigger resolved → removed bare "ho gaya/ho gya" from list
+  const hasPositive = chalRahaPositive || /\b(normal|noraml|norml|theek|thik|sahi|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|sahi ho gaya|theek ho gaya|thik ho gaya|chal gaya|chal gyi|on ho gaya|work kar raha|charged|charge ho|connect ho gaya|sorted|done|complete|ho gayi|mil gaya|mil gayi)\b/i.test(p);
   if (hasPositive && !hasNegative && p.split(/\s+/).length <= 8) {
     return `Great! Khushi hui ki resolve ho gaya 😊✅ Aur koi IT help chahiye toh zaroor batao!`;
   }
