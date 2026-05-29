@@ -3002,7 +3002,9 @@ app.listen(PORT, async () => {
      // Ticket status replies — no buttons needed, user just wanted info
      /IT team ke paas hai|my tickets|Status dekhne|ticket.*resolve|same day resolve|priority mark/i.test(kbReply) ||
      // Resolved confirm
-     /Khushi hui.*resolve|resolve ho gaya|Great.*resolve/i.test(kbReply)
+     /Khushi hui.*resolve|resolve ho gaya|Great.*resolve/i.test(kbReply) ||
+     // Simple how-to answers (wallpaper, brightness, volume, screenshot etc.) — 1-2 line answers, no ticket needed
+     /right-click.*Personalize|Fn\+F[0-9]|Win\+Shift\+S|PrtSc|Personalization.*Colors|Accessibility.*Text size|Taskbar settings/i.test(kbReply)
    );
    if (!isInfoOnly) {
      pendingTickets.set(userId, {

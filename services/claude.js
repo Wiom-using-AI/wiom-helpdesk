@@ -135,8 +135,17 @@ VPN/Remote: Ticket only — IT configures
 Ticket status → "IT team ke paas hai — type karo *my tickets* status ke liye 📋"
 Compliments → 1 warm line + offer more help
 Bye/done → "Theek hai! Koi bhi issue aaye toh batana 😊"
-Non-IT topic → "IT problems mein help karta hoon 😊 Koi tech issue hai?"`;
-;
+Non-IT topic → "IT problems mein help karta hoon 😊 Koi tech issue hai?"
+
+━━━ SIMPLE WINDOWS HOW-TO (1-2 line answer, NO ticket, NO buttons) ━━━
+These are basic Windows settings — just answer directly, never say "not in scope":
+- Wallpaper change → "Desktop right-click → Personalize → Background 😊"
+- Brightness → "Fn+F5/F6 ya taskbar brightness slider 😊"
+- Volume → "Taskbar speaker icon ya keyboard volume keys 😊"
+- Screenshot → "Win+Shift+S ya PrtSc button 😊"
+- Dark mode → "Settings → Personalization → Colors → Dark 😊"
+- Font/display size → "Settings → Accessibility → Text size 😊"
+- Any simple 'kaise karu' Windows question → answer in 1-2 lines, done`;
 
 
 
@@ -626,6 +635,30 @@ const getKBAnswer = (problem) => {
   if (/\b(tv|television|telly|ac\b|air\s*condition|fan\b|ceiling\s*fan|light\b|bulb|electricity|current\s*nahi|power\s*cut|generator|geyser|water|pantry|canteen|chair|table|desk|furniture|lift|elevator|ac\s*nahi|ac\s*band)\b/i.test(p) &&
       !/\b(laptop|wifi|internet|software|password|teams|outlook|chrome|window|screen|monitor|keyboard|mouse|bluetooth|usb)\b/i.test(p)) {
     return `Yeh IT ke scope mein nahi aata 😊\n\nIT helpdesk sirf yeh handle karta hai:\n💻 Laptop / Desktop problems\n🌐 WiFi / Internet issues\n🔑 Password / Account\n⚙️ Software (Teams, Outlook, etc.)\n\n*TV, AC, lights, furniture* ke liye → *Admin / Facilities team* se contact karo.\nKoi laptop ya IT problem ho toh batao — main hoon! 🚀`;
+  }
+
+  // ── 🖼️ SIMPLE HOW-TO QUESTIONS — instant answer, no ticket/buttons needed ──
+  // Wallpaper, brightness, volume, screenshot etc. → just answer directly
+  if (/wallpap|wallpper|valpaper|desktop\s*(background|change|set)|background\s*change/i.test(p)) {
+    return `Desktop pe *right-click* karo → *Personalize* → *Background* → apni photo ya color select karo. Done! 😊`;
+  }
+  if (/brightness\s*(kaise|badhao|kam|change|set)|screen\s*bright|screen\s*dim|display\s*bright/i.test(p)) {
+    return `*Fn + F5/F6* press karo (brightness keys) — ya taskbar mein 🔆 icon click karo → slider adjust karo. 😊`;
+  }
+  if (/volume\s*(kaise|badhao|kam|mute|change|set|control)|awaaz\s*(badhao|kam|set|kaise)/i.test(p) && !/laptop|speaker|nahi|problem|issue/i.test(p)) {
+    return `Taskbar mein 🔊 icon click karo → slider se volume set karo. Ya keyboard pe volume keys (Fn+F7/F8) use karo. 😊`;
+  }
+  if (/screenshot\s*(kaise|lena|lo|capture)|screen\s*capture|print\s*screen/i.test(p)) {
+    return `*Win + Shift + S* press karo → area select karo → screenshot copy ho jaayega. Ya *PrtSc* button se full screen. 😊`;
+  }
+  if (/dark\s*mode|night\s*mode|theme\s*(change|kaise|dark|light)/i.test(p)) {
+    return `*Settings → Personalization → Colors → Choose your mode → Dark* select karo. 😊`;
+  }
+  if (/font\s*size\s*(badhao|change|kaise|bada|chota)|text\s*size|display\s*size\s*(change|kaise)/i.test(p)) {
+    return `*Settings → Accessibility → Text size* → slider badhao. Ya *Ctrl + scroll* karo browser mein zoom ke liye. 😊`;
+  }
+  if (/taskbar\s*(kaise|change|hide|show|set)|start\s*menu\s*(kaise|change)/i.test(p)) {
+    return `Taskbar pe *right-click* → *Taskbar settings* — wahan position, size, hidden apps sab set kar sakte ho. 😊`;
   }
 
   // ── 🚨 THEFT / LOSS — HIGHEST PRIORITY — check BEFORE anything else ────
