@@ -683,7 +683,8 @@ app.listen(PORT, async () => {
    if (/\bzoom\b/.test(t)) return { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' };
    if (/outlook/.test(t)) return { file: 'fix-outlook.bat', label: '📧 Auto-Fix: Outlook' };
    // ── Network — "net" alone also means internet in India ───────────────
-   if (/wifi|wi-fi|internet|\bnet\b|network|hotspot|broadband|ping|nahi chal rha|nahi chal raha/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
+   // IMPORTANT: removed generic "nahi chal rha" — too broad, matches TV/AC/any device
+   if (/wifi|wi-fi|internet|\bnet\b|network|hotspot|broadband|ping/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
    if (/onedrive|one drive/.test(t)) return { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' };
    if (/\bpdf\b/.test(t)) return { file: 'fix-pdf.bat', label: '📄 Auto-Fix: PDF' };
    if (/word|excel|office|powerpoint/.test(t)) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };

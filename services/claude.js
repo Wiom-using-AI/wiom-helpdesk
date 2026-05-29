@@ -89,6 +89,9 @@ ONLY "sahi ho gaya", "fix ho gaya", "theek ho gaya", "chal gaya" → "Nice! Sahi
 
 RULE 5: STAY ON TOPIC
 Network issue → network fix only. Laptop issue → laptop fix only.
+IT scope: laptop, WiFi, software, passwords, Teams, Outlook, printer.
+OUT OF SCOPE (redirect to Admin/Facilities): TV, AC, lights, fan, furniture, electricity, water, pantry, lift.
+Agar out-of-scope aaye → "Yeh IT ke scope mein nahi aata — Admin/Facilities team se contact karo." KABHI TV steps mat do!
 
 ━━━ TONE EXAMPLES ━━━
 Instead of: "Issue resolved successfully. Please follow these steps:"
@@ -628,6 +631,13 @@ const quickReply = async (userMessage, empName = 'Employee', laptop = null, lapt
 const getKBAnswer = (problem) => {
   if (!problem) return null;
   const p = problem.toLowerCase().trim();
+
+  // ── 🚫 OUT OF SCOPE — TV, AC, furniture, electricity etc. ───────────────
+  // IT helpdesk sirf laptops, WiFi, software, passwords handle karta hai
+  if (/\b(tv|television|telly|ac\b|air\s*condition|fan\b|ceiling\s*fan|light\b|bulb|electricity|current\s*nahi|power\s*cut|generator|geyser|water|pantry|canteen|chair|table|desk|furniture|lift|elevator|ac\s*nahi|ac\s*band)\b/i.test(p) &&
+      !/\b(laptop|wifi|internet|software|password|teams|outlook|chrome|window|screen|monitor|keyboard|mouse|bluetooth|usb)\b/i.test(p)) {
+    return `Yeh IT ke scope mein nahi aata 😊\n\nIT helpdesk sirf yeh handle karta hai:\n💻 Laptop / Desktop problems\n🌐 WiFi / Internet issues\n🔑 Password / Account\n⚙️ Software (Teams, Outlook, etc.)\n\n*TV, AC, lights, furniture* ke liye → *Admin / Facilities team* se contact karo.\nKoi laptop ya IT problem ho toh batao — main hoon! 🚀`;
+  }
 
   // ── 🚨 THEFT / LOSS — HIGHEST PRIORITY — check BEFORE anything else ────
   // "chori", "gum", "missing", "stolen", "lost" → NEVER say "resolved"
