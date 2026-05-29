@@ -309,88 +309,118 @@ const extractTriedSteps = (messages) => {
 const getKBFallback = (problem) => {
   const p = problem.toLowerCase();
 
+  // Normalize common typos so matching below is simpler
+  const pn = p
+    .replace(/\bwiffi\b/g, 'wifi')
+    .replace(/\bwifi+\b/g, 'wifi')
+    .replace(/\bl[ae]?p?to?p\b/g, 'laptop')        // leptop, lptop, latop, laptoop
+    .replace(/\bpas?w?ro?d\b/g, 'password')          // pasword, paswrod, pasord
+    .replace(/\btims?\b/g, 'teams')                  // tims, tim (Teams typo)
+    .replace(/\bcamra\b/g, 'camera')                 // camra
+    .replace(/\bkeybo?r?a?d\b/g, 'keyboard')         // keyborad, keybord
+    .replace(/\bcharg(e|er|ing)?\b/g, 'charging');   // normalize charger/charging variants
+
   // WiFi connected but no internet
-  if (/connect(ed)?.*(nahi chal|work nahi|internet nahi|nahi work)|wifi.*(connected|chal).*(internet nahi|nahi chal)|(no internet|internet nahi).*(connected|connect)/.test(p))
+  if (/connect(ed)?.*(nahi chal|work nahi|internet nahi|nahi work)|wifi.*(connected|chal).*(internet nahi|nahi chal)|(no internet|internet nahi).*(connected|connect)/.test(pn))
     return `WiFi connected hai par internet nahi chal raha. Please yeh steps follow karein:\n\n1. Taskbar mein WiFi icon click karein → Disconnect karein → "Wiom office 5g-Test" select karein → Password: spartans500\n2. Win+R → cmd → Enter → ipconfig /flushdns → Enter\n3. netsh winsock reset → Enter → Laptop restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('slow') || p.includes('hang') || p.includes('freez') || p.includes('dheema'))
+  if (pn.includes('slow') || pn.includes('hang') || pn.includes('freez') || pn.includes('dheema'))
     return `Laptop slow/hang issue hai. Please yeh steps try karein:\n\n1. Ctrl+Shift+Esc → Task Manager → sabse zyada CPU use karne wala process → End Task karein\n2. Startup apps disable karein: Win+R → msconfig → Startup tab → unnecessary apps disable karein → Restart\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('wifi') || p.includes('internet') || p.includes('network') ||
-      /\bnet\b/.test(p) || p.includes('net band') || p.includes('signal nahi') || p.includes('no internet'))
+  if (pn.includes('wifi') || pn.includes('internet') || pn.includes('network') ||
+      /\bnet\b/.test(pn) || pn.includes('net band') || pn.includes('signal nahi') || pn.includes('no internet'))
     return `WiFi/Internet issue. Please yeh steps try karein:\n\n1. Taskbar WiFi → OFF karein → 10 sec wait karein → ON karein\n2. "Wiom office 5g-Test" select karein → Password: spartans500\n3. Win+R → cmd → netsh winsock reset → Enter → Restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (/colorful|colorfull|colarful|colarfull|colour|color\s*aa|rang\s*aa|pink\s*screen|green\s*screen|screen\s*pe\s*rang|display.*color|color.*display|lines\s*aa|screen\s*kharab|distort/.test(p) &&
-      /screen|display|monitor|laptop/.test(p))
-    return `Screen color distortion issue hai. Please yeh steps try karein:\n\n1. *Restart* → Laptop restart karein — driver glitch zyada tar restart se theek ho jaata hai\n2. *Display Driver Update* → Win+X → Device Manager → Display adapters → right-click → Update driver → Search automatically\n3. *Display Driver Reinstall* → Device Manager → Display adapters → Uninstall device → Restart karein\n4. *Refresh Rate* → Settings → System → Display → Advanced display → 60Hz select karein\n5. *External Monitor Test* → HDMI se monitor connect karein — bahar sahi dikh raha toh laptop screen hardware issue hai\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+  // Laptop won't start / boot / turn on
+  if (/\b(laptop|leptop|lptop|latop)\b.*(on\s*nahi|start\s*nahi|band\s*ho|nahi\s*chalta|khulta\s*nahi|nahi\s*khulta|chal\s*nahi|chalti\s*nahi|chalte\s*nahi)|boot\s*nahi|(switch|power)\s*on\s*nahi|laptop\s*nahi\s*(chal|start|on|boot)|on\s*nahi\s*ho\s*rh|(nahi\s*ho\s*rh|nahi\s*chal).*(laptop|leptop|lptop|latop)/.test(pn))
+    return `Laptop on nahi ho raha — yeh ek common boot issue hai. Please yeh steps follow karein:\n\n1. *Force Restart* → Power button 10 sec hold karein → band ho jaayega → dobara on karein\n2. *Charger Check* → Charger lagao aur 5 min wait karein (battery low ho sakti hai) → phir on karein\n3. *Battery Reset* → Charger nikaal lo → Power button 30 sec hold karein → charger lagao → on karein\n4. *Power Drain* → Charger nikaal lo → Power button 60 sec hold karein → charger lagao → on karein\n5. *Safe Mode* → On karte waqt F8 ya Shift+F8 press karein → Safe Mode select karein\n\nAgar kisi bhi step se resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('sound') || p.includes('audio') || p.includes('speaker') || p.includes('headphone'))
+  // Overheating
+  if (/\b(laptop|leptop|lptop|latop)\b.*(garm|garam|heat|hot\b)|garm.*(laptop|leptop)|(overheat|over\s*heat|bahut\s*garam|bahut\s*garm|zyada\s*heat|zyada\s*garm)/.test(pn))
+    return `Laptop overheating issue hai. Please yeh steps follow karein:\n\n1. *Hard Surface* → Laptop ko table par rakhein — bed/sofa par mat rakhein (vents block hote hain)\n2. *Heavy Apps Band Karein* → Ctrl+Shift+Esc → Task Manager → CPU column sort karein → heavy apps End Task karein\n3. *Power Mode* → Settings → Power & battery → Power mode → Balanced select karein\n4. *Restart* → Laptop restart karein — background processes band ho jaate hain\n5. *Vents Check* → Laptop ke vents (sides/bottom) mein dust toh nahi — thoda dur rakhein taaki airflow ho\n\nAgar bahut zyada garam ho raha hai ya band ho raha hai, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
+  // Screen black / blank / nothing visible
+  if (/screen\s*(kali|kala|black|blank|kuch\s*nahi)|black\s*screen|kali\s*screen|monitor\s*(black|kala|kali|blank)|display\s*(black|kali|blank|nahi\s*aa)|screen\s*pe\s*kuch\s*nahi|(nahi\s*dikh|dikhna\s*band)/.test(pn))
+    return `Black/blank screen issue hai. Please yeh steps follow karein:\n\n1. *Brightness Keys* → Fn+F5 ya Fn+F8 press karein (brightness keys) — screen dim ho sakti hai\n2. *Force Restart* → Power button 10 sec hold karein → band karein → dobara on karein\n3. *External Monitor Test* → HDMI cable se bahar monitor connect karein — agar bahar dikh raha toh laptop screen hardware issue hai\n4. *Charger Check* → Battery completely dead ho sakti hai → charger lagao → 10 min wait karein → on karein\n\nAgar ab bhi screen nahi aa rahi, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
+  // Screen color distortion / flickering / lines
+  if ((/colorful|colorfull|colarful|colarfull|colour|color\s*aa|rang\s*aa|pink\s*screen|green\s*screen|screen\s*pe\s*rang|display.*color|color.*display|screen\s*kharab/.test(pn) ||
+       /distort|flicker|flickring/i.test(pn) ||
+       /lines\s*(aa|on|on\s*screen|pe)|screen.*lines|horizontal\s*lines?|vertical\s*lines?/.test(pn)) &&
+      /screen|display|monitor|laptop/.test(pn))
+    return `Screen color/display issue hai. Please yeh steps try karein:\n\n1. *Restart* → Laptop restart karein — driver glitch zyada tar restart se theek ho jaata hai\n2. *Display Driver Update* → Win+X → Device Manager → Display adapters → right-click → Update driver → Search automatically\n3. *Display Driver Reinstall* → Device Manager → Display adapters → Uninstall device → Restart karein\n4. *Refresh Rate* → Settings → System → Display → Advanced display → 60Hz select karein\n5. *External Monitor Test* → HDMI se monitor connect karein — bahar sahi dikh raha toh laptop screen hardware issue hai\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
+  // Windows update / OS crash / restart loop
+  if (/windows\s*(crash|restart|update|stuck|atak|loop|hang)|update\s*(stuck|atak|hang|nahi|ruka)|restart\s*(bar\s*bar|baar\s*baar|loop|hota\s*rha|ho\s*rha\s*bar)|os\s*(crash|hang|stuck)/.test(pn))
+    return `Windows/OS issue hai. Please yeh steps follow karein:\n\n1. *Force Restart* → Power button 10 sec hold karein → band karein → dobara on karein\n2. *Update Wait* → Agar update chal rahi hai → wait karein, band mat karein\n3. *Startup Repair* → On karte waqt F8 press karein → "Repair Your Computer" → Startup Repair\n4. *Last Known Good* → F8 menu → "Last Known Good Configuration" select karein\n5. *Safe Mode* → F8 → Safe Mode with Networking → login karein\n\nAgar 3 baar se zyada restart ho raha hai, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
+  if (pn.includes('sound') || pn.includes('audio') || pn.includes('speaker') || pn.includes('headphone'))
     return `Audio issue. Please yeh steps try karein:\n\n1. Taskbar mein speaker icon par right-click karein → Sound settings\n2. Output device mein sahi device select karein\n3. Volume check karein — 0% ya mute toh nahi hai\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('blue screen') || p.includes('bsod'))
+  if (pn.includes('blue screen') || pn.includes('bsod'))
     return `Blue Screen issue. Please yeh steps follow karein:\n\n1. Screen par jo error code tha — note karein\n2. Laptop restart karein — zyada tar ek restart mein theek ho jaata hai\n3. Agar 3 baar se zyada aaya hai → please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg/.test(p))
+  if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charging/.test(pn))
     return `Battery/Charging issue. Please yeh steps try karein:\n\n1. Charger dono taraf firmly connect karein (laptop side aur socket side)\n2. Alag power socket try karein\n3. Laptop shut down karein → charger disconnect karein → power button 30 sec hold karein → charger reconnect karein → on karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('black screen') || p.includes('no display'))
+  if (pn.includes('black screen') || pn.includes('no display'))
     return `Black screen issue. Please yeh steps try karein:\n\n1. Fn+F5 ya Fn+F8 press karein (brightness keys)\n2. Koi change nahi → power button 10 sec hold karein → restart\n3. Agar ab bhi display nahi → please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('keyboard') || p.includes('keys'))
+  if (pn.includes('keyboard') || pn.includes('keys') || /keybo?r?a?d/.test(pn))
     return `Keyboard issue. Please yeh steps try karein:\n\n1. Laptop restart karein\n2. Win+R → osk → Enter — on-screen keyboard se kaam chalayein\n3. Device Manager → Keyboards → driver update karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('touchpad') || p.includes('mouse'))
+  if (pn.includes('touchpad') || pn.includes('mouse'))
     return `Touchpad issue. Please yeh steps try karein:\n\n1. Fn + touchpad lock key press karein (keyboard par lock icon wali key)\n2. Settings → Bluetooth & devices → Touchpad → ON karein\n3. Laptop restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('printer'))
+  if (pn.includes('printer'))
     return `Printer issue. Please yeh steps try karein:\n\n1. Settings → Bluetooth & devices → Printers → printer par right-click → Set as default\n2. Win+R → services.msc → Print Spooler → Restart\n3. Dobara print karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('teams'))
+  if (pn.includes('teams'))
     return `Microsoft Teams issue. Please yeh steps try karein:\n\n1. System tray → Teams icon right-click → Quit → dobara open karein\n2. Win+R → %appdata%\\Microsoft\\Teams → Cache folder delete karein\n3. teams.microsoft.com browser mein try karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('zoom'))
+  if (pn.includes('zoom'))
     return `Zoom issue. Please yeh steps try karein:\n\n1. Zoom close karein → dobara open karein\n2. Internet connection check karein → zoom.us/wc/join browser mein try karein\n3. Zoom Settings → Audio/Video → correct device select karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('outlook') || p.includes('email'))
+  if (pn.includes('outlook') || pn.includes('email'))
     return `Outlook issue. Please yeh steps try karein:\n\n1. Ctrl+Shift+Esc → Outlook process end karein\n2. Win+R → outlook /safe → Enter\n3. outlook.office365.com browser mein try karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('password') || p.includes('locked') || p.includes('login')) {
-    if (/google|gmail/.test(p))
+  if (pn.includes('password') || pn.includes('locked') || pn.includes('login') || /pas?w?ro?d/.test(pn)) {
+    if (/google|gmail/.test(pn))
       return `Google account password reset ke liye:\n\n1. myaccount.google.com par jaayein\n2. Security tab → "How you sign in to Google" → Password\n3. Verify karein aur naya password set karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
     return `Windows/Account password reset sirf IT team kar sakti hai.\n\nPlease type karein *ha* — IT ticket raise kar deta hoon, team jaldi reset kar degi 🎫`;
   }
 
-  if (p.includes('bluetooth'))
+  if (pn.includes('bluetooth'))
     return `Bluetooth issue. Please yeh steps try karein:\n\n1. Settings → Bluetooth → toggle OFF karein → ON karein\n2. Device dobara pair karein\n3. Device Manager → Bluetooth → Disable → Enable\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('camera') || p.includes('camra') || p.includes('webcam') || /\bcam\b/.test(p))
+  if (pn.includes('camera') || pn.includes('webcam') || /\bcam\b/.test(pn))
     return `Camera issue. Please yeh steps try karein:\n\n1. Settings → Privacy & Security → Camera → ON karein\n2. Teams/Zoom Settings → Video → correct camera select karein\n3. Device Manager → Cameras → Disable → Enable\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('mic') || p.includes('microphone'))
+  if (pn.includes('mic') || pn.includes('microphone'))
     return `Microphone issue. Please yeh steps try karein:\n\n1. Settings → Privacy & Security → Microphone → ON karein\n2. Sound settings → Input → correct mic select karein\n3. Teams: Settings → Devices → mic test karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('usb') || p.includes('pendrive'))
+  if (pn.includes('usb') || pn.includes('pendrive'))
     return `USB issue. Please yeh steps try karein:\n\n1. Alag USB port mein try karein\n2. Device Manager → Universal Serial Bus → Uninstall → Scan for hardware changes\n3. Laptop restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('storage') || p.includes('disk full'))
+  if (pn.includes('storage') || pn.includes('disk full'))
     return `Storage full issue. Please yeh steps try karein:\n\n1. Win+R → cleanmgr → C: → Clean system files\n2. Win+R → %temp% → Ctrl+A → Delete\n3. Recycle Bin empty karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (p.includes('virus') || p.includes('malware') || p.includes('antivirus'))
+  if (pn.includes('virus') || pn.includes('malware') || pn.includes('antivirus'))
     return `Possible virus/malware issue. Please yeh steps follow karein:\n\n1. Windows Security → Virus & threat protection → Quick Scan\n2. Agar suspicious activity lag rahi hai → internet disconnect karein\n\nPlease type karein *ha* — IT team ko escalate karna zaroori hai 🎫`;
 
-  if (p.includes('kaise ho') || p.includes('kaisa hai') || p.includes('how are you') || p.includes('kya haal'))
+  if (pn.includes('kaise ho') || pn.includes('kaisa hai') || pn.includes('how are you') || pn.includes('kya haal'))
     return 'All good, thank you. Please batayein — koi IT issue hai jisme help kar sakta hoon?';
 
-  if (p.includes('thanks') || p.includes('shukriya') || p.includes('thank you') || p.includes('dhanyawad'))
+  if (pn.includes('thanks') || pn.includes('shukriya') || pn.includes('thank you') || pn.includes('dhanyawad'))
     return 'You are welcome. Feel free to reach out if anything else comes up.';
 
-  if (/^(hello|hi+|hey|namaste|namaskar|hlo|helo)\s*[!.]*$/i.test(p.trim()))
+  if (/^(hello|hi+|hey|namaste|namaskar|hlo|helo)\s*[!.]*$/i.test(pn.trim()))
     return 'Hello! I am Zivon — WIOM IT Support Assistant. How can I help you today?';
 
-  if (/\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(p) || /\b(tum|aap)\s*(kya|kise|kaun)\b/i.test(p))
+  if (/\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(pn) || /\b(tum|aap)\s*(kya|kise|kaun)\b/i.test(pn))
     return `Main *Zivon* hoon — WIOM ka IT support assistant.\nLaptop, WiFi, software, password — kisi bhi IT issue mein help kar sakta hoon.\nPlease batayein aapka issue kya hai.`;
 
-  if (p.includes('sajan') || p.includes('admin') || p.includes('it head') || p.includes('phone number') || p.includes('number do'))
+  if (pn.includes('sajan') || pn.includes('admin') || pn.includes('it head') || pn.includes('phone number') || pn.includes('number do'))
     return 'IT Admin: *Sajan Kumar*\nPhone: 9654244281\nEmail: sajan.kumar@wiom.in';
 
   return `Please describe your issue in a bit more detail — what exactly is happening? Any error message on screen? The more information you provide, the faster I can help.`;
@@ -691,79 +721,95 @@ const getKBAnswer = (problem) => {
   if (!problem) return null;
   const p = problem.toLowerCase().trim();
 
+  // Normalize common typos for matching inside getKBAnswer
+  // (pn is used for pattern matching; original p kept for physical-damage etc.)
+  const pn = p
+    .replace(/\bwiffi\b/g, 'wifi')
+    .replace(/\bwifi+\b/g, 'wifi')
+    .replace(/\bl[ae]?p?to?p\b/g, 'laptop')        // leptop, lptop, latop
+    .replace(/\bpas?w?ro?d\b/g, 'password')          // pasword, paswrod
+    .replace(/\btims?\b/g, 'teams')                  // tims (Teams typo)
+    .replace(/\bcamra\b/g, 'camera')                 // camra
+    .replace(/\bkeybo?r?a?d\b/g, 'keyboard')         // keyborad, keybord
+    .replace(/\bcharg(e|er|ing)?\b/g, 'charging');   // normalize charger/charging
+
   // ── 🚫 OUT OF SCOPE — TV, AC, furniture, electricity etc. ───────────────
   // IT helpdesk sirf laptops, WiFi, software, passwords handle karta hai
-  if (/\b(tv|television|telly|ac\b|air\s*condition|fan\b|ceiling\s*fan|light\b|bulb|electricity|current\s*nahi|power\s*cut|generator|geyser|water|pantry|canteen|chair|table|desk|furniture|lift|elevator|ac\s*nahi|ac\s*band)\b/i.test(p) &&
-      !/\b(laptop|wifi|internet|software|password|teams|outlook|chrome|window|screen|monitor|keyboard|mouse|bluetooth|usb)\b/i.test(p)) {
+  if (/\b(tv|television|telly|ac\b|air\s*condition|fan\b|ceiling\s*fan|light\b|bulb|electricity|current\s*nahi|power\s*cut|generator|geyser|water|pantry|canteen|chair|table|desk|furniture|lift|elevator|ac\s*nahi|ac\s*band)\b/i.test(pn) &&
+      !/\b(laptop|wifi|internet|software|password|teams|outlook|chrome|window|screen|monitor|keyboard|mouse|bluetooth|usb)\b/i.test(pn)) {
     return `Yeh IT ke scope mein nahi aata 😊\n\nIT helpdesk sirf yeh handle karta hai:\n💻 Laptop / Desktop problems\n🌐 WiFi / Internet issues\n🔑 Password / Account\n⚙️ Software (Teams, Outlook, etc.)\n\n*TV, AC, lights, furniture* ke liye → *Admin / Facilities team* se contact karo.\nKoi laptop ya IT problem ho toh batao — main hoon! 🚀`;
   }
 
-  // ── 🖥️ SCREEN COLOR / DISPLAY DISTORTION ────────────────────────────────────
-  // "colorful", "colour", "rang aa rha", "pink/green/yellow screen", "lines", "tint"
-  if (/\b(colorful|colorfull|colarful|colarfull|colour|color|rang\s*aa|pink|green|yellow|purple|red\s*screen|tint|hue|distort|lines\s*aa|horizontal\s*line|vertical\s*line|display\s*kharab|screen\s*kharab|screen\s*pe\s*rang|puri\s*screen)\b/i.test(p) &&
-      /\b(screen|display|monitor|laptop)\b/i.test(p)) {
-    return `Screen color distortion issue hai. Please yeh steps try karein:\n\n1. *Restart* → Laptop restart karein — sometimes driver glitch hota hai jo restart se theek ho jaata hai\n2. *Display Driver Update* → Win+X → Device Manager → Display adapters → right-click → Update driver → Search automatically\n3. *Display Driver Reinstall* → Device Manager → Display adapters → Uninstall device → Restart (Windows automatically reinstall karega)\n4. *Refresh Rate Check* → Settings → System → Display → Advanced display → Change refresh rate → 60Hz select karein\n5. *External Monitor Test* → HDMI se bahar monitor connect karein — agar bahar sahi dikh raha → laptop screen hardware issue hai\n\nAgar kisi bhi step se resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+  // ── 🖥️ SCREEN COLOR / DISPLAY DISTORTION / FLICKERING / LINES ──────────────
+  // "colorful", "colour", "rang aa rha", "pink/green/yellow screen", "lines on screen",
+  // "screen flickering", "horizontal/vertical lines", "distorted", "tint"
+  if ((/\b(colorful|colorfull|colarful|colarfull|colour|color|rang\s*aa|pink|green|yellow|purple|red\s*screen|tint|hue|display\s*kharab|screen\s*kharab|screen\s*pe\s*rang|puri\s*screen)\b/i.test(pn) ||
+       /distort|flicker|flickring/i.test(pn) ||
+       /\blines\s*(aa|on|pe)\b/i.test(pn) ||
+       /horizontal\s*lines?|vertical\s*lines?/i.test(pn)) &&
+      /\b(screen|display|monitor|laptop)\b/i.test(pn)) {
+    return `Screen color/display issue hai. Please yeh steps try karein:\n\n1. *Restart* → Laptop restart karein — sometimes driver glitch hota hai jo restart se theek ho jaata hai\n2. *Display Driver Update* → Win+X → Device Manager → Display adapters → right-click → Update driver → Search automatically\n3. *Display Driver Reinstall* → Device Manager → Display adapters → Uninstall device → Restart (Windows automatically reinstall karega)\n4. *Refresh Rate Check* → Settings → System → Display → Advanced display → Change refresh rate → 60Hz select karein\n5. *External Monitor Test* → HDMI se bahar monitor connect karein — agar bahar sahi dikh raha → laptop screen hardware issue hai\n\nAgar kisi bhi step se resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
   }
 
   // ── 🔧 PHYSICAL DAMAGE — hardware broken, no software fix possible ────────
   // "damage", "toot gaya", "crack", "phoot gaya" → ticket immediately, NO steps
-  if (/\b(damage|damag|damagd|toot|tuti|tuta|phoot|foota|crack|cracked|broken|tod|toda|tod\s*di|giir|gir\s*gaya|gir\s*gayi|physically|physical)\b/i.test(p)) {
-    // Identify which part is damaged
+  if (/\b(damage|damag|damagd|toot|tuti|tuta|phoot|foota|crack|cracked|broken|tod|toda|tod\s*di|giir|gir\s*gaya|gir\s*gayi|physically|physical)\b/i.test(pn)) {
+    // Identify which part is damaged (use pn so typos like "leptop" are normalized)
     const part =
-      /touchpad|trackpad/.test(p) ? 'Touchpad' :
-      /screen|display|monitor/.test(p) ? 'Screen/Display' :
-      /keyboard/.test(p) ? 'Keyboard' :
-      /laptop/.test(p) ? 'Laptop' :
-      /battery/.test(p) ? 'Battery' :
-      /charger|charging/.test(p) ? 'Charger' :
-      /mouse/.test(p) ? 'Mouse' : 'Hardware';
+      /touchpad|trackpad/.test(pn) ? 'Touchpad' :
+      /screen|display|monitor/.test(pn) ? 'Screen/Display' :
+      /keyboard/.test(pn) ? 'Keyboard' :
+      /laptop/.test(pn) ? 'Laptop' :
+      /battery/.test(pn) ? 'Battery' :
+      /charging/.test(pn) ? 'Charger' :
+      /mouse/.test(pn) ? 'Mouse' : 'Hardware';
     return `🔧 *${part} physically damage hai* — software se yeh fix nahi hoga.\n\nIT team ko bhejte hain, woh physically check karke replace karenge.\nType karo *ha* — main abhi HIGH PRIORITY ticket raise karta hoon 🎫`;
   }
 
   // ── 🚨 THEFT / LOSS — HIGHEST PRIORITY — check BEFORE anything else ────
   // "chori", "gum", "missing", "stolen", "lost" → NEVER say "resolved"
-  if (/\b(chori|cori|churai|churaya|churaye|stolen|theft|gum\s*ho|gum\s*gaya|missing|khoya|khoyi|kho\s*gaya|kho\s*gayi|nahi\s*mila|nahi\s*mili|gum\s*gyi|gum\s*gaya)\b/i.test(p) &&
-      /\b(laptop|device|phone|mobile|tab|bag|charger)\b/i.test(p)) {
+  if (/\b(chori|cori|churai|churaya|churaye|stolen|theft|gum\s*ho|gum\s*gaya|missing|khoya|khoyi|kho\s*gaya|kho\s*gayi|nahi\s*mila|nahi\s*mili|gum\s*gyi|gum\s*gaya)\b/i.test(pn) &&
+      /\b(laptop|device|phone|mobile|tab|bag|charging)\b/i.test(pn)) {
     return `🚨 *URGENT — Laptop Chori/Gum Report*\n\nYeh bahut serious matter hai! Abhi yeh karo:\n\n1. *IT Admin ko call karo ABHI* → Sajan Kumar: *9654244281*\n2. *HR ko bhi batao* → Formal report ke liye\n3. *Security desk* → Building security ko inform karo\n4. *Note karo* → Kahan tha laptop? Kab se missing? Koi witness?\n\n*Main aapke liye HIGH PRIORITY ticket bana raha hoon.*\nType karo *ha* — main IT Admin ko alert karunga iska ticket banata hoon 🎫`;
   }
 
   // ── User saying issue is resolved / working fine now ───────────────────
   // STRICT: only if NO negative word present AND message is short status update
   // Fix 1: Added nhai/nha (common typos of nahi that users actually type)
-  const hasNegative = /\b(not|nahi|nahin|nai|nhi|mahi|nhai|nha|mat|na\b|band|kharab|problem|issue|error|chal nahi|kaam nahi|nahi chal|nahi ho|ho nahi|abhi bhi|still|phir bhi|chal nahi|nai chal|mahi chal|nhai chal|ho nahi rha|nahi ho rha|nahi rha)\b/i.test(p);
+  const hasNegative = /\b(not|nahi|nahin|nai|nhi|mahi|nhai|nha|mat|na\b|band|kharab|problem|issue|error|chal nahi|kaam nahi|nahi chal|nahi ho|ho nahi|abhi bhi|still|phir bhi|chal nahi|nai chal|mahi chal|nhai chal|ho nahi rha|nahi ho rha|nahi rha)\b/i.test(pn);
   // "chal raha hai" ONLY counts as positive if NOT preceded by nahi/mahi/na etc.
-  const chalRahaPositive = /chal\s*raha\s*hai|chal\s*rhi\s*hai/.test(p) && !/(\bmahi\b|\bnahi\b|\bnai\b|\bnhi\b|\bnot\b).{0,15}chal/i.test(p);
+  const chalRahaPositive = /chal\s*raha\s*hai|chal\s*rhi\s*hai/.test(pn) && !/(\bmahi\b|\bnahi\b|\bnai\b|\bnhi\b|\bnot\b).{0,15}chal/i.test(pn);
   // IMPORTANT: "ho gya" / "ho gaya" alone are too vague — only count if paired with fix/solve/theek/sahi
   // "chori ho gya" / "kharab ho gya" must NOT trigger resolved → removed bare "ho gaya/ho gya" from list
-  const hasPositive = chalRahaPositive || /\b(normal|noraml|norml|theek|thik|sahi|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|sahi ho gaya|theek ho gaya|thik ho gaya|chal gaya|chal gyi|on ho gaya|work kar raha|charged|charge ho|connect ho gaya|sorted|done|complete|ho gayi|mil gaya|mil gayi)\b/i.test(p);
-  if (hasPositive && !hasNegative && p.split(/\s+/).length <= 8) {
+  const hasPositive = chalRahaPositive || /\b(normal|noraml|norml|theek|thik|sahi|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|sahi ho gaya|theek ho gaya|thik ho gaya|chal gaya|chal gyi|on ho gaya|work kar raha|charged|charge ho|connect ho gaya|sorted|done|complete|ho gayi|mil gaya|mil gayi)\b/i.test(pn);
+  if (hasPositive && !hasNegative && pn.split(/\s+/).length <= 8) {
     return `Glad to hear it is resolved. ✅ Feel free to reach out if anything else comes up.`;
   }
 
   // ── Identity questions — broad match, instant reply, no AI needed ───────
   const isIdentityQ =
-    /^(kise\s*hai|kise\s*ho|tum\s*kise\s*ho|aap\s*kise\s*ho|tum\s*kaun\s*ho|aap\s*kaun\s*ho|kaun\s*ho|kaun\s*hain|kaun\s*hai|tum\s*kya\s*ho|aap\s*kya\s*ho|kya\s*ho\s*tum|kya\s*hain\s*aap|what\s*are\s*you|who\s*are\s*you|bot\s*hai\s*kya|kya\s*tum\s*bot|are\s*you\s*a\s*bot|introduce|apna\s*parichay|apne\s*bare\s*mein\s*batao)\s*\??$/i.test(p.trim()) ||
-    /\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(p) && p.split(/\s+/).length <= 5;
+    /^(kise\s*hai|kise\s*ho|tum\s*kise\s*ho|aap\s*kise\s*ho|tum\s*kaun\s*ho|aap\s*kaun\s*ho|kaun\s*ho|kaun\s*hain|kaun\s*hai|tum\s*kya\s*ho|aap\s*kya\s*ho|kya\s*ho\s*tum|kya\s*hain\s*aap|what\s*are\s*you|who\s*are\s*you|bot\s*hai\s*kya|kya\s*tum\s*bot|are\s*you\s*a\s*bot|introduce|apna\s*parichay|apne\s*bare\s*mein\s*batao)\s*\??$/i.test(pn.trim()) ||
+    /\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(pn) && pn.split(/\s+/).length <= 5;
   if (isIdentityQ) {
     return `I am *Zivon* — WIOM IT Support Assistant.\nI can help with laptop, WiFi, software, and account issues.\nPlease describe your issue and I will assist you.`;
   }
 
   // ── Ticket status / ETA questions (typo-tolerant: tiket/tikket/ticket) ──
-  const pTicket = p.replace(/ti+ke+t/gi, 'ticket');
+  const pTicket = pn.replace(/ti+ke+t/gi, 'ticket');
   if (/ticket\s*(kab|kb|kab\s*tak|kab\s*solve|kab\s*hoga|kab\s*fix|status|update|progress|ho\s*gaya|hua\s*kya|abhi\s*tak|kyun\s*nahi|pending)/i.test(pTicket) ||
       /kab\s*tak\s*(hoga|milega|fix\s*hoga|solve\s*hoga|resolve)/i.test(pTicket) ||
       /mera\s*ticket\s*(kab|solve|fix|hoga|ho\s*ga)/i.test(pTicket)) {
     return `Aapka ticket IT team ke paas hai! 📋 Usually same day resolve hota hai — priority ke hisaab se.\nStatus dekhne ke liye type karo: *my tickets* 👀\nUrgent hai toh batao, main priority mark kar deta hoon! 🎫`;
   }
 
-  // ── WiFi password — strict match only ───────────────────────────────────
+  // ── WiFi password — strict match only (pn handles wiffi typo) ───────────
   const isWifiPassword =
-    /wifi\s*(ka|ke|ki)?\s*(password|pass|pwd|pasword|passward)/i.test(p) ||
-    /password\s*(wifi|wi-fi|wiom|network)/i.test(p) ||
-    /^(wifi|wi-fi|network)\s*(password|pass|pwd)\s*\??$/i.test(p.trim()) ||
-    /^(pass|pwd|password)\s*\??$/i.test(p.trim()) ||
-    /network\s*ka\s*pass/i.test(p) ||
-    /office\s*(wifi|network|wi-fi)\s*(password|pass)/i.test(p);
+    /wifi\s*(ka|ke|ki)?\s*(password|pass|pwd|pasword|passward)/i.test(pn) ||
+    /password\s*(wifi|wi-fi|wiom|network)/i.test(pn) ||
+    /^(wifi|wi-fi|network)\s*(password|pass|pwd)\s*\??$/i.test(pn.trim()) ||
+    /^(pass|pwd|password)\s*\??$/i.test(pn.trim()) ||
+    /network\s*ka\s*pass/i.test(pn) ||
+    /office\s*(wifi|network|wi-fi)\s*(password|pass)/i.test(pn);
 
   if (isWifiPassword) {
     return `WiFi Password! 📶\n\n🔑 *Password:* \`spartans500\` — sabhi networks ke liye same\n\n*Networks:*\n• Wiom office 5g-Test — Ground floor\n• Wiom office Guest\n• Wiom office 3rd floor\n• Wiomnet — Saket office *(Password: \`Password@12345\`)*\n\nHo gaya? Batao! 😊`;
@@ -771,7 +817,7 @@ const getKBAnswer = (problem) => {
 
   // ── Instant KB answers — Zivon tone, no Step 1/2/3 ─────────────────────
   // MATCHING RULES:
-  //   - Multi-word keys (contains space): exact substring match in p
+  //   - Multi-word keys (contains space): exact substring match in pn
   //   - Single-word keys: anchored start match (prevents 'mail' matching 'email', etc.)
   //     BUT suffix-flexible so 'charge' still matches 'charger'/'charging'
   // ORDER: specific app/device entries FIRST, general hardware LAST
@@ -786,20 +832,40 @@ const getKBAnswer = (problem) => {
   // ── Only EXACT FACTS in KB — everything else → Claude asks follow-up ────
   // NOTE: Resolved check above runs FIRST — so "fan normal hai" won't hit fan noise handler
 
+  // ── Laptop won't start / turn on / boot ─────────────────────────────────
+  // "laptop on nahi ho rha", "leptop start nahi ho rha", "boot nahi ho rha", "khulta nahi"
+  if (/\blaptop\b.*(on\s*nahi|start\s*nahi|band\s*ho|nahi\s*chalta|khulta\s*nahi|nahi\s*khulta|chal\s*nahi|chalti\s*nahi|chalte\s*nahi|nahi\s*chal\s*rh)|boot\s*nahi|(switch|power)\s*on\s*nahi|\blaptop\b.*(nahi\s*(chal|start|on|boot)|on\s*ho\s*nahi)|on\s*nahi\s*ho\s*rh/.test(pn))
+    return `Laptop on nahi ho raha — yeh ek common boot issue hai. Please yeh steps follow karein:\n\n1. *Force Restart* → Power button 10 sec hold karein → band ho jaayega → dobara on karein\n2. *Charger Check* → Charger lagao aur 5 min wait karein (battery low ho sakti hai) → phir on karein\n3. *Battery Reset* → Charger nikaal lo → Power button 30 sec hold karein → charger lagao → on karein\n4. *Power Drain* → Charger nikaal lo → Power button 60 sec hold karein → charger lagao → on karein\n5. *Safe Mode* → On karte waqt F8 ya Shift+F8 press karein → Safe Mode select karein\n\nAgar kisi bhi step se resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
+  // ── Overheating ──────────────────────────────────────────────────────────
+  // "laptop bahut garam ho rha", "laptop heat ho rha", "laptop garm hai", "zyada heat"
+  if (/\blaptop\b.*(garm|garam|heat|hot\b)|garm.{0,10}laptop|(overheat|over\s*heat|bahut\s*garam|bahut\s*garm|zyada\s*heat|zyada\s*garm|laptop\s*garm)/.test(pn))
+    return `Laptop overheating issue hai. Please yeh steps follow karein:\n\n1. *Hard Surface* → Laptop ko table par rakhein — bed/sofa par mat rakhein (vents block hote hain)\n2. *Heavy Apps Band Karein* → Ctrl+Shift+Esc → Task Manager → CPU column sort karein → heavy apps End Task karein\n3. *Power Mode* → Settings → Power & battery → Power mode → Balanced select karein\n4. *Restart* → Laptop restart karein — background processes band ho jaate hain\n5. *Vents Check* → Laptop ke vents (sides/bottom) pe dust toh nahi — taaki airflow ho sake\n\nAgar bahut zyada garam ho raha hai ya band ho raha hai, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
+  // ── Screen black / blank / nothing visible ───────────────────────────────
+  // "screen kali ho gyi", "black screen aa gya", "screen pe kuch nahi dikh rha", "monitor black hai"
+  if (/screen\s*(kali|kala|black|blank|kuch\s*nahi\s*dikh|pe\s*kuch\s*nahi)|black\s*screen|kali\s*screen|monitor\s*(black|kala|kali|blank)|display\s*(black|kali|blank|nahi\s*aa)|(nahi\s*dikh|dikhna\s*band)\s*(rha|rhi|raha)/.test(pn))
+    return `Black/blank screen issue hai. Please yeh steps follow karein:\n\n1. *Brightness Keys* → Fn+F5 ya Fn+F8 press karein (brightness keys) — screen dim ho sakti hai\n2. *Force Restart* → Power button 10 sec hold karein → band karein → dobara on karein\n3. *External Monitor Test* → HDMI cable se bahar monitor connect karein — agar bahar dikh raha toh laptop screen hardware issue hai\n4. *Charger Check* → Battery completely dead ho sakti hai → charger lagao → 10 min wait karein → on karein\n\nAgar ab bhi screen nahi aa rahi, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
+  // ── Windows / OS crash / restart loop / update stuck ────────────────────
+  // "windows crash ho gaya", "windows restart ho rha bar bar", "windows update atak gaya/stuck"
+  if (/windows\s*(crash|restart|update|stuck|atak|loop|hang)|update\s*(stuck|atak|hang|nahi|ruka)|restart\s*(bar\s*bar|baar\s*baar|loop|hota\s*rha|ho\s*rha\s*bar)|os\s*(crash|hang|stuck)/.test(pn))
+    return `Windows/OS issue hai. Please yeh steps follow karein:\n\n1. *Force Restart* → Power button 10 sec hold karein → band karein → dobara on karein\n2. *Update Wait* → Agar update chal rahi hai → wait karein, band mat karein\n3. *Startup Repair* → On karte waqt F8 press karein → "Repair Your Computer" → Startup Repair\n4. *Last Known Good* → F8 menu → "Last Known Good Configuration" select karein\n5. *Safe Mode* → F8 → Safe Mode with Networking → login karein\n\nAgar 3 baar se zyada restart ho raha hai, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   // Fan noise/sound (fan IS running but making noise — NOT an emergency)
   // This only runs if hasPositive check above did NOT return (i.e., user is NOT saying "fixed")
-  if (/fan\s*(sound|awaaz|baj|noise|shor|loud|kar\s*rha|chal\s*rha|aa\s*rhi)/i.test(p) ||
-      /\bfan\s+(kar|chal|baj|sound)/i.test(p)) {
+  if (/fan\s*(sound|awaaz|baj|noise|shor|loud|kar\s*rha|chal\s*rha|aa\s*rhi)/i.test(pn) ||
+      /\bfan\s+(kar|chal|baj|sound)/i.test(pn)) {
     return `Fan ki awaaz aa rahi hai — usually heavy apps se hota hai 🔊\nCtrl+Shift+Esc dabao → CPU column sort karo → koi heavy app End Task karo.\nLaptop hard surface pe rakhho (table pe, bed/sofa pe nahi).\nThodi der mein band ho jaaye toh theek hai. Agar bahut tez awaaz ho ya nahi ruki toh batao 🎫`;
   }
 
   // Fan emergency — fan NOT working at all (safety critical — instant response)
-  if (/fan\s*(nahi\s*chal|band|kaam\s*nahi|not\s*work|chal\s*nahi)/i.test(p)) {
+  if (/fan\s*(nahi\s*chal|band|kaam\s*nahi|not\s*work|chal\s*nahi)/i.test(pn)) {
     return `Fan nahi chal raha — laptop abhi band karo aur charger nikaal do ⚠️ Hardware damage ho sakta hai. Type karo *ha*, ticket abhi bhejta hoon 🎫`;
   }
 
   // Virus (urgent — must be instant)
-  if (/\b(virus|malware|ransomware|hack)\b/i.test(p)) {
+  if (/\b(virus|malware|ransomware|hack)\b/i.test(pn)) {
     return `Abhi Windows Security → Virus & threat protection → Quick Scan karo 🦠 Kuch suspicious mila? Internet band karo aur type karo *ha* — IT ko turant batata hoon 🎫`;
   }
 
