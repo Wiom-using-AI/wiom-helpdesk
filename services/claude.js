@@ -305,68 +305,87 @@ const extractTriedSteps = (messages) => {
 const getKBFallback = (problem) => {
   const p = problem.toLowerCase();
 
-  // ── SPECIFIC SYMPTOMS — full steps, no question ─────────────────────────────
-
-  // WiFi connected but no internet — most common scenario
+  // WiFi connected but no internet
   if (/connect(ed)?.*(nahi chal|work nahi|internet nahi|nahi work)|wifi.*(connected|chal).*(internet nahi|nahi chal)|(no internet|internet nahi).*(connected|connect)/.test(p))
-    return `WiFi connected hai par internet nahi chal raha — ye steps karo:\n\n1. Taskbar WiFi click karo → Disconnect karo → "Wiom office 5g-Test" select karo → Password: spartans500\n2. Win+R dabao → cmd likho → Enter → phir type karo: ipconfig /flushdns → Enter\n3. Phir type karo: netsh winsock reset → Enter → laptop restart karo\n\nAgar nahi hua → IT ticket banao 🎫`;
+    return `WiFi connected hai par internet nahi chal raha. Please yeh steps follow karein:\n\n1. Taskbar mein WiFi icon click karein → Disconnect karein → "Wiom office 5g-Test" select karein → Password: spartans500\n2. Win+R → cmd → Enter → ipconfig /flushdns → Enter\n3. netsh winsock reset → Enter → Laptop restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
   if (p.includes('slow') || p.includes('hang') || p.includes('freez') || p.includes('dheema'))
-    return `Acha, laptop slow/hang hai? 🔧\nPehle ye karo: Ctrl+Shift+Esc dabao → Task Manager mein jo process sabse zyada CPU le raha ho → End Task karo.\nKaro batao ho gaya ya nahi!`;
+    return `Laptop slow/hang issue hai. Please yeh steps try karein:\n\n1. Ctrl+Shift+Esc → Task Manager → sabse zyada CPU use karne wala process → End Task karein\n2. Startup apps disable karein: Win+R → msconfig → Startup tab → unnecessary apps disable karein → Restart\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('wifi') || p.includes('internet') || p.includes('network') ||
       /\bnet\b/.test(p) || p.includes('net band') || p.includes('signal nahi') || p.includes('no internet'))
-    return `WiFi/Net issue — ye steps try karo:\n\n1. Taskbar WiFi click → OFF karo → ON karo → try karo\n2. "Wiom office 5g-Test" select karo → Password: spartans500\n3. Win+R → cmd → netsh winsock reset → Enter → restart karo\n\nAgar nahi hua → IT ticket banao 🎫`;
+    return `WiFi/Internet issue. Please yeh steps try karein:\n\n1. Taskbar WiFi → OFF karein → 10 sec wait karein → ON karein\n2. "Wiom office 5g-Test" select karein → Password: spartans500\n3. Win+R → cmd → netsh winsock reset → Enter → Restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('sound') || p.includes('audio') || p.includes('speaker') || p.includes('headphone'))
-    return `Sound fix! 🔊\n1. Taskbar speaker icon Right-click → Sound settings.\n2. Output device → sahi device select karo.\n3. Volume 0% nahi honi chahiye — check karo.\nClick the script button below! ⬇️`;
+    return `Audio issue. Please yeh steps try karein:\n\n1. Taskbar mein speaker icon par right-click karein → Sound settings\n2. Output device mein sahi device select karein\n3. Volume check karein — 0% ya mute toh nahi hai\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('blue screen') || p.includes('bsod'))
-    return `Blue Screen fix! 💙\n1. Error code note karo jo screen par tha.\n2. Laptop restart karo — akbar mein theek ho jata hai.\n3. 3 baar se zyada hua toh ticket raise karo.\nClick the script button below! ⬇️`;
+    return `Blue Screen issue. Please yeh steps follow karein:\n\n1. Screen par jo error code tha — note karein\n2. Laptop restart karein — zyada tar ek restart mein theek ho jaata hai\n3. Agar 3 baar se zyada aaya hai → please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg/.test(p))
-    return `Battery/Charging fix! 🔋\n\n1. Charger dono taraf firmly lagao (laptop side + socket side)\n2. Alag power socket try karo\n3. Laptop band karo → charger nikalo → power button 30 sec hold karo → charger lagao → on karo\n\nAgar nahi hua → IT ticket banao 🎫`;
+    return `Battery/Charging issue. Please yeh steps try karein:\n\n1. Charger dono taraf firmly connect karein (laptop side aur socket side)\n2. Alag power socket try karein\n3. Laptop shut down karein → charger disconnect karein → power button 30 sec hold karein → charger reconnect karein → on karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('black screen') || p.includes('no display'))
-    return `Black screen fix! 🖥️\n1. Fn+F5 ya Fn+F8 (brightness keys) dabao.\n2. Koi change nahi → power button 10sec hold → restart.\n3. Baad mein bhi kuch nahi → ticket raise karo.\nClick the script button below! ⬇️`;
+    return `Black screen issue. Please yeh steps try karein:\n\n1. Fn+F5 ya Fn+F8 press karein (brightness keys)\n2. Koi change nahi → power button 10 sec hold karein → restart\n3. Agar ab bhi display nahi → please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('keyboard') || p.includes('keys'))
-    return `Keyboard fix! ⌨️\n1. Laptop restart karo.\n2. Win+R → osk → on-screen keyboard se kaam chalao.\n3. Device Manager → Keyboards → Update driver.\nClick the script button below! ⬇️`;
+    return `Keyboard issue. Please yeh steps try karein:\n\n1. Laptop restart karein\n2. Win+R → osk → Enter — on-screen keyboard se kaam chalayein\n3. Device Manager → Keyboards → driver update karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('touchpad') || p.includes('mouse'))
-    return `Touchpad fix! 🖱️\n1. Fn + touchpad key (lock icon wali) dabao.\n2. Settings → Bluetooth & devices → Touchpad → ON.\n3. Laptop restart karo.\nClick the script button below! ⬇️`;
+    return `Touchpad issue. Please yeh steps try karein:\n\n1. Fn + touchpad lock key press karein (keyboard par lock icon wali key)\n2. Settings → Bluetooth & devices → Touchpad → ON karein\n3. Laptop restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('printer'))
-    return `Printer fix! 🖨️\n1. Settings → Bluetooth & devices → Printers → right-click → Set as default.\n2. Win+R → services.msc → Print Spooler → Restart.\n3. Dubara print karo.\nClick the script button below! ⬇️`;
+    return `Printer issue. Please yeh steps try karein:\n\n1. Settings → Bluetooth & devices → Printers → printer par right-click → Set as default\n2. Win+R → services.msc → Print Spooler → Restart\n3. Dobara print karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('teams'))
-    return `Teams fix! 📹\n1. System tray → Teams icon right-click → Quit → reopen.\n2. Win+R → %appdata%\\Microsoft\\Teams → Cache folder delete karo.\n3. teams.microsoft.com browser mein kholo (web fallback).\nClick the script button below! ⬇️`;
+    return `Microsoft Teams issue. Please yeh steps try karein:\n\n1. System tray → Teams icon right-click → Quit → dobara open karein\n2. Win+R → %appdata%\\Microsoft\\Teams → Cache folder delete karein\n3. teams.microsoft.com browser mein try karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('zoom'))
-    return `Zoom fix! 🎥\n1. Zoom band karo → dobara kholo.\n2. Internet check karo → zoom.us/wc/join browser mein try karo.\n3. Zoom Settings → Audio/Video → sahi device select karo.\nClick the script button below! ⬇️`;
+    return `Zoom issue. Please yeh steps try karein:\n\n1. Zoom close karein → dobara open karein\n2. Internet connection check karein → zoom.us/wc/join browser mein try karein\n3. Zoom Settings → Audio/Video → correct device select karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('outlook') || p.includes('email'))
-    return `Outlook fix! 📧\n1. Ctrl+Shift+Esc → Outlook process end karo.\n2. Win+R → outlook /safe → Enter.\n3. outlook.office365.com browser mein try karo.\nClick the script button below! ⬇️`;
+    return `Outlook issue. Please yeh steps try karein:\n\n1. Ctrl+Shift+Esc → Outlook process end karein\n2. Win+R → outlook /safe → Enter\n3. outlook.office365.com browser mein try karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('password') || p.includes('locked') || p.includes('login')) {
-    // Google/Gmail self-service reset
     if (/google|gmail/.test(p))
-      return `Google account password reset! 🔐\n1. myaccount.google.com pe jaao\n2. Security tab click karo\n3. "How you sign in to Google" → Password click karo\n4. Current password enter karo (ya fingerprint se verify karo)\n5. Naya password set karo\n\nAgar nahi hua → IT ticket raise karo 🎫`;
-    // Windows/laptop/account — IT only, no self-service
-    return `Windows/Account password sirf IT reset kar sakta hai! 🔐\n\nType karo *ha* — main IT ko bhej deta hoon, woh jaldi reset kar denge 🎫`;
+      return `Google account password reset ke liye:\n\n1. myaccount.google.com par jaayein\n2. Security tab → "How you sign in to Google" → Password\n3. Verify karein aur naya password set karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Windows/Account password reset sirf IT team kar sakti hai.\n\nPlease type karein *ha* — IT ticket raise kar deta hoon, team jaldi reset kar degi 🎫`;
   }
+
   if (p.includes('bluetooth'))
-    return `Bluetooth fix! 🔵\n1. Settings → Bluetooth → toggle OFF → ON karo.\n2. Device dobara pair karo.\n3. Device Manager → Bluetooth → Disable → Enable.\nClick the script button below! ⬇️`;
+    return `Bluetooth issue. Please yeh steps try karein:\n\n1. Settings → Bluetooth → toggle OFF karein → ON karein\n2. Device dobara pair karein\n3. Device Manager → Bluetooth → Disable → Enable\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('camera') || p.includes('camra') || p.includes('webcam') || /\bcam\b/.test(p))
-    return `Settings → Privacy → Camera → ON karo 📷 Teams/Zoom mein Settings → Video → sahi camera select hai? Device Manager → Cameras → Disable → Enable karo. Batao kaise raha!`;
+    return `Camera issue. Please yeh steps try karein:\n\n1. Settings → Privacy & Security → Camera → ON karein\n2. Teams/Zoom Settings → Video → correct camera select karein\n3. Device Manager → Cameras → Disable → Enable\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('mic') || p.includes('microphone'))
-    return `Microphone fix! 🎤\n1. Settings → Privacy → Microphone → ON karo.\n2. Sound settings → Input → sahi mic select karo.\n3. Teams: Settings → Devices → mic test karo.\nClick the script button below! ⬇️`;
+    return `Microphone issue. Please yeh steps try karein:\n\n1. Settings → Privacy & Security → Microphone → ON karein\n2. Sound settings → Input → correct mic select karein\n3. Teams: Settings → Devices → mic test karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('usb') || p.includes('pendrive'))
-    return `USB fix! 🔌\n1. Alag USB port mein try karo.\n2. Device Manager → Universal Serial Bus → Uninstall → Scan for hardware changes.\n3. Laptop restart karo.\nClick the script button below! ⬇️`;
+    return `USB issue. Please yeh steps try karein:\n\n1. Alag USB port mein try karein\n2. Device Manager → Universal Serial Bus → Uninstall → Scan for hardware changes\n3. Laptop restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('storage') || p.includes('disk full'))
-    return `Storage cleanup ! 💾\n1. Win+R → cleanmgr → C: → Clean system files.\n2. Win+R → %temp% → Ctrl+A → Delete.\n3. Recycle Bin empty karo.\nClick the script button below! ⬇️`;
+    return `Storage full issue. Please yeh steps try karein:\n\n1. Win+R → cleanmgr → C: → Clean system files\n2. Win+R → %temp% → Ctrl+A → Delete\n3. Recycle Bin empty karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
   if (p.includes('virus') || p.includes('malware') || p.includes('antivirus'))
-    return `Virus scan ! 🦠\n1. Windows Security kholo → Virus & threat protection.\n2. Quick Scan karo → wait karo.\n3. Serious lag raha → raise a ticket: type *raise ticket* 🎫\nClick the script button below! ⬇️`;
+    return `Possible virus/malware issue. Please yeh steps follow karein:\n\n1. Windows Security → Virus & threat protection → Quick Scan\n2. Agar suspicious activity lag rahi hai → internet disconnect karein\n\nPlease type karein *ha* — IT team ko escalate karna zaroori hai 🎫`;
+
   if (p.includes('kaise ho') || p.includes('kaisa hai') || p.includes('how are you') || p.includes('kya haal'))
-    return 'Theek hoon! Batao kya IT problem hai, help karta hoon 😊';
+    return 'All good, thank you. Please batayein — koi IT issue hai jisme help kar sakta hoon?';
+
   if (p.includes('thanks') || p.includes('shukriya') || p.includes('thank you') || p.includes('dhanyawad'))
-    return 'Khushi hui! Koi aur IT problem ho toh batao 😊';
+    return 'You are welcome. Feel free to reach out if anything else comes up.';
+
   if (/^(hello|hi+|hey|namaste|namaskar|hlo|helo)\s*[!.]*$/i.test(p.trim()))
-    return 'Hello! Kya IT problem hai — batao, abhi help karta hoon 😊';
+    return 'Hello! I am Zivon — WIOM IT Support Assistant. How can I help you today?';
+
   if (/\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(p) || /\b(tum|aap)\s*(kya|kise|kaun)\b/i.test(p))
-    return `Main *Zivon* hoon — WIOM ka IT helpdesk assistant ⚡\nLaptop, WiFi, software, password — kisi bhi IT problem mein help karta hoon.\nBatao kya issue hai! 😊`;
+    return `Main *Zivon* hoon — WIOM ka IT support assistant.\nLaptop, WiFi, software, password — kisi bhi IT issue mein help kar sakta hoon.\nPlease batayein aapka issue kya hai.`;
+
   if (p.includes('sajan') || p.includes('admin') || p.includes('it head') || p.includes('phone number') || p.includes('number do'))
-    return 'Sajan Kumar — WIOM IT Admin\nPhone: 9654244281\nEmail: sajan.kumar@wiom.in\nTicket ke liye type karo: *raise ticket*';
-  // Generic fallback — ask first, don't assume
-  return `Haan batao! 😊 Thoda detail mein bolo — exactly kya ho raha hai? Koi error message aa raha kya screen pe? Jitna detail doge, utni jaldi fix karunga!`;
+    return 'IT Admin: *Sajan Kumar*\nPhone: 9654244281\nEmail: sajan.kumar@wiom.in';
+
+  return `Please describe your issue in a bit more detail — what exactly is happening? Any error message on screen? The more information you provide, the faster I can help.`;
 };
 
 // ── Call Gemini (Google FREE fallback) ───────────────────────────────────────
@@ -703,7 +722,7 @@ const getKBAnswer = (problem) => {
   // "chori ho gya" / "kharab ho gya" must NOT trigger resolved → removed bare "ho gaya/ho gya" from list
   const hasPositive = chalRahaPositive || /\b(normal|noraml|norml|theek|thik|sahi|fixed|resolved|kaam kar raha|solve ho|fix ho gaya|sahi ho gaya|theek ho gaya|thik ho gaya|chal gaya|chal gyi|on ho gaya|work kar raha|charged|charge ho|connect ho gaya|sorted|done|complete|ho gayi|mil gaya|mil gayi)\b/i.test(p);
   if (hasPositive && !hasNegative && p.split(/\s+/).length <= 8) {
-    return `Great! Khushi hui ki resolve ho gaya 😊✅ Aur koi IT help chahiye toh zaroor batao!`;
+    return `Glad to hear it is resolved. ✅ Feel free to reach out if anything else comes up.`;
   }
 
   // ── Identity questions — broad match, instant reply, no AI needed ───────
@@ -711,7 +730,7 @@ const getKBAnswer = (problem) => {
     /^(kise\s*hai|kise\s*ho|tum\s*kise\s*ho|aap\s*kise\s*ho|tum\s*kaun\s*ho|aap\s*kaun\s*ho|kaun\s*ho|kaun\s*hain|kaun\s*hai|tum\s*kya\s*ho|aap\s*kya\s*ho|kya\s*ho\s*tum|kya\s*hain\s*aap|what\s*are\s*you|who\s*are\s*you|bot\s*hai\s*kya|kya\s*tum\s*bot|are\s*you\s*a\s*bot|introduce|apna\s*parichay|apne\s*bare\s*mein\s*batao)\s*\??$/i.test(p.trim()) ||
     /\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(p) && p.split(/\s+/).length <= 5;
   if (isIdentityQ) {
-    return `Main *Zivon* hoon — WIOM ka IT helpdesk assistant ⚡\nLaptop, WiFi, software, password — kisi bhi IT problem mein help karta hoon.\nBatao kya issue hai! 😊`;
+    return `I am *Zivon* — WIOM IT Support Assistant.\nI can help with laptop, WiFi, software, and account issues.\nPlease describe your issue and I will assist you.`;
   }
 
   // ── Ticket status / ETA questions (typo-tolerant: tiket/tikket/ticket) ──

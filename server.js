@@ -3160,7 +3160,7 @@ app.listen(PORT, async () => {
    pendingTickets.delete(userId); // no ticket needed
 
    const replies = [
-     `✅ *Bahut badhiya!* Sahi ho gaya 😊\n\nKoi aur IT problem ho toh seedha batao — main hoon! 🚀`,
+     `✅ Glad it is resolved. Feel free to reach out if anything else comes up.`,
      `✅ *Ho gaya* 🎉 Mast!\n\nKoi aur problem aaye toh yahan type karo — main 24/7 hoon! 😄`,
      `*Nice!* Lagta hai issue solve ho gayi 😊\n\nAur kuch chahiye? Batao!`
    ];
