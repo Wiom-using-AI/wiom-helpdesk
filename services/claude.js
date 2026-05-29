@@ -226,6 +226,10 @@ const detectIntent = (messages) => {
   if (/slow|hang\b|lagg|freez|speed|fast karo|\bram\b|\bcpu\b|processor|heavy|battery drain|alag hai|dheema|dheere|aahista/.test(recentText))
     return { category: 'PERFORMANCE', hint: 'PERFORMANCE ISSUE. First ask: "Kab se ho raha hai? Koi specific app mein ya poora laptop slow hai?" — then give Task Manager step.' };
 
+  // DISPLAY COLOR DISTORTION — colorful screen, color lines, tint
+  if (/colorful|colorfull|colarful|colarfull|colour|color\s*aa|rang\s*aa|pink\s*screen|green\s*screen|tint|lines\s*aa|horizontal\s*line|vertical\s*line|screen\s*pe\s*rang|display.*rang|rang.*display/.test(recentText))
+    return { category: 'DISPLAY_COLOR', hint: 'SCREEN COLOR DISTORTION. User says screen is showing colors/lines/tint. This is a display driver or hardware issue. SKIP all diagnostic questions — give steps directly:\n1. Restart laptop — driver glitch often fixes on restart\n2. Device Manager → Display adapters → Update driver → Search automatically\n3. Device Manager → Display adapters → Uninstall device → Restart (auto-reinstalls)\n4. Settings → System → Display → Advanced display → Change refresh rate → 60Hz\n5. Test with external monitor via HDMI — if external is fine, laptop screen hardware issue\nEnd with: type karein *ha* — IT ticket raise kar deta hoon 🎫' };
+
   // DISPLAY — screen, black, blue screen
   if (/screen|display|black screen|nahi dikh|dikhna band|blue screen|bsod|flicker|bright|dim|resolution|monitor|hdmi|kala ho gaya|screen kali/.test(recentText))
     return { category: 'DISPLAY', hint: 'DISPLAY ISSUE. First ask: "Laptop on hai (power LED dikh raha)? Ya screen bilkul black hai?" — never suggest network steps for display.' };
@@ -315,6 +319,10 @@ const getKBFallback = (problem) => {
   if (p.includes('wifi') || p.includes('internet') || p.includes('network') ||
       /\bnet\b/.test(p) || p.includes('net band') || p.includes('signal nahi') || p.includes('no internet'))
     return `WiFi/Internet issue. Please yeh steps try karein:\n\n1. Taskbar WiFi → OFF karein → 10 sec wait karein → ON karein\n2. "Wiom office 5g-Test" select karein → Password: spartans500\n3. Win+R → cmd → netsh winsock reset → Enter → Restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
+  if (/colorful|colorfull|colarful|colarfull|colour|color\s*aa|rang\s*aa|pink\s*screen|green\s*screen|screen\s*pe\s*rang|display.*color|color.*display|lines\s*aa|screen\s*kharab|distort/.test(p) &&
+      /screen|display|monitor|laptop/.test(p))
+    return `Screen color distortion issue hai. Please yeh steps try karein:\n\n1. *Restart* → Laptop restart karein — driver glitch zyada tar restart se theek ho jaata hai\n2. *Display Driver Update* → Win+X → Device Manager → Display adapters → right-click → Update driver → Search automatically\n3. *Display Driver Reinstall* → Device Manager → Display adapters → Uninstall device → Restart karein\n4. *Refresh Rate* → Settings → System → Display → Advanced display → 60Hz select karein\n5. *External Monitor Test* → HDMI se monitor connect karein — bahar sahi dikh raha toh laptop screen hardware issue hai\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
   if (p.includes('sound') || p.includes('audio') || p.includes('speaker') || p.includes('headphone'))
     return `Audio issue. Please yeh steps try karein:\n\n1. Taskbar mein speaker icon par right-click karein → Sound settings\n2. Output device mein sahi device select karein\n3. Volume check karein — 0% ya mute toh nahi hai\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
@@ -688,6 +696,13 @@ const getKBAnswer = (problem) => {
   if (/\b(tv|television|telly|ac\b|air\s*condition|fan\b|ceiling\s*fan|light\b|bulb|electricity|current\s*nahi|power\s*cut|generator|geyser|water|pantry|canteen|chair|table|desk|furniture|lift|elevator|ac\s*nahi|ac\s*band)\b/i.test(p) &&
       !/\b(laptop|wifi|internet|software|password|teams|outlook|chrome|window|screen|monitor|keyboard|mouse|bluetooth|usb)\b/i.test(p)) {
     return `Yeh IT ke scope mein nahi aata 😊\n\nIT helpdesk sirf yeh handle karta hai:\n💻 Laptop / Desktop problems\n🌐 WiFi / Internet issues\n🔑 Password / Account\n⚙️ Software (Teams, Outlook, etc.)\n\n*TV, AC, lights, furniture* ke liye → *Admin / Facilities team* se contact karo.\nKoi laptop ya IT problem ho toh batao — main hoon! 🚀`;
+  }
+
+  // ── 🖥️ SCREEN COLOR / DISPLAY DISTORTION ────────────────────────────────────
+  // "colorful", "colour", "rang aa rha", "pink/green/yellow screen", "lines", "tint"
+  if (/\b(colorful|colorfull|colarful|colarfull|colour|color|rang\s*aa|pink|green|yellow|purple|red\s*screen|tint|hue|distort|lines\s*aa|horizontal\s*line|vertical\s*line|display\s*kharab|screen\s*kharab|screen\s*pe\s*rang|puri\s*screen)\b/i.test(p) &&
+      /\b(screen|display|monitor|laptop)\b/i.test(p)) {
+    return `Screen color distortion issue hai. Please yeh steps try karein:\n\n1. *Restart* → Laptop restart karein — sometimes driver glitch hota hai jo restart se theek ho jaata hai\n2. *Display Driver Update* → Win+X → Device Manager → Display adapters → right-click → Update driver → Search automatically\n3. *Display Driver Reinstall* → Device Manager → Display adapters → Uninstall device → Restart (Windows automatically reinstall karega)\n4. *Refresh Rate Check* → Settings → System → Display → Advanced display → Change refresh rate → 60Hz select karein\n5. *External Monitor Test* → HDMI se bahar monitor connect karein — agar bahar sahi dikh raha → laptop screen hardware issue hai\n\nAgar kisi bhi step se resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
   }
 
   // ── 🔧 PHYSICAL DAMAGE — hardware broken, no software fix possible ────────
