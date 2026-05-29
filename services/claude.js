@@ -637,30 +637,6 @@ const getKBAnswer = (problem) => {
     return `Yeh IT ke scope mein nahi aata 😊\n\nIT helpdesk sirf yeh handle karta hai:\n💻 Laptop / Desktop problems\n🌐 WiFi / Internet issues\n🔑 Password / Account\n⚙️ Software (Teams, Outlook, etc.)\n\n*TV, AC, lights, furniture* ke liye → *Admin / Facilities team* se contact karo.\nKoi laptop ya IT problem ho toh batao — main hoon! 🚀`;
   }
 
-  // ── 🖼️ SIMPLE HOW-TO QUESTIONS — instant answer, no ticket/buttons needed ──
-  // Wallpaper, brightness, volume, screenshot etc. → just answer directly
-  if (/wallpap|wallpper|valpaper|desktop\s*(background|change|set)|background\s*change/i.test(p)) {
-    return `Desktop pe *right-click* karo → *Personalize* → *Background* → apni photo ya color select karo. Done! 😊`;
-  }
-  if (/brightness\s*(kaise|badhao|kam|change|set)|screen\s*bright|screen\s*dim|display\s*bright/i.test(p)) {
-    return `*Fn + F5/F6* press karo (brightness keys) — ya taskbar mein 🔆 icon click karo → slider adjust karo. 😊`;
-  }
-  if (/volume\s*(kaise|badhao|kam|mute|change|set|control)|awaaz\s*(badhao|kam|set|kaise)/i.test(p) && !/laptop|speaker|nahi|problem|issue/i.test(p)) {
-    return `Taskbar mein 🔊 icon click karo → slider se volume set karo. Ya keyboard pe volume keys (Fn+F7/F8) use karo. 😊`;
-  }
-  if (/screenshot\s*(kaise|lena|lo|capture)|screen\s*capture|print\s*screen/i.test(p)) {
-    return `*Win + Shift + S* press karo → area select karo → screenshot copy ho jaayega. Ya *PrtSc* button se full screen. 😊`;
-  }
-  if (/dark\s*mode|night\s*mode|theme\s*(change|kaise|dark|light)/i.test(p)) {
-    return `*Settings → Personalization → Colors → Choose your mode → Dark* select karo. 😊`;
-  }
-  if (/font\s*size\s*(badhao|change|kaise|bada|chota)|text\s*size|display\s*size\s*(change|kaise)/i.test(p)) {
-    return `*Settings → Accessibility → Text size* → slider badhao. Ya *Ctrl + scroll* karo browser mein zoom ke liye. 😊`;
-  }
-  if (/taskbar\s*(kaise|change|hide|show|set)|start\s*menu\s*(kaise|change)/i.test(p)) {
-    return `Taskbar pe *right-click* → *Taskbar settings* — wahan position, size, hidden apps sab set kar sakte ho. 😊`;
-  }
-
   // ── 🚨 THEFT / LOSS — HIGHEST PRIORITY — check BEFORE anything else ────
   // "chori", "gum", "missing", "stolen", "lost" → NEVER say "resolved"
   if (/\b(chori|cori|churai|churaya|churaye|stolen|theft|gum\s*ho|gum\s*gaya|missing|khoya|khoyi|kho\s*gaya|kho\s*gayi|nahi\s*mila|nahi\s*mili|gum\s*gyi|gum\s*gaya)\b/i.test(p) &&

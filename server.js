@@ -3003,8 +3003,8 @@ app.listen(PORT, async () => {
      /IT team ke paas hai|my tickets|Status dekhne|ticket.*resolve|same day resolve|priority mark/i.test(kbReply) ||
      // Resolved confirm
      /Khushi hui.*resolve|resolve ho gaya|Great.*resolve/i.test(kbReply) ||
-     // Simple how-to answers (wallpaper, brightness, volume, screenshot etc.) — 1-2 line answers, no ticket needed
-     /right-click.*Personalize|Fn\+F[0-9]|Win\+Shift\+S|PrtSc|Personalization.*Colors|Accessibility.*Text size|Taskbar settings/i.test(kbReply)
+     // Short informational replies with no steps (1-2 lines, ends with emoji, no ticket mention)
+     (!kbHasTicketAsk && kbReply.split('\n').filter(l => l.trim()).length <= 2 && !/\d+\.\s/.test(kbReply))
    );
    if (!isInfoOnly) {
      pendingTickets.set(userId, {
@@ -3091,13 +3091,18 @@ app.listen(PORT, async () => {
  // Use current message (text) for script detection — NOT recentUserText (avoids old WiFi context bleeding in)
  // Info-only = informational, no troubleshooting → NO buttons
  // NEVER info-only if shouldCreateTicket = true (user must confirm with "ha")
+ const replyLines = reply.trim().split('\n').filter(l => l.trim());
+ const hasNumberedSteps = /^\d+[\.\)]\s/m.test(reply);
  const isInfoOnly = !shouldCreateTicket && (
    // Greeting / identity / thanks
    /khushi hui|koi baat nahi|theek hoon|aur koi.*IT help|IT problems mein help|Main Zivon|Zivon hoon|koi aur cheez|Kya IT problem/i.test(reply) ||
    // Ticket status / info queries
    /IT team ke paas|my tickets|Status dekhne|ticket.*resolve|same day|priority mark/i.test(reply) ||
    // Resolved celebrations
-   /resolve ho gaya|Great.*resolve|sahi ho gaya.*Koi aur/i.test(reply)
+   /resolve ho gaya|Great.*resolve|sahi ho gaya.*Koi aur/i.test(reply) ||
+   // Short factual/how-to answer — 1-2 lines, no numbered steps, no ticket ask
+   // e.g. "wallpaper kaise change karu", "wifi password kya hai", "screenshot kaise lu"
+   (replyLines.length <= 2 && !hasNumberedSteps && !/type\s*karo.*\*?ha\*?/i.test(reply))
  );
 
  // Only set pendingTickets for actionable replies (avoid stale ticket context for greetings/facts)
