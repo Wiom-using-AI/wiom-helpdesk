@@ -886,21 +886,27 @@ app.listen(PORT, async () => {
 
  // ── Detect reply mode — decides which buttons (if any) to show ───────────────
  // 'question' → AI asked a diagnostic question, no buttons needed yet
- // 'ticket'   → AI wants user to confirm ticket with "ha"
- // 'steps'    → AI gave actual fix steps, show Ho gaya + Ticket
+ // 'ticket'   → AI wants user to confirm ticket with "ha" (only IT Ticket button)
+ // 'steps'    → AI gave actual fix steps (Ho gaya + IT Ticket both show)
  const detectReplyMode = (reply, shouldCreateTicket) => {
    const lines = reply.trim().split('\n').filter(l => l.trim());
    const hasNumberedSteps = /^\d+[\.\)]\s/m.test(reply);
    const hasBullets = /^[•\-\*]\s/m.test(reply);
-   const hasSteps = hasNumberedSteps || hasBullets || lines.length >= 4;
-   // If reply has actual steps → always 'steps' mode (script + Ho gaya + IT Ticket)
-   // Even if shouldCreateTicket is true, steps get full treatment
-   if (hasSteps) return 'steps';
-   // No steps: pure ticket confirm (only IT Ticket button)
+   const hasRealSteps = hasNumberedSteps || hasBullets;
+
+   // Real numbered/bulleted steps → always 'steps' (user may have already tried them)
+   if (hasRealSteps) return 'steps';
+
+   // No real steps but ticket ask → 'ticket' only (nothing is resolved yet — no Ho gaya)
+   // e.g. installation request, physical damage, theft — IT team hasn't come yet
    if (shouldCreateTicket) return 'ticket';
-   // Short reply with question mark → diagnostic question (no buttons)
+
+   // Short reply with question mark → diagnostic question (no buttons yet)
    const isQuestion = /\?/.test(reply) && lines.length <= 3;
-   return isQuestion ? 'question' : 'steps';
+   if (isQuestion) return 'question';
+
+   // Multi-line informational reply with no ticket ask → show both buttons as fallback
+   return lines.length >= 4 ? 'steps' : 'question';
  };
 
  // ── Build DM response blocks — smart: no buttons for questions, buttons for steps ──
