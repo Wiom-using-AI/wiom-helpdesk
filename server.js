@@ -3185,8 +3185,11 @@ app.listen(PORT, async () => {
  else if (/chori|stolen|theft|gum\s*ho|gum\s*gaya|missing|kho\s*gaya/i.test(allUserText)) autoCategory = 'Theft/Loss';
 
  let autoPriority = 'Medium';
+ // Water/liquid damage = ALWAYS Critical (data + hardware at risk)
+ if (/\b(water|liquid|paani|chai|coffee|juice|drink|spill|bhig|wet|geela)\b/i.test(allUserText) &&
+     /\b(laptop|keyboard|device|screen)\b/i.test(allUserText)) autoPriority = 'Critical';
  // Theft/loss = ALWAYS High priority
- if (/chori|cori|stolen|theft|gum\s*ho|gum\s*gaya|missing|kho\s*gaya|kho\s*gayi/i.test(allUserText)) autoPriority = 'High';
+ else if (/chori|cori|stolen|theft|gum\s*ho|gum\s*gaya|missing|kho\s*gaya|kho\s*gayi/i.test(allUserText)) autoPriority = 'High';
  else if (/urgent|critical|emergency|immediately|stop.*work|can.*t work|completely|floor down/i.test(allUserText)) autoPriority = 'High';
  else if (/minor|small|little|low|whenever/i.test(allUserText)) autoPriority = 'Low';
 
