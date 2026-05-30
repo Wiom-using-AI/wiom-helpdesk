@@ -753,7 +753,8 @@ const getKBAnswer = (problem) => {
 
   // ── 💿 SOFTWARE INSTALLATION REQUEST — needs IT admin, no script can install ──
   // "MS Office install karo", "Teams install", "Zoom install kaise karu" etc.
-  const isInstallQuery = /instal|install\s*karo|install\s*kaise|install\s*karu|install\s*chahiye|install\s*karna|install\s*nahi|naya.*software|software.*install/i.test(pn);
+  // Catches: install, insatll, insatall, intsall, instll and all common install typos
+  const isInstallQuery = /install|insatl|insatal|instat|instll|intsall|kaise.*instal|instal.*karo|instal.*karu|naya.*softw|softw.*install/i.test(pn);
   if (isInstallQuery) {
     // Identify what they want to install
     const software =

@@ -735,7 +735,8 @@ app.listen(PORT, async () => {
 
    // ── Office apps — fix scripts only for already-installed Office (not fresh installs) ──
    // "install karo/kaise install/insatll" = fresh installation → IT admin required → NO script
-   const isInstallRequest = /instal|install\s*karo|install\s*kaise|install\s*karu|install\s*chahiye|naya.*install|fresh.*install/.test(t);
+   // Catches: install, insatll, insatall, intsall, instll and all common install typos
+   const isInstallRequest = /install|insatl|insatal|instat|instll|intsall|kaise.*instal|instal.*karo|instal.*karu|naya.*softw|softw.*install/.test(t);
    if (!isInstallRequest && (/\bword\b|\bexcel\b|\bpowerpoint\b/.test(t))) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };
    if (!isInstallRequest && (/\bms\s*office\b|\bmicrosoft\s*office\b/.test(t))) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };
 
