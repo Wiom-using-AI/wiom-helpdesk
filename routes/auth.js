@@ -31,14 +31,14 @@ router.post('/admin-login', async (req, res) => {
 });
 
 // ── POST /api/auth/employee-login ─────────────────────────────────────────────
-// Employees login with Keka empId (no password — internal tool)
+// Employees login with Keka empId (internal tool — no password by design)
 router.post('/employee-login', async (req, res) => {
   try {
     const { empId } = req.body;
     if (!empId) return res.status(400).json({ error: 'Employee ID required' });
 
     const emp = await Employee.findOne({ empId: empId.toUpperCase(), isActive: true });
-    if (!emp) return res.status(404).json({ error: 'Employee not found. Contact ADMIN_EMAIL.' });
+    if (!emp) return res.status(404).json({ error: 'Employee not found. Contact IT Admin.' });
 
     emp.lastLogin = new Date();
     await emp.save();
@@ -68,24 +68,30 @@ router.post('/employee-login', async (req, res) => {
 });
 
 // ── POST /api/auth/setup-admin ────────────────────────────────────────────────
-// Run once to create first admin (disable after)
+// BUG-04 fix: disabled by default — only active when SETUP_ENABLED=true (not SETUP_DISABLED)
+// Run once on fresh deploy to create first admin, then remove SETUP_ENABLED from env
 router.post('/setup-admin', async (req, res) => {
-  if (process.env.SETUP_DISABLED === 'true')
-    return res.status(403).json({ error: 'Setup disabled' });
+  if (process.env.SETUP_ENABLED !== 'true')
+    return res.status(403).json({ error: 'Setup is disabled. Set SETUP_ENABLED=true in env to enable.' });
 
   try {
-    const existing = await Admin.findOne({ username: 'ADMIN_EMAIL' });
-    if (existing) return res.status(400).json({ error: 'Admin already exists' });
+    const count = await Admin.countDocuments();
+    if (count > 0) return res.status(400).json({ error: 'Admin already exists. Use admin panel to add more.' });
 
+    const { password, name, email } = req.body;
+    if (!password || password.length < 8)
+      return res.status(400).json({ error: 'Password required (min 8 chars)' });
+
+    // BUG-03 fix: use a proper username, require password explicitly
     const admin = await Admin.create({
-      username    : 'ADMIN_EMAIL',
-      passwordHash: req.body.password || 'Wiom@2024',
-      name        : 'IT Admin',
-      email       : process.env.ADMIN_EMAIL || 'it@wiom.in',
+      username    : 'it_admin',
+      passwordHash: password,
+      name        : name || 'IT Admin',
+      email       : email || process.env.ADMIN_EMAIL || 'it@wiom.in',
       role        : 'superadmin'
     });
 
-    res.json({ message: 'Admin created', username: admin.username });
+    res.json({ message: 'Admin created successfully', username: admin.username });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

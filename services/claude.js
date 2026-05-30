@@ -430,11 +430,21 @@ const getKBFallback = (problem) => {
 const callGemini = async (systemPrompt, history) => {
   if (!gemini) throw new Error('Gemini client not initialized — GEMINI_API_KEY missing');
   const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
-  // Build chat history for Gemini format
-  const geminiHistory = history.slice(0, -1).map(m => ({
+  // BUG-21 fix: Gemini requires strictly alternating user/model roles.
+  // Merge consecutive same-role messages so API doesn't reject with 400.
+  const rawHistory = history.slice(0, -1).map(m => ({
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: m.content }]
   }));
+  const geminiHistory = [];
+  for (const msg of rawHistory) {
+    if (geminiHistory.length > 0 && geminiHistory[geminiHistory.length - 1].role === msg.role) {
+      // Merge into previous entry (same role — Gemini would reject)
+      geminiHistory[geminiHistory.length - 1].parts[0].text += '\n' + msg.parts[0].text;
+    } else {
+      geminiHistory.push(msg);
+    }
+  }
   const chat = model.startChat({
     history: geminiHistory,
     generationConfig: { maxOutputTokens: 500, temperature: 0.55 }

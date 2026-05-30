@@ -255,13 +255,18 @@ cron.schedule('*/30 * * * *', async () => {
  { $match: { count: { $gte: 3 } } }
  ]);
 
+ // BUG-10/22 fix: TTL Map instead of Set — evict per-entry after 1h, no full-clear storm
+ if (!global._sentRecurringAlerts) global._sentRecurringAlerts = new Map();
+ const now_ms = Date.now();
+ // Evict entries older than 1 hour (1-by-1, not full clear)
+ for (const [k, ts] of global._sentRecurringAlerts) {
+   if (now_ms - ts > 3600000) global._sentRecurringAlerts.delete(k);
+ }
+
  for (const g of grouped) {
- const key = `recurring-alert-${g._id}-${new Date().toISOString().slice(0,13)}`;
- // Avoid duplicate alerts in same hour (use simple in-memory set)
- if (!global._sentRecurringAlerts) global._sentRecurringAlerts = new Set();
- if (global._sentRecurringAlerts.size > 200) global._sentRecurringAlerts.clear(); // prevent memory leak
+ const key = `recurring-alert-${g._id}`;
  if (global._sentRecurringAlerts.has(key)) continue;
- global._sentRecurringAlerts.add(key);
+ global._sentRecurringAlerts.set(key, now_ms);
 
  await slackClient.chat.postMessage({
  channel: adminId,
@@ -282,19 +287,27 @@ cron.schedule('*/30 * * * *', async () => {
 });
 
 // ── Auto-create default admin if none exists ──────────────────────────────────
+// BUG-03/20 fix: use meaningful username, require ADMIN_PASSWORD env var, never log password
 const ensureAdminExists = async () => {
  try {
  const Admin = require('./models/Admin');
  const count = await Admin.countDocuments();
  if (count === 0) {
+ const pwd = process.env.ADMIN_PASSWORD;
+ if (!pwd) {
+   console.warn('⚠️  No admin exists and ADMIN_PASSWORD env var is not set.');
+   console.warn('   Set ADMIN_PASSWORD in Railway env vars, then restart.');
+   console.warn('   Or POST /api/auth/setup-admin with SETUP_ENABLED=true to create manually.');
+   return;
+ }
  await Admin.create({
- username : 'ADMIN_EMAIL',
- passwordHash: process.env.ADMIN_PASSWORD || 'Wiom@2024',
- name : 'IT Admin',
- email : process.env.ADMIN_EMAIL || 'it@wiom.in',
- role : 'superadmin'
+   username : 'it_admin',
+   passwordHash: pwd,
+   name : process.env.ADMIN_NAME || 'IT Admin',
+   email : process.env.ADMIN_EMAIL || 'it@wiom.in',
+   role : 'superadmin'
  });
- console.log('✅ Default admin created: ADMIN_EMAIL / Wiom@2024');
+ console.log('✅ Default admin created — username: it_admin (password from ADMIN_PASSWORD env var)');
  }
  } catch (err) {
  console.error('Admin setup error:', err.message);
@@ -707,7 +720,7 @@ app.listen(PORT, async () => {
    if (/charg/.test(t) && /laptop|pc|computer|plug/.test(t)) return { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' };
 
    if (/sleep|wake|hibernate|suspend/.test(t)) return { file: 'fix-sleep-wake.bat', label: '💤 Auto-Fix: Sleep/Wake' };
-   if (/turn on|boot|start nahi|on nahi|won.?t turn/.test(t)) return { file: 'fix-wont-turn-on.bat', label: '⚡ Auto-Fix: Won\'t Turn On' };
+   // BUG-08 fix: "won't turn on" removed — laptop must be ON to run a script
    if (/sudden shutdown|shut.?down|band ho|band ho jata/.test(t)) return { file: 'fix-sudden-shutdown.bat', label: '⚡ Auto-Fix: Sudden Shutdown' };
 
    // ── Software apps BEFORE network — "teams not connecting" ≠ wifi ─────
@@ -1340,8 +1353,9 @@ app.listen(PORT, async () => {
  slackApp.command('/broadcast', async ({ command, ack, client }) => {
  await ack();
  const adminId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
- // Only admin can broadcast
- if (adminId && command.user_id !== adminId) {
+ // BUG-06 fix: deny if adminId not configured OR user is not the admin
+ // Flipped logic — default is DENY, not allow
+ if (!adminId || adminId === 'FILL_KARO' || command.user_id !== adminId) {
  await client.chat.postEphemeral({
  channel: command.channel_id, user: command.user_id,
  text: '❌ Sirf IT Admin broadcast kar sakta hai!'
@@ -3374,9 +3388,9 @@ app.listen(PORT, async () => {
      // Get pendingTickets data (set by KB/AI path) or fallback to button value / conversation
      let pending = pendingTickets.get(userId);
      if (!pending) {
-       // BUG-11 fix: use button value (user's problem text stored in buildDMBlocks) not AI reply
+       // BUG-18 fix: conversations use slackUserId not sessionId; sort by lastActive for most recent
        const btnValue = body.actions?.[0]?.value || '';
-       const conv = await Conversation.findOne({ sessionId: userId }).lean().catch(() => null);
+       const conv = await Conversation.findOne({ slackUserId: userId }).sort({ lastActive: -1 }).lean().catch(() => null);
        const firstUserMsg = conv?.messages?.filter(m => m.role === 'user')?.[0]?.content || '';
        const problemText = (btnValue.length > 10 && !/^(Critical|High|Medium|Low|script)$/.test(btnValue))
          ? btnValue
@@ -3439,8 +3453,11 @@ app.listen(PORT, async () => {
  const adminId = (process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID);
  if (!adminId || adminId === 'FILL_KARO') return;
 
- const todayStart = new Date();
- todayStart.setUTCHours(0, 0, 0, 0);
+ // BUG-09 fix: use IST midnight (UTC 18:30 prev day) not UTC midnight
+ const IST_OFFSET_MS = 5.5 * 3600000;
+ const todayStart = new Date(
+   Math.floor((Date.now() + IST_OFFSET_MS) / 86400000) * 86400000 - IST_OFFSET_MS
+ );
 
  const [totalOpen, newToday, resolvedToday, critical, slaBreached] = await Promise.all([
  Ticket.countDocuments({ status: { $in: ['Open', 'In Progress'] } }),
@@ -3466,8 +3483,7 @@ app.listen(PORT, async () => {
  timeZone: 'Asia/Kolkata'
  });
 
- // Trending: top categories today
- const todayStart2 = new Date(); todayStart2.setHours(0,0,0,0);
+ // Trending: top categories (last 7 days) — todayStart already IST-correct
  const trendData = await Ticket.aggregate([
  { $match: { createdAt: { $gte: new Date(Date.now() - 7*24*3600000) } } },
  { $group: { _id: '$category', count: { $sum: 1 } } },

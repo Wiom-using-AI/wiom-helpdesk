@@ -16,11 +16,13 @@ const ticketSchema = new mongoose.Schema({
   empDept    : { type: String },
   empFloor   : { type: String },
   laptop     : { type: String },                  // Assigned laptop model
+  laptopSN   : { type: String },                  // BUG-16 fix: serial number persisted with ticket
 
   // ── Issue Details ────────────────────────────────────────────────────────────
   category   : {
     type: String,
-    enum: ['Hardware','Software','Network','Account','Purchase','Other'],
+    // BUG-24 fix: added 'Theft/Loss' to enum so theft tickets don't fail on save
+    enum: ['Hardware','Software','Network','Account','Purchase','Theft/Loss','Other'],
     default: 'Other'
   },
   priority   : {

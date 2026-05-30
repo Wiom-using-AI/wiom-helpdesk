@@ -1,7 +1,9 @@
-const jwt = require('jsonwebtoken');
+const jwt   = require('jsonwebtoken');
+const Admin = require('../models/Admin');
 
 // ── Verify JWT for admin routes ───────────────────────────────────────────────
-const verifyAdmin = (req, res, next) => {
+// BUG-11 fix: DB check ensures deactivated admins can't use old tokens
+const verifyAdmin = async (req, res, next) => {
   const header = req.headers['authorization'];
   if (!header || !header.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No token provided' });
@@ -10,6 +12,11 @@ const verifyAdmin = (req, res, next) => {
   const token = header.split(' ')[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Confirm admin still exists and is active in DB
+    const admin = await Admin.findOne({ _id: decoded.id, isActive: true }).lean();
+    if (!admin) return res.status(401).json({ error: 'Account deactivated or not found' });
+
     req.admin = decoded;
     next();
   } catch (err) {

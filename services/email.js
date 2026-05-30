@@ -57,8 +57,8 @@ const sendTicketConfirmation = async (ticket) => {
       </table>
     </div>
 
-    <p style="color:#374151;font-size:14px">Koi bhi update ke liye ADMIN_EMAIL se directly contact karein:<br>
-    📱 <strong>IT Helpdesk (Slack)</strong> | 📧 <strong>ADMIN_EMAIL.kumar@wiom.in</strong></p>
+    <p style="color:#374151;font-size:14px">Koi bhi update ke liye IT Admin se directly contact karein:<br>
+    📱 <strong>IT Helpdesk (Slack)</strong> | 📧 <strong>${ADMIN_EMAIL}</strong></p>
   `);
 
   await transporter.sendMail({

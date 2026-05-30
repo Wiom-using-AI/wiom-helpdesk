@@ -2,6 +2,19 @@ const router   = require('express').Router();
 const Employee = require('../models/Employee');
 const { verifyAdmin } = require('../middleware/auth');
 
+// ── Allowed fields for employee create/update (BUG-02 fix: prevent mass-assignment) ──
+const allowedEmployeeFields = [
+  'empId','name','email','department','designation','floor','phone',
+  'laptop','laptopSN','isActive','slackUserId','slackHandle'
+];
+const pickAllowed = (body) => {
+  const safe = {};
+  for (const key of allowedEmployeeFields) {
+    if (body[key] !== undefined) safe[key] = body[key];
+  }
+  return safe;
+};
+
 // ── GET /api/employees  — List all ───────────────────────────────────────────
 router.get('/', verifyAdmin, async (req, res) => {
   try {
@@ -35,7 +48,12 @@ router.get('/:empId', verifyAdmin, async (req, res) => {
 // ── POST /api/employees  — Add employee ───────────────────────────────────────
 router.post('/', verifyAdmin, async (req, res) => {
   try {
-    const emp = await Employee.create(req.body);
+    // BUG-02 fix: only allowed fields are saved
+    const data = pickAllowed(req.body);
+    if (!data.empId || !data.name)
+      return res.status(400).json({ error: 'empId and name required' });
+    data.empId = data.empId.toUpperCase();
+    const emp = await Employee.create(data);
     res.status(201).json({ success: true, employee: emp });
   } catch (err) {
     if (err.code === 11000) return res.status(400).json({ error: 'Employee ID already exists' });
@@ -49,15 +67,25 @@ router.post('/bulk', verifyAdmin, async (req, res) => {
     const { employees } = req.body;
     if (!Array.isArray(employees)) return res.status(400).json({ error: 'employees array required' });
 
+    // BUG-25 fix: track inserts vs updates separately
     const results = { inserted: 0, updated: 0, errors: [] };
     for (const e of employees) {
       try {
-        await Employee.findOneAndUpdate(
-          { empId: e.empId.toUpperCase() },
-          e,
-          { upsert: true, new: true }
+        const data = pickAllowed(e);
+        if (!data.empId) { results.errors.push({ empId: e.empId, error: 'empId required' }); continue; }
+        data.empId = data.empId.toUpperCase();
+
+        const result = await Employee.findOneAndUpdate(
+          { empId: data.empId },
+          { $set: data },
+          { upsert: true, new: true, rawResult: true }
         );
-        results.inserted++;
+        // rawResult.lastErrorObject.updatedExisting = true if existing doc was updated
+        if (result.lastErrorObject?.updatedExisting) {
+          results.updated++;
+        } else {
+          results.inserted++;
+        }
       } catch (err) {
         results.errors.push({ empId: e.empId, error: err.message });
       }
@@ -71,9 +99,14 @@ router.post('/bulk', verifyAdmin, async (req, res) => {
 // ── PATCH /api/employees/:empId  — Update employee ───────────────────────────
 router.patch('/:empId', verifyAdmin, async (req, res) => {
   try {
+    // BUG-02 fix: only allowed fields are updated
+    const data = pickAllowed(req.body);
+    if (!Object.keys(data).length)
+      return res.status(400).json({ error: 'No valid fields to update' });
+
     const emp = await Employee.findOneAndUpdate(
       { empId: req.params.empId.toUpperCase() },
-      req.body,
+      { $set: data },
       { new: true }
     );
     if (!emp) return res.status(404).json({ error: 'Employee not found' });

@@ -105,14 +105,28 @@ router.patch('/team/:username', verifyAdmin, async (req, res) => {
 // ── GET /api/admin/charts  — Analytics data for dashboard ─────────────────────
 router.get('/charts', verifyAdmin, async (req, res) => {
   try {
-    // 7-day ticket trend
+    // BUG-14 fix: single aggregation instead of 7 sequential countDocuments calls
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600000);
+    const IST_OFFSET_MS = 5.5 * 3600000;
+    const trendRaw = await Ticket.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      { $project: {
+          // Convert to IST date string (UTC + 5:30)
+          day: { $dateToString: { format: '%Y-%m-%d', date: { $add: ['$createdAt', IST_OFFSET_MS] } } }
+      }},
+      { $group: { _id: '$day', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    ]);
+    const countByDay = Object.fromEntries(trendRaw.map(r => [r._id, r.count]));
+
     const trendLabels = [], trendData = [];
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
-      const next = new Date(d); next.setDate(next.getDate() + 1);
-      const count = await Ticket.countDocuments({ createdAt: { $gte: d, $lt: next } });
-      trendData.push(count);
-      trendLabels.push(d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }));
+      const d = new Date(Date.now() - i * 24 * 3600000);
+      // Day label in IST
+      const istDate = new Date(d.getTime() + IST_OFFSET_MS);
+      const key = istDate.toISOString().slice(0, 10); // YYYY-MM-DD in IST
+      trendData.push(countByDay[key] || 0);
+      trendLabels.push(d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }));
     }
 
     // Category breakdown

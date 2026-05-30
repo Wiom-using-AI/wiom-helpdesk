@@ -3,6 +3,7 @@ const Conversation = require('../models/Conversation');
 const Ticket       = require('../models/Ticket');
 const claudeSvc    = require('../services/claude');
 const emailSvc     = require('../services/email');
+const { verifyAdmin } = require('../middleware/auth');
 
 // ── POST /api/ai/chat  — Main AI chat endpoint ────────────────────────────────
 router.post('/chat', async (req, res) => {
@@ -152,7 +153,8 @@ router.post('/stream', async (req, res) => {
 });
 
 // ── GET /api/ai/history/:empId  — Get chat history for employee ───────────────
-router.get('/history/:empId', async (req, res) => {
+// BUG-28 fix: requires admin auth — conversation history is sensitive
+router.get('/history/:empId', verifyAdmin, async (req, res) => {
   try {
     const convs = await Conversation.find({ empId: req.params.empId })
       .sort({ createdAt: -1 }).limit(10)
@@ -164,7 +166,8 @@ router.get('/history/:empId', async (req, res) => {
 });
 
 // ── GET /api/ai/session/:sessionId  — Get full conversation ──────────────────
-router.get('/session/:sessionId', async (req, res) => {
+// BUG-29 fix: requires admin auth — session IDs are predictable, full messages exposed
+router.get('/session/:sessionId', verifyAdmin, async (req, res) => {
   try {
     const conv = await Conversation.findOne({ sessionId: req.params.sessionId });
     if (!conv) return res.status(404).json({ error: 'Session not found' });
