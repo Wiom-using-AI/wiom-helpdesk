@@ -141,13 +141,17 @@ Then: "Agar phir bhi nahi mila — ABHI Sajan Kumar ko call karo: 9654244281. HR
 - VPN: WIOM mein VPN USE NAHI HOTA — agar koi VPN pooche: "WIOM mein VPN use nahi hota. Koi aur IT issue?"
 - Door access card: New employees ko IT/Admin door access card deta hai — card issue = IT ticket
 - Projector/HDMI: Conference rooms mein use hota hai — IT handles
-- No custom proprietary software — standard MS Office, Teams, Outlook, Chrome etc.
+- Software used: MS Office (Word/Excel/PowerPoint), Microsoft Teams, Google Chrome, Google Workspace
+- Email: GMAIL (Google Workspace) — NOT Outlook. "email nahi chal rha" = Gmail issue
+- NEVER suggest Outlook steps — WIOM uses Gmail. outlook.office365.com is WRONG
+- Admin rights: Employees do NOT have admin rights — cannot install/uninstall software themselves
+  → Any install, driver update, or software change REQUIRES IT team (raise ticket)
 - WiFi: Office WiFi (spartans500) — no router/modem access for employees
 
 ━━━ OUT OF SCOPE ━━━
 Personal phone (employee's own phone), TV, AC, lights, ceiling fan, furniture, electricity, lift, water issues, pantry → "Yeh IT ke scope mein nahi — Admin/Facilities team se contact karo."
 OFFICE PHONE (company-provided testing phone) → IN SCOPE — IT handles
-IT scope: laptop, WiFi, software, passwords, Teams, Outlook, printer, camera, mic, HDMI/projector, door access card, office phones
+IT scope: laptop, WiFi, software, passwords, Teams, Gmail, printer, camera, mic, HDMI/projector, door access card, office phones
 
 ━━━ TICKET RULES ━━━
 NEVER say ticket already sent/created/raised — you CANNOT do that
@@ -162,25 +166,26 @@ IT Admin: Sajan Kumar | 📞 9654244281 | sajan.kumar@wiom.in
 NEVER suggest router/modem/cable changes — only laptop-side Windows fixes
 
 ━━━ TROUBLESHOOTING KNOWLEDGE ━━━
-Slow laptop: Task Manager → End Task heavy apps → Restart. Fails: msconfig → Startup → disable → restart. Still slow = ticket (RAM/SSD)
+Slow laptop: Task Manager → End Task heavy apps → Restart. Fails: msconfig → Startup → disable → restart. Still slow = ticket (RAM/SSD need upgrade, IT will check)
 Blue screen: Note error code → restart (usually fixes). 3+ times = ticket immediately
 Black screen: Fn+F5/F8 brightness → 10sec power restart → external monitor test via HDMI
 Battery not charging: Replug both ends → different socket → shutdown → remove charger → hold power 30sec → reconnect
 Fan noise/not working: Shut down NOW, remove charger — hardware risk, ticket immediately
 Overheating: Hard surface → Task Manager end heavy apps → set Balanced power mode
-Teams: Quit from system tray → reopen. Fails: delete %appdata%\Microsoft\Teams\Cache
-Outlook: Run outlook /safe → repair account. Fails: use outlook.office365.com in browser
-Camera: Settings → Privacy → Camera → ON. App settings → select correct camera. Fails: Device Manager → Cameras → Disable → Enable
-Keyboard: Restart → use osk.exe (on-screen keyboard). Fails: Device Manager → Keyboards → Uninstall → restart
+Teams: Quit from system tray → reopen. Fails: delete %appdata%\Microsoft\Teams\Cache. Still fails = ticket
+Gmail/Email not working: Open gmail.com in Chrome incognito → check if opens. Fails → clear Chrome cache (Ctrl+Shift+Del) → try again. Password forgot = IT raises Google account reset
+Gmail password forgot: IT Admin reset karta hai → ticket raise karo (employees cannot reset Google account password themselves — needs IT)
+Camera: Settings → Privacy → Camera → ON. App settings → select correct camera. Fails: Device Manager → Cameras → Disable → Enable. Still fails = ticket
+Keyboard: Restart → use osk.exe (on-screen keyboard). Fails: Device Manager → Keyboards → Uninstall → restart. NEVER suggest driver download — no admin rights
 Printer not printing: Turn OFF/ON → restart Print Spooler (services.msc). Fails = ticket
-Printer not visible on network: IT ticket — network access setup needed
-HDMI/Projector not connecting: Check cable → try different HDMI port → display settings → Detect. Fails = ticket
+Printer not visible on network: IT ticket — network access setup needed, employee cannot add themselves (no admin rights)
+HDMI/Projector not connecting: Check cable → try different HDMI port → Win+P → Extend → Detect. Fails = ticket
 Door access card not working: IT/Admin ticket — card reprogramming needed
 Office phone issue: IT ticket — IT handles company-provided phones
 Storage full: cleanmgr → delete %temp% → empty Recycle Bin
 USB not working: Try different port → Device Manager → USB → Uninstall → Scan for changes
 Bluetooth: Settings toggle OFF/ON → Device Manager → Bluetooth → Disable → Enable
-Virus/Malware: Windows Security → Quick Scan → disconnect internet if serious → ticket
+Virus/Malware: Windows Security → Quick Scan → disconnect internet if serious → ticket immediately
 Password (Windows/email/account): Ticket only — IT resets
 Software install: Ticket only — needs IT permission and license
 VPN: WIOM mein use nahi hota — tell user this directly
@@ -232,8 +237,8 @@ const detectIntent = (messages) => {
     return { category: 'ACCOUNT_WINDOWS', hint: 'Windows login password issue. SKIP question. Say directly: "Windows password sirf IT reset kar sakta hai — type karo *ha*, main IT ko bhej deta hoon 🎫"' };
 
   // Outlook/Teams specific error
-  if (/(outlook|teams).*(nahi khul|not opening|crash|band ho|error|loading)/.test(recentText))
-    return { category: 'SOFTWARE_SPECIFIC', hint: 'User gave specific app + error detail. SKIP question. Give app-specific fix: Outlook: outlook /safe → repair. Teams: system tray quit → reopen → cache clear.' };
+  if (/(gmail|email|teams).*(nahi khul|not opening|crash|band ho|error|loading|nahi aa rha|nahi chal)/.test(recentText))
+    return { category: 'SOFTWARE_SPECIFIC', hint: 'User gave specific app + error. SKIP question. WIOM uses Gmail NOT Outlook. Gmail fix: incognito test → clear Chrome cache → try different browser. Teams fix: system tray quit → reopen → cache clear (%appdata%\\Microsoft\\Teams\\Cache). Give direct steps now.' };
 
   // ── GENERAL NETWORK — ask diagnostic question ──
   // NOTE: "nahi chal" alone is NOT here — too broad, matches "steps nahi chale" etc.
@@ -274,7 +279,7 @@ const detectIntent = (messages) => {
 
   // ACCOUNT / PASSWORD
   if (/password|login|locked|account|access|sign in|signin|password bhool|bhool gaya password/.test(recentText))
-    return { category: 'ACCOUNT', hint: 'ACCOUNT/PASSWORD ISSUE. First ask: "Windows ka password hai ya kisi app ka — Gmail, Outlook?" — Windows/email = ticket only. Google = self-service.' };
+    return { category: 'ACCOUNT', hint: 'ACCOUNT/PASSWORD ISSUE. WIOM uses Gmail (Google Workspace) NOT Outlook. Windows password reset = ticket only (IT handles). Gmail/Google password reset = ticket only (IT handles company Google accounts — employees cannot self-reset). Do NOT give self-service Google password steps. Raise ticket directly.' };
 
   // SECURITY
   if (/virus|malware|hack|ransomware|suspicious|phishing/.test(recentText))
@@ -399,13 +404,20 @@ const getKBFallback = (problem) => {
   if (pn.includes('zoom'))
     return `Zoom issue. Please yeh steps try karein:\n\n1. Zoom close karein → dobara open karein\n2. Internet connection check karein → zoom.us/wc/join browser mein try karein\n3. Zoom Settings → Audio/Video → correct device select karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (pn.includes('outlook') || pn.includes('email'))
-    return `Outlook issue. Please yeh steps try karein:\n\n1. Ctrl+Shift+Esc → Outlook process end karein\n2. Win+R → outlook /safe → Enter\n3. outlook.office365.com browser mein try karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+  // WIOM uses Gmail (Google Workspace) — NOT Outlook
+  // "email nahi chal rha", "gmail nahi khul rha", "mail nahi aa rha"
+  if (pn.includes('outlook')) {
+    return `ℹ️ WIOM mein Outlook use nahi hota — *Gmail* use hoti hai.\n\nGmail se koi problem hai? gmail.com open karein Chrome mein aur batayein kya issue aa raha hai.`;
+  }
+  if (pn.includes('email') || pn.includes('gmail') || pn.includes('mail')) {
+    return `📧 *Gmail Issue* — yeh steps try karein:\n\n1. *Incognito mein check karein* → Chrome → Ctrl+Shift+N → gmail.com → dekho khulta hai ya nahi\n2. *Chrome cache clear karein* → Ctrl+Shift+Del → "All time" → Cookies + Cache → Clear\n3. *Alag browser try karein* → Firefox ya Edge mein gmail.com kholein\n4. *Account switch karo* → Gmail top-right profile icon → correct account select karein\n\nAgar phir bhi nahi hua, type karein *ha* — IT ticket raise karta hoon 🎫`;
+  }
 
   if (pn.includes('password') || pn.includes('locked') || pn.includes('login') || /pas?w?ro?d/.test(pn)) {
-    if (/google|gmail/.test(pn))
-      return `Google account password reset ke liye:\n\n1. myaccount.google.com par jaayein\n2. Security tab → "How you sign in to Google" → Password\n3. Verify karein aur naya password set karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
-    return `Windows/Account password reset sirf IT team kar sakti hai.\n\nPlease type karein *ha* — IT ticket raise kar deta hoon, team jaldi reset kar degi 🎫`;
+    // Gmail/Google password — IT handles (no admin rights to self-reset company Google accounts)
+    if (/google|gmail|email|mail/.test(pn))
+      return `🔑 *Gmail/Google Account Password*\n\nCompany Gmail account ka password reset IT Admin karta hai — employees khud reset nahi kar sakte.\n\nType karein *ha* — IT ticket raise karta hoon, jaldi reset ho jaayega 🎫`;
+    return `🔑 *Password/Login Issue*\n\nPassword reset sirf IT team kar sakti hai.\n\nType karein *ha* — IT ticket raise karta hoon, team jaldi reset kar degi 🎫`;
   }
 
   if (pn.includes('bluetooth'))
@@ -813,10 +825,10 @@ const getKBAnswer = (problem) => {
       /\bms\s*office\b|\bmicrosoft\s*office\b/i.test(pn) ? 'MS Office' :
       /\bteams\b/i.test(pn) ? 'Microsoft Teams' :
       /\bzoom\b/i.test(pn) ? 'Zoom' :
-      /\boutlook\b/i.test(pn) ? 'Outlook' :
+      /\boutlook\b/i.test(pn) ? 'Outlook' :  // Rare — WIOM uses Gmail but someone may ask
       /\bchrome\b/i.test(pn) ? 'Google Chrome' :
       /\bword\b|\bexcel\b|\bpowerpoint\b/i.test(pn) ? 'MS Office (Word/Excel)' :
-      /\bonedrive\b/i.test(pn) ? 'OneDrive' :
+      /\bgmail\b|\bgoogle\b/i.test(pn) ? 'Google Workspace' :
       /\bvpn\b/i.test(pn) ? 'VPN' : 'Software';
     return `💿 *${software} Installation*\n\nSoftware install karne ke liye *admin rights aur valid license key* ki zarurat hoti hai — yeh sirf IT team kar sakti hai.\n\nIT team aapke laptop par aake install kar degi.\nType karo *ha* — abhi IT ticket raise karta hoon 🎫`;
   }
