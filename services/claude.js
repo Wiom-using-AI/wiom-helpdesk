@@ -175,6 +175,7 @@ Overheating: Hard surface → Task Manager end heavy apps → set Balanced power
 Teams: Quit from system tray → reopen. Fails: delete %appdata%\Microsoft\Teams\Cache. Still fails = ticket
 Gmail/Email not working: Open gmail.com in Chrome incognito → check if opens. Fails → clear Chrome cache (Ctrl+Shift+Del) → try again. Password forgot = IT raises Google account reset
 Gmail password forgot: IT Admin reset karta hai → ticket raise karo (employees cannot reset Google account password themselves — needs IT)
+Apple ID / MacBook password: Apple ID ≠ Google account ≠ Windows password — these are 3 DIFFERENT things. NEVER say Apple ID = Google account. Company MacBook = IT handles. Personal Apple device (iPhone/iPad) = out of scope (support.apple.com). NEVER suggest Google account recovery for Apple ID questions.
 Camera: Settings → Privacy → Camera → ON. App settings → select correct camera. Fails: Device Manager → Cameras → Disable → Enable. Still fails = ticket
 Keyboard: Restart → use osk.exe (on-screen keyboard). Fails: Device Manager → Keyboards → Uninstall → restart. NEVER suggest driver download — no admin rights
 Printer not printing: Turn OFF/ON → restart Print Spooler (services.msc). Fails = ticket
@@ -865,6 +866,13 @@ const getKBAnswer = (problem) => {
       /charging/.test(pn) ? 'Charger' :
       /mouse/.test(pn) ? 'Mouse' : 'Hardware';
     return `🔧 *${part} physically damage hai* — software se yeh fix nahi hoga.\n\nIT team ko bhejte hain, woh physically check karke replace karenge.\nType karo *ha* — main abhi HIGH PRIORITY ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🍎 APPLE ID / MACBOOK — separate from Google account & Windows password ──
+  // "Apple ID bhool gaya", "MacBook ka password", "Apple M4 login nahi ho rha"
+  // IMPORTANT: Apple ID ≠ Google account ≠ Windows password — completely different things
+  if (/\b(apple\s*id|appleid|apple\s*account|icloud|macbook|mac\s*book|mac\s*os|macos|apple\s*m[1-4]|apple\s*password|apple.*login|apple.*password)\b/i.test(pn)) {
+    return `🍎 *Apple ID / MacBook Issue*\n\nApple ID aur Google account alag hote hain — inhe mix mat karo.\n\n*Company MacBook hai?*\nIT Admin company Apple devices manage karta hai — woh reset kar denge.\nType karo *ha* — IT ticket raise karta hoon 🎫\n\n*Personal iPhone/iPad ke liye Apple ID bhool gaye?*\nYeh personal device hai — IT scope mein nahi aata.\nApple support se help lo: *support.apple.com/en-in/forgot-password*`;
   }
 
   // ── 🚨 THEFT / LOSS — HIGHEST PRIORITY — check BEFORE anything else ────
