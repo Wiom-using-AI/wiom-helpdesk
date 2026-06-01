@@ -606,6 +606,9 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     .replace(/\barre\b/gi, '')
     .replace(/\byaar\b/gi, '')
     .replace(/\bbhai\b/gi, '')
+    // Remove phone number — never show in any bot message
+    .replace(/📞?\s*9654244281/g, '')
+    .replace(/\b9654244281\b/g, '')
     // Remove "common issue/problem" openers — go straight to solution
     .replace(/yeh\s+ek\s+(common\s+)?(boot|wifi|network|laptop|hardware|software|display|screen|password|account|printer|teams|email|gmail)?\s*(issue|problem|error)\s+hai[.!,—–-]?\s*/gi, '')
     .replace(/this\s+is\s+a\s+(common\s+)?(issue|problem|error)[.!,—–-]?\s*/gi, '')
@@ -778,6 +781,11 @@ const getKBAnswer = (problem) => {
     .replace(/\bcamra\b/g, 'camera')                 // camra
     .replace(/\bkeybo?r?a?d\b/g, 'keyboard')         // keyborad, keybord
     .replace(/\bcharg(e|er|ing)?\b/g, 'charging');   // normalize charger/charging
+
+  // ── 📹 CCTV — not IT scope, Admin handles ────────────────────────────────
+  if (/\b(cctv|camera\s*footage|security\s*camera|recording|footage|surveillance)\b/i.test(pn)) {
+    return `📹 CCTV access IT helpdesk ke scope mein nahi aata.\n\nCCTV ke liye *Admin team* se contact karein.\nKoi laptop ya IT problem ho toh batao!`;
+  }
 
   // ── 🚫 OUT OF SCOPE — TV, AC, furniture, electricity etc. ───────────────
   // Personal phones OUT OF SCOPE — but office/company phones = IT handles
