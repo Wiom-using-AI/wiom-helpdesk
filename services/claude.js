@@ -72,7 +72,7 @@ WIOM employees are NON-TECHNICAL office workers. They are NOT IT people.
 - Give MAXIMUM 3-4 simple steps that anyone can do in 2 minutes
 - NO Safe Mode, NO CMD commands, NO Device Manager, NO BIOS, NO chkdsk — these are IT admin tasks
 - Steps must be: click this button, plug/unplug, restart — nothing more
-- If basic steps fail → IMMEDIATELY say "IT Admin ko call karo: 9654244281" + raise ticket
+- If basic steps fail → raise IT ticket immediately
 - Think: "Can a non-tech person do this in 30 seconds?" — if NO, don't include it
 
 ━━━ GIVING STEPS — THE MOST IMPORTANT PART ━━━
@@ -360,7 +360,7 @@ const getKBFallback = (problem) => {
   // Laptop won't start / boot / turn on
   // ISSUE 5 fix: added English boot phrases ("won't turn on", "not turning on", "laptop dead")
   if (/\b(laptop|leptop|lptop|latop)\b.*(on\s*nahi|start\s*nahi|band\s*ho|nahi\s*chalta|khulta\s*nahi|nahi\s*khulta|chal\s*nahi|chalti\s*nahi|chalte\s*nahi)|boot\s*nahi|(switch|power)\s*on\s*nahi|laptop\s*nahi\s*(chal|start|on|boot)|on\s*nahi\s*ho\s*rh|(nahi\s*ho\s*rh|nahi\s*chal).*(laptop|leptop|lptop|latop)|won.?t\s*(turn\s*on|start|boot)|not\s*turning\s*on|not\s*starting|laptop\s*(is\s*)?(dead|not\s*starting)|no\s*power\s*laptop/.test(pn))
-    return `Yeh 3 cheezein try karo:\n\n1. *Charger check karo* — charger properly laga hai? Alag socket mein try karo\n2. *10 second hold* — power button 10 sec tak dabao → chhoddo → 30 sec wait karo → dobara try karo\n3. *Charger nikaal ke try karo* — charger hatao → power button 30 sec hold karo → charger lagao → on karo\n\nAgar in teeno se bhi nahi khula — *IT Admin ko call karo: 📞 9654244281*\nType karo *ha* — HIGH PRIORITY ticket raise karta hoon 🎫`;
+    return `Yeh 3 cheezein try karo:\n\n1. *Charger check karo* — charger properly laga hai? Alag socket mein try karo\n2. *10 second hold* — power button 10 sec tak dabao → chhoddo → 30 sec wait karo → dobara try karo\n3. *Charger nikaal ke try karo* — charger hatao → power button 30 sec hold karo → charger lagao → on karo\n\nType karo *ha* — HIGH PRIORITY ticket raise karta hoon 🎫`;
 
   // Overheating
   if (/\b(laptop|leptop|lptop|latop)\b.*(garm|garam|heat|hot\b)|garm.*(laptop|leptop)|(overheat|over\s*heat|bahut\s*garam|bahut\s*garm|zyada\s*heat|zyada\s*garm)/.test(pn))
@@ -454,7 +454,7 @@ const getKBFallback = (problem) => {
     return `Main *Zivon* hoon — WIOM ka IT support assistant.\nLaptop, WiFi, software, password — kisi bhi IT issue mein help kar sakta hoon.\nPlease batayein aapka issue kya hai.`;
 
   if (pn.includes('sajan') || pn.includes('admin') || pn.includes('it head') || pn.includes('phone number') || pn.includes('number do'))
-    return 'IT Admin: *Sajan Kumar*\nPhone: 9654244281\nEmail: sajan.kumar@wiom.in';
+    return 'IT Admin: *Sajan Kumar* | 📧 sajan.kumar@wiom.in';
 
   return `Please describe your issue in a bit more detail — what exactly is happening? Any error message on screen? The more information you provide, the faster I can help.`;
 };
@@ -798,7 +798,7 @@ const getKBAnswer = (problem) => {
 
   // ── 🪪 DOOR ACCESS CARD — IT/Admin handles ────────────────────────────────
   if (/\b(access\s*card|door\s*card|entry\s*card|id\s*card|biometric|card\s*nahi|card\s*kaam|card\s*chal|swipe|door\s*nahi\s*khul|gate\s*nahi)\b/i.test(pn)) {
-    return `🪪 *Door Access Card Issue*\n\nAccess card IT Admin ke paas se milta/reprogram hota hai.\n\n*Sajan Kumar ko contact karo:*\n📞 9654244281 | 📧 sajan.kumar@wiom.in\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+    return `🪪 *Door Access Card Issue*\n\nAccess card IT Admin ke paas se milta/reprogram hota hai.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
   // ── 📱 OFFICE PHONE ISSUE — IT handles company phones ────────────────────
@@ -855,7 +855,7 @@ const getKBAnswer = (problem) => {
   // "water damage", "paani gira", "liquid spill", "bhig gaya", "chai giri" etc.
   if (/\b(water|liquid|paani|chai|coffee|juice|drink|beverage|spill|bhig|wet|geela|geeli|nami|baarish|rain)\b/i.test(pn) &&
       /\b(laptop|keyboard|device|screen|charger|port)\b/i.test(pn)) {
-    return `🚨 *LIQUID/WATER DAMAGE — TURANT YEH KARO:*\n\n1. *ABHI laptop band karo* — power button hold karke force shutdown (agar on hai)\n2. *Charger/cable nikalo* — bijli bilkul nahi lagna chahiye\n3. *Ulta karo* — laptop ko seedha neeche karke rakho taaki paani bahar nikal sake\n4. *Hairdryer mat lagao* — heat se aur damage hoga\n5. *Chalane ki koshish MAT karo* — corrosion hoga, laptop permanently kharab ho sakta hai\n\n⚠️ *IT Admin ko ABHI call karo: Sajan Kumar — 9654244281*\n\nType karo *ha* — CRITICAL PRIORITY emergency ticket raise karta hoon 🎫`;
+    return `🚨 *LIQUID/WATER DAMAGE — TURANT YEH KARO:*\n\n1. *ABHI laptop band karo* — power button hold karke force shutdown (agar on hai)\n2. *Charger/cable nikalo* — bijli bilkul nahi lagna chahiye\n3. *Ulta karo* — laptop ko seedha neeche karke rakho taaki paani bahar nikal sake\n4. *Hairdryer mat lagao* — heat se aur damage hoga\n5. *Chalane ki koshish MAT karo* — corrosion hoga, laptop permanently kharab ho sakta hai\n\nType karo *ha* — CRITICAL PRIORITY emergency ticket raise karta hoon 🎫`;
   }
 
   // ── 🔧 PHYSICAL DAMAGE — hardware broken, no software fix possible ────────
@@ -884,7 +884,7 @@ const getKBAnswer = (problem) => {
   // "chori", "gum", "missing", "stolen", "lost" → NEVER say "resolved"
   if (/\b(chori|cori|churai|churaya|churaye|stolen|theft|gum\s*ho|gum\s*gaya|missing|khoya|khoyi|kho\s*gaya|kho\s*gayi|nahi\s*mila|nahi\s*mili|gum\s*gyi|gum\s*gaya)\b/i.test(pn) &&
       /\b(laptop|device|phone|mobile|tab|bag|charging)\b/i.test(pn)) {
-    return `🚨 *URGENT — Laptop Chori/Gum Report*\n\nPehle yeh karo:\n\n1. *Apni desk, drawer aur aas-paas ek baar achhe se check karo* — kabhi kabhi nearby reh jaata hai\n2. *Colleagues se puchho* — kisi ne temporarily liya ho sakta hai\n\nAgar phir bhi nahi mila:\n\n3. *IT Admin ko call karo ABHI* → Sajan Kumar: *9654244281*\n4. *HR ko bhi batao* → Formal report ke liye\n\n*Main aapke liye HIGH PRIORITY ticket bana raha hoon.*\nType karo *ha* — main IT Admin ko alert karunga iska ticket banata hoon 🎫`;
+    return `🚨 *URGENT — Laptop Chori/Gum Report*\n\nPehle yeh karo:\n\n1. *Apni desk, drawer aur aas-paas ek baar achhe se check karo* — kabhi kabhi nearby reh jaata hai\n2. *Colleagues se puchho* — kisi ne temporarily liya ho sakta hai\n\nAgar phir bhi nahi mila:\n\n3. *HR ko bhi batao* → Formal report ke liye\n\n*Main aapke liye HIGH PRIORITY ticket bana raha hoon.*\nType karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
   // ── User saying issue is resolved / working fine now ───────────────────
@@ -949,7 +949,7 @@ const getKBAnswer = (problem) => {
   // ── Laptop won't start / turn on / boot ─────────────────────────────────
   // Hindi/Hinglish + English variants (ISSUE 1 fix: added English patterns)
   if (/\blaptop\b.*(on\s*nahi|start\s*nahi|band\s*ho|nahi\s*chalta|khulta\s*nahi|nahi\s*khulta|chal\s*nahi|chalti\s*nahi|chalte\s*nahi|nahi\s*chal\s*rh)|boot\s*nahi|(switch|power)\s*on\s*nahi|\blaptop\b.*(nahi\s*(chal|start|on|boot)|on\s*ho\s*nahi)|on\s*nahi\s*ho\s*rh|won.?t\s*(turn\s*on|start|boot)|not\s*turning\s*on|not\s*starting|laptop\s*(is\s*)?(dead|not\s*starting|won.?t\s*start)|no\s*power\s*laptop/.test(pn))
-    return `Yeh 3 cheezein try karo:\n\n1. *Charger check karo* — charger properly laga hai? Alag socket mein try karo\n2. *10 second hold* — power button 10 sec tak dabao → chhoddo → 30 sec wait karo → dobara try karo\n3. *Charger nikaal ke try karo* — charger hatao → power button 30 sec hold karo → charger lagao → on karo\n\nAgar in teeno se bhi nahi khula — *IT Admin ko call karo: 📞 9654244281*\nType karo *ha* — HIGH PRIORITY ticket raise karta hoon, Sajan Kumar aayenge 🎫`;
+    return `Yeh 3 cheezein try karo:\n\n1. *Charger check karo* — charger properly laga hai? Alag socket mein try karo\n2. *10 second hold* — power button 10 sec tak dabao → chhoddo → 30 sec wait karo → dobara try karo\n3. *Charger nikaal ke try karo* — charger hatao → power button 30 sec hold karo → charger lagao → on karo\n\nType karo *ha* — HIGH PRIORITY ticket raise karta hoon 🎫`;
 
   // ── System hang + file save — specific scenario, must be BEFORE generic hang handler ──
   // "system hang ho gya file kaise save karu", "laptop hang hai document save nahi hua"
