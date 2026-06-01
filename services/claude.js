@@ -122,7 +122,7 @@ Please yeh steps try karein — har step ke baad check karein ki connect hua ya 
 Agar ab bhi resolve nahi hua → type karein *ha* — IT ticket raise kar deta hoon 🎫
 
 ━━━ 🔧 PHYSICAL DAMAGE — IMMEDIATE TICKET ━━━
-Agar user bole "water damage", "paani gira", "liquid spill", "bhig gaya" — CRITICAL EMERGENCY hai. Steps: TURANT band karo, charger nikalo, battery nikalo, ulta rakho, hairdryer mat lagao. CRITICAL ticket raise karo.
+Agar user bole "water damage", "paani gira", "liquid spill", "bhig gaya" — CRITICAL EMERGENCY hai. Steps: TURANT band karo, charger nikalo, ulta rakho, hairdryer mat lagao (battery remove NAHI — modern laptops mein battery andar sealed hoti hai). CRITICAL ticket raise karo.
 Agar user bole "damage ho gya", "toot gaya", "crack aa gaya", "phoot gaya", "gir gaya" — yeh HARDWARE damage hai.
 Software steps, scripts, Auto-Fix — KUCH KAAM NAHI KAREGA.
 Seedha bolna: "Physical damage hai — software se fix nahi hoga. Type karo *ha*, IT team physically replace karegi 🎫"
@@ -853,7 +853,7 @@ const getKBAnswer = (problem) => {
   // "water damage", "paani gira", "liquid spill", "bhig gaya", "chai giri" etc.
   if (/\b(water|liquid|paani|chai|coffee|juice|drink|beverage|spill|bhig|wet|geela|geeli|nami|baarish|rain)\b/i.test(pn) &&
       /\b(laptop|keyboard|device|screen|charger|port)\b/i.test(pn)) {
-    return `🚨 *LIQUID/WATER DAMAGE — TURANT YEH KARO:*\n\n1. *ABHI laptop band karo* — power button hold karke force shutdown (agar on hai)\n2. *Charger/cable nikalo* — bijli bilkul nahi lagna chahiye\n3. *Battery nikalo* — agar removable hai\n4. *Ulta karo* — laptop ko seedha neeche karke rakho taaki paani bahar aaye\n5. *Hairdryer mat lagao* — heat se aur damage hoga\n6. *Chalane ki koshish MAT karo* — corrosion hoga\n\n⚠️ *IT Admin ko ABHI call karo: Sajan Kumar — 9654244281*\n\nType karo *ha* — CRITICAL PRIORITY emergency ticket raise karta hoon 🎫`;
+    return `🚨 *LIQUID/WATER DAMAGE — TURANT YEH KARO:*\n\n1. *ABHI laptop band karo* — power button hold karke force shutdown (agar on hai)\n2. *Charger/cable nikalo* — bijli bilkul nahi lagna chahiye\n3. *Ulta karo* — laptop ko seedha neeche karke rakho taaki paani bahar nikal sake\n4. *Hairdryer mat lagao* — heat se aur damage hoga\n5. *Chalane ki koshish MAT karo* — corrosion hoga, laptop permanently kharab ho sakta hai\n\n⚠️ *IT Admin ko ABHI call karo: Sajan Kumar — 9654244281*\n\nType karo *ha* — CRITICAL PRIORITY emergency ticket raise karta hoon 🎫`;
   }
 
   // ── 🔧 PHYSICAL DAMAGE — hardware broken, no software fix possible ────────
