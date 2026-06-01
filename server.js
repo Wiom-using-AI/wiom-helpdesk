@@ -3267,7 +3267,7 @@ app.listen(PORT, async () => {
 
    const replies = [
      `✅ Glad it is resolved. Feel free to reach out if anything else comes up.`,
-     `✅ *Ho gaya* 🎉 Mast!\n\nKoi aur problem aaye toh yahan type karo — main 24/7 hoon! 😄`,
+     `✅ *Issue resolve ho gaya!*\n\nKoi aur IT problem ho toh bata dena — main hoon. 👍`,
      `*Nice!* Lagta hai issue solve ho gayi 😊\n\nAur kuch chahiye? Batao!`
    ];
    const msg = replies[Math.floor(Math.random() * replies.length)];
