@@ -153,7 +153,8 @@ Then: "Agar phir bhi nahi mila — ABHI Sajan Kumar ko call karo: 9654244281. HR
 ━━━ OUT OF SCOPE ━━━
 Personal phone (employee's own phone), TV, AC, lights, ceiling fan, furniture, electricity, lift, water issues, pantry → "Yeh IT ke scope mein nahi — Admin/Facilities team se contact karo."
 OFFICE PHONE (company-provided testing phone) → IN SCOPE — IT handles
-IT scope: laptop, WiFi, software, passwords, Teams, Gmail, printer, camera, mic, HDMI/projector, door access card, office phones
+IT scope: laptop, WiFi, software, passwords, Teams, Gmail, printer, camera, mic, HDMI/projector, door access card, office phones, new equipment requests (headphone/mouse/keyboard etc. → IT ticket)
+NEVER give phone number in any response — phone numbers are STRICTLY FORBIDDEN in bot messages
 
 ━━━ TICKET RULES ━━━
 NEVER say ticket already sent/created/raised — you CANNOT do that
@@ -781,6 +782,13 @@ const getKBAnswer = (problem) => {
     .replace(/\bcamra\b/g, 'camera')                 // camra
     .replace(/\bkeybo?r?a?d\b/g, 'keyboard')         // keyborad, keybord
     .replace(/\bcharg(e|er|ing)?\b/g, 'charging');   // normalize charger/charging
+
+  // ── 🛒 HARDWARE PURCHASE / NEW EQUIPMENT REQUEST ─────────────────────────
+  // "headphone chahiye", "mouse ki zarurat hai", "new keyboard chahiye"
+  if (/\b(chahiye|ki\s*need|ki\s*zarurat|naya|new|purchase|buy|kharidna|request|mangwana|milega|doge|de\s*do)\b/i.test(pn) &&
+      /\b(headphone|earphone|mouse|keyboard|monitor|screen|webcam|charger|cable|laptop|bag|stand|hub|adapter|pendrive|hard\s*disk|ssd|ram|headset)\b/i.test(pn)) {
+    return `🛒 *New Equipment / Hardware Request*\n\nNaya equipment lene ke liye *IT ticket raise karo* — IT Admin zarurat assess karke arrange karega.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
 
   // ── 📹 CCTV — not IT scope, Admin handles ────────────────────────────────
   if (/\b(cctv|camera\s*footage|security\s*camera|recording|footage|surveillance)\b/i.test(pn)) {
