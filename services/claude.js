@@ -457,7 +457,7 @@ const getKBFallback = (problem) => {
   if (pn.includes('sajan') || pn.includes('admin') || pn.includes('it head') || pn.includes('phone number') || pn.includes('number do'))
     return 'IT Admin: *Sajan Kumar* | 📧 sajan.kumar@wiom.in';
 
-  return `Please describe your issue in a bit more detail — what exactly is happening? Any error message on screen? The more information you provide, the faster I can help.`;
+  return `Thoda aur batao — screen pe kya dikh raha hai? Kaunsa error message aa raha hai? Main help karunga.`;
 };
 
 // ── Call Gemini (Google FREE fallback) ───────────────────────────────────────
@@ -610,6 +610,11 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     // Remove phone number — never show in any bot message
     .replace(/📞?\s*9654244281/g, '')
     .replace(/\b9654244281\b/g, '')
+    // Remove Safe Mode / F8 / Diagnostic Tool suggestions — IT admin only
+    .replace(/safe\s*mode\s*(mein|me|boot|open|karo|se)[^.!?\n]*/gi, 'IT ticket raise karo')
+    .replace(/F8\s*(key|dabao|press)[^.!?\n]*/gi, '')
+    .replace(/diagnostic\s*tool[^.!?\n]*/gi, 'IT ticket raise karo')
+    .replace(/advanced\s*boot\s*options[^.!?\n]*/gi, '')
     // Remove "common issue/problem" openers — go straight to solution
     .replace(/yeh\s+ek\s+(common\s+)?(boot|wifi|network|laptop|hardware|software|display|screen|password|account|printer|teams|email|gmail)?\s*(issue|problem|error)\s+hai[.!,—–-]?\s*/gi, '')
     .replace(/this\s+is\s+a\s+(common\s+)?(issue|problem|error)[.!,—–-]?\s*/gi, '')
@@ -990,10 +995,16 @@ const getKBAnswer = (problem) => {
   if (/screen\s*(kali|kala|black|blank|kuch\s*nahi\s*dikh|pe\s*kuch\s*nahi)|black\s*screen|kali\s*screen|monitor\s*(black|kala|kali|blank)|display\s*(black|kali|blank|nahi\s*aa)|(nahi\s*dikh|dikhna\s*band)\s*(rha|rhi|raha)/.test(pn))
     return `Black/blank screen issue hai. Please yeh steps follow karein:\n\n1. *Brightness Keys* → Fn+F5 ya Fn+F8 press karein (brightness keys) — screen dim ho sakti hai\n2. *Force Restart* → Power button 10 sec hold karein → band karein → dobara on karein\n3. *External Monitor Test* → HDMI cable se bahar monitor connect karein — agar bahar dikh raha toh laptop screen hardware issue hai\n4. *Charger Check* → Battery completely dead ho sakti hai → charger lagao → 10 min wait karein → on karein\n\nAgar ab bhi screen nahi aa rahi, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
+  // ── Windows Diagnosis / Safe Mode / Diagnostic Tool — IT admin only ─────
+  // Employee sees "Windows Diagnosis" screen or asks about Safe Mode/Diagnostic Tool
+  if (/\b(safe\s*mode|safemode|diagnostic\s*tool|windows\s*diagno|diagno.*tool|f8\s*key|advanced\s*boot|startup\s*repair|last\s*known\s*good)\b/i.test(pn)) {
+    return `Yeh IT Admin ka kaam hai — aap khud mat karo, kuch aur kharab ho sakta hai.\n\nType karo *ha* — IT ticket raise karta hoon, IT team aake fix karega 🎫`;
+  }
+
   // ── Windows / OS crash / restart loop / update stuck ────────────────────
   // "windows crash ho gaya", "windows restart ho rha bar bar", "windows update atak gaya/stuck"
-  if (/windows\s*(crash|restart|update|stuck|atak|loop|hang)|update\s*(stuck|atak|hang|nahi|ruka)|restart\s*(bar\s*bar|baar\s*baar|loop|hota\s*rha|ho\s*rha\s*bar)|os\s*(crash|hang|stuck)/.test(pn))
-    return `Windows issue hai. Yeh try karo:\n\n1. *Restart* → Power button se properly shut down karo → dobara on karo\n2. *Wait* → Agar Windows update chal rahi hai → wait karo, band mat karo\n\nAgar 3 baar se zyada restart ho raha hai ya nahi ruk raha — type karo *ha* — IT ticket raise karta hoon 🎫`;
+  if (/windows\s*(crash|restart|update|stuck|atak|loop|hang|diagno)|update\s*(stuck|atak|hang|nahi|ruka)|restart\s*(bar\s*bar|baar\s*baar|loop|hota\s*rha|ho\s*rha\s*bar)|os\s*(crash|hang|stuck)|windows\s*diagno/.test(pn))
+    return `Windows issue aa raha hai. Yeh try karo:\n\n1. *Restart* → Power button se properly shut down karo → dobara on karo\n2. *Update hai?* → Agar Windows update chal rahi hai → wait karo, band mat karo\n\nAgar baar baar ho raha hai ya screen pe koi error aa raha hai — type karo *ha* — IT ticket raise karta hoon 🎫`;
 
   // ════════════════════════════════════════════════════════════════════════
   // TOP 5 MOST COMMON WIOM PROBLEMS — optimized for 300 users, 1 IT admin
