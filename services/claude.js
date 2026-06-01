@@ -130,7 +130,7 @@ KABHI numbered steps mat do physical damage ke liye.
 ━━━ 🚨 THEFT / LOSS — EMERGENCY ━━━
 "chori ho gya", "gum ho gya", "laptop missing" → NEVER troubleshoot, NEVER say "resolved"
 First tell them: "Pehle apni desk/drawer/aas-paas check karo aur colleagues se puchho — kabhi kabhi nearby reh jaata hai."
-Then: "Agar phir bhi nahi mila — ABHI Sajan Kumar ko call karo: 9654244281. HR ko bhi batao. Type karo *ha* — HIGH PRIORITY ticket raise karta hoon."
+Then: "Agar phir bhi nahi mila — Sajan Kumar ko email karo: sajan.kumar@wiom.in. HR ko bhi batao. Type karo *ha* — HIGH PRIORITY ticket raise karta hoon."
 
 ━━━ WIOM OFFICE ENVIRONMENT (CRITICAL — affects scope and responses) ━━━
 - Laptops: Dell, HP, Lenovo, Apple MacBook (mix) — scripts (.bat) only for Windows laptops, NEVER for Mac
@@ -165,7 +165,7 @@ Always word it naturally: "type karo *ha*, main IT ko bhej deta hoon 🎫"
 WiFi password: spartans500 (all Wiom networks)
 Special network: "Wiomnet-Saket" → password: Password@12345
 Floor networks: "Wiom office 5g-Test" (Ground) | "Wiom office Guest" | "Wiom office 3rd floor"
-IT Admin: Sajan Kumar | 📞 9654244281 | sajan.kumar@wiom.in
+IT Admin: Sajan Kumar | sajan.kumar@wiom.in
 NEVER suggest router/modem/cable changes — only laptop-side Windows fixes
 
 ━━━ TROUBLESHOOTING KNOWLEDGE ━━━
@@ -226,7 +226,7 @@ const detectIntent = (messages) => {
 
   // WiFi connected but no internet
   if (/connect(ed)?.*(nahi chal|work nahi|internet nahi|chal nahi|nahi work|not working)|wifi.*(connected|chal raha).*(internet nahi|nahi chal|no internet)|(no internet|internet nahi).*(connected|chal raha)|wifi connected.*but|but.*wifi connected/.test(recentText))
-    return { category: 'NETWORK_CONNECTED', hint: 'WiFi connected but no internet. Steps: 1) Toggle WiFi off/on. 2) Restart laptop. 3) If only one site blocked — check another site. Agar resolve nahi hua → type karo *ha*, IT ticket.' };
+    return { category: 'NETWORK_CONNECTED', hint: 'WiFi connected but no internet. Max 3 steps: 1) Toggle WiFi off/on. 2) Check if only one site is blocked — try gmail.com and another site. 3) If all sites fail → restart laptop. Agar resolve nahi hua → type karo *ha*, IT ticket. Do NOT suggest CMD or ipconfig.' };
 
   // Laptop slow but specific — already gave context
   if (/(specific|ek|sirf|only|particular).*(app|game|software).*(slow|hang)|(slow|hang).*(specific|ek|sirf)/.test(recentText))
@@ -242,7 +242,7 @@ const detectIntent = (messages) => {
 
   // Outlook/Teams specific error
   if (/(gmail|email|teams).*(nahi khul|not opening|crash|band ho|error|loading|nahi aa rha|nahi chal)/.test(recentText))
-    return { category: 'SOFTWARE_SPECIFIC', hint: 'User gave specific app + error. SKIP question. WIOM uses Gmail NOT Outlook. Gmail fix: incognito test → clear Chrome cache → try different browser. Teams fix: system tray quit → reopen → cache clear (%appdata%\\Microsoft\\Teams\\Cache). Give direct steps now.' };
+    return { category: 'SOFTWARE_SPECIFIC', hint: 'User gave specific app + error. SKIP question. WIOM uses Gmail NOT Outlook. Gmail fix: incognito test → clear Chrome cache → try different browser. Teams fix: system tray quit → reopen. If Teams still fails → type karo *ha* IT ticket (IT cache clear karega). MAX 3 steps. NO %appdata% paths.' };
 
   // ── GENERAL NETWORK — ask diagnostic question ──
   // NOTE: "nahi chal" alone is NOT here — too broad, matches "steps nahi chale" etc.
@@ -251,7 +251,7 @@ const detectIntent = (messages) => {
 
   // PERFORMANCE — slow, hang, freeze
   if (/slow|hang\b|lagg|freez|speed|fast karo|\bram\b|\bcpu\b|processor|heavy|battery drain|alag hai|dheema|dheere|aahista/.test(recentText))
-    return { category: 'PERFORMANCE', hint: 'PERFORMANCE ISSUE. First ask: "Kab se ho raha hai? Koi specific app mein ya poora laptop slow hai?" — then give Task Manager step.' };
+    return { category: 'PERFORMANCE', hint: 'PERFORMANCE ISSUE. First ask: "Kab se ho raha hai? Koi specific app mein ya poora laptop slow hai?" — then give MAXIMUM 3 steps: 1) Task Manager → End Task heavy apps 2) Close browser tabs 3) Restart laptop. No more than 3 steps.' };
 
   // DISPLAY COLOR DISTORTION — colorful screen, color lines, tint
   if (/colorful|colorfull|colarful|colarfull|colour|color\s*aa|rang\s*aa|pink\s*screen|green\s*screen|tint|lines\s*aa|horizontal\s*line|vertical\s*line|screen\s*pe\s*rang|display.*rang|rang.*display/.test(recentText))
@@ -271,7 +271,7 @@ const detectIntent = (messages) => {
 
   // SOFTWARE
   if (/teams|zoom|outlook|email|\bchrome\b|\boffice\b|\bword\b|\bexcel\b|onedrive|pdf|app nahi|software|install|crash|error aa raha|error aa rahi/.test(recentText))
-    return { category: 'SOFTWARE', hint: 'SOFTWARE/APP ISSUE. First ask: "Kya exact error message aa raha hai? Screen pe kya likh raha hai?" — give app-specific fix only.' };
+    return { category: 'SOFTWARE', hint: 'SOFTWARE/APP ISSUE. First ask: "Kya exact error message aa raha hai? Screen pe kya likh raha hai?" — give app-specific fix only. If outlook mentioned: WIOM uses Gmail not Outlook — redirect to Gmail. NO %appdata% paths, NO CMD.' };
 
   // PERIPHERAL — keyboard, mouse
   if (/keyboard|\bkeys\b|typing|touchpad|\bmouse\b|cursor|trackpad|key nahi|type nahi/.test(recentText))
@@ -394,7 +394,7 @@ const getKBFallback = (problem) => {
   // ISSUE 4 fix: removed dead code — black screen already handled above (line ~361)
 
   if (pn.includes('keyboard') || pn.includes('keys') || /keybo?r?a?d/.test(pn))
-    return `Keyboard issue. Yeh try karo:\n\n1. *Restart* → Laptop restart karo\n2. *On-screen keyboard* → Win+R → osk → Enter → screen keyboard se kaam chalao\n\nType karo *ha* — IT ticket raise karta hoon, IT aake fix karega 🎫`;
+    return `Keyboard issue. Yeh try karo:\n\n1. *Restart* → Laptop restart karo\n2. *On-screen keyboard* → Start menu mein "On-Screen Keyboard" type karo → open karo → kaam chalao\n\nType karo *ha* — IT ticket raise karta hoon, IT aake fix karega 🎫`;
 
   if (pn.includes('touchpad') || pn.includes('mouse'))
     return `Touchpad issue. Please yeh steps try karein:\n\n1. Fn + touchpad lock key press karein (keyboard par lock icon wali key)\n2. Settings → Bluetooth & devices → Touchpad → ON karein\n3. Laptop restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
@@ -403,7 +403,7 @@ const getKBFallback = (problem) => {
     return `Printer issue. Yeh try karo:\n\n1. *Printer restart* → Printer band karo → 30 sec → on karo\n2. *Laptop restart* → Laptop restart karo → dobara print karo\n\nAgar resolve nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('teams'))
-    return `Microsoft Teams issue. Please yeh steps try karein:\n\n1. System tray → Teams icon right-click → Quit → dobara open karein\n2. Win+R → %appdata%\\Microsoft\\Teams → Cache folder delete karein\n3. teams.microsoft.com browser mein try karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Microsoft Teams issue. Yeh try karo:\n\n1. *Quit & Reopen* → Taskbar pe Teams icon right-click → Quit → dobara open karo\n2. *Browser mein try karo* → teams.microsoft.com Chrome mein open karo\n\nAgar resolve nahi hua, type karein *ha* — IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('zoom'))
     return `Zoom issue. Please yeh steps try karein:\n\n1. Zoom close karein → dobara open karein\n2. Internet connection check karein → zoom.us/wc/join browser mein try karein\n3. Zoom Settings → Audio/Video → correct device select karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
@@ -414,7 +414,7 @@ const getKBFallback = (problem) => {
     return `ℹ️ WIOM mein Outlook use nahi hota — *Gmail* use hoti hai.\n\nGmail se koi problem hai? gmail.com open karein Chrome mein aur batayein kya issue aa raha hai.`;
   }
   if (pn.includes('email') || pn.includes('gmail') || pn.includes('mail')) {
-    return `📧 *Gmail Issue* — yeh steps try karein:\n\n1. *Incognito mein check karein* → Chrome → Ctrl+Shift+N → gmail.com → dekho khulta hai ya nahi\n2. *Chrome cache clear karein* → Ctrl+Shift+Del → "All time" → Cookies + Cache → Clear\n3. *Alag browser try karein* → Firefox ya Edge mein gmail.com kholein\n4. *Account switch karo* → Gmail top-right profile icon → correct account select karein\n\nAgar phir bhi nahi hua, type karein *ha* — IT ticket raise karta hoon 🎫`;
+    return `📧 *Gmail Issue* — yeh steps try karein:\n\n1. *Incognito mein check karein* → Chrome → Ctrl+Shift+N → gmail.com → dekho khulta hai ya nahi\n2. *Chrome cache clear karein* → Ctrl+Shift+Del → "All time" → Cookies + Cache → Clear\n3. *Alag browser try karein* → Edge mein gmail.com kholein\n\nAgar phir bhi nahi hua, type karein *ha* — IT ticket raise karta hoon 🎫`;
   }
 
   if (pn.includes('password') || pn.includes('locked') || pn.includes('login') || /pas?w?ro?d/.test(pn)) {
@@ -610,6 +610,14 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     // Remove phone number — never show in any bot message
     .replace(/📞?\s*9654244281/g, '')
     .replace(/\b9654244281\b/g, '')
+    // Remove casual/banned words the system prompt bans
+    .replace(/\bDekho\b/gi, '')
+    .replace(/\bAchha\s+suno\b/gi, 'Please note:')
+    .replace(/\bHaan\s+yaar\b/gi, 'Haan,')
+    // Remove admin-only tools if AI slips them through
+    .replace(/%appdata%[^\s]*/gi, '')
+    .replace(/\bcleanmgr\b/gi, '')
+    .replace(/\bservices\.msc\b/gi, '')
     // Remove Safe Mode / F8 / Diagnostic Tool suggestions — IT admin only
     .replace(/safe\s*mode\s*(mein|me|boot|open|karo|se)[^.!?\n]*/gi, 'IT ticket raise karo')
     .replace(/F8\s*(key|dabao|press)[^.!?\n]*/gi, '')
@@ -665,7 +673,7 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     const isHardware = /screen|laptop|keyboard|mouse|battery|fan|hardware/i.test(lastUserMsg);
     reply = isHardware
       ? `Hardware issue hai — ismein IT team physically help karegi. Type karo *ha*, main ticket raise karta hoon 🎫`
-      : `Koi baat nahi! 😊 IT team ko bhejte hain. Type karo *ha*, ticket raise karta hoon 🎫`;
+      : `Samajh gaya. IT team ko bhejte hain — woh handle kar lenge. Type karo *ha*, ticket raise karta hoon 🎫`;
   }
 
   // Normalize: if shouldCreateTicket but no "type karo" visible, add the prompt
@@ -839,7 +847,7 @@ const getKBAnswer = (problem) => {
 
   // ── 📽️ HDMI / PROJECTOR — conference room ────────────────────────────────
   if (/\b(hdmi|projector|project|screen\s*share|external\s*screen|external\s*monitor|conference\s*room|meeting\s*room|display\s*nahi|second\s*screen|dual\s*screen|extend\s*display)\b/i.test(pn)) {
-    return `📽️ *HDMI/Projector Issue* — yeh steps try karein:\n\n1. *Cable check karo* → HDMI cable properly plugged in dono sides\n2. *Win+P* → "Extend" ya "Duplicate" select karo\n3. *Detect karo* → Settings → System → Display → "Detect" button dabao\n4. *Different HDMI port try karo* → laptop ya projector pe dusra port\n5. *Restart karo* → cable laga ke laptop restart karo\n\nAgar phir bhi nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
+    return `📽️ *HDMI/Projector Issue* — yeh steps try karein:\n\n1. *Cable check karo* → HDMI cable properly plugged in dono sides\n2. *Win+P* → keyboard pe Win+P dabao → "Extend" ya "Duplicate" select karo\n3. *Alag port try karo* → laptop ya projector pe dusra HDMI port lagao\n4. *Restart karo* → cable laga ke laptop restart karo\n\nAgar phir bhi nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
   // ── 💿 SOFTWARE INSTALLATION REQUEST — needs IT admin, no script can install ──
@@ -947,7 +955,7 @@ const getKBAnswer = (problem) => {
     /office\s*(wifi|network|wi-fi)\s*(password|pass)/i.test(pn);
 
   if (isWifiPassword) {
-    return `WiFi Password! 📶\n\n🔑 *Password:* \`spartans500\` — sabhi networks ke liye same\n\n*Networks:*\n• Wiom office 5g-Test — Ground floor\n• Wiom office Guest\n• Wiom office 3rd floor\n• Wiomnet — Saket office *(Password: \`Password@12345\`)*\n\nConnect ho gaya? Koi aur help chahiye?`;
+    return `WiFi Password! 📶\n\n🔑 *Password:* \`spartans500\` — sabhi networks ke liye same\n\n*Networks:*\n• Wiom office 5g-Test — Ground floor\n• Wiom office Guest\n• Wiom office 3rd floor\n• Wiomnet — Saket office *(Password: \`Password@12345\`)*\n\nKoi aur IT issue ho toh batayein.`;
   }
 
   // ── Instant KB answers — Zivon tone, no Step 1/2/3 ─────────────────────
@@ -988,7 +996,7 @@ const getKBAnswer = (problem) => {
   // ── Overheating ──────────────────────────────────────────────────────────
   // "laptop bahut garam ho rha", "laptop heat ho rha", "laptop garm hai", "zyada heat"
   if (/\blaptop\b.*(garm|garam|heat|hot\b)|garm.{0,10}laptop|(overheat|over\s*heat|bahut\s*garam|bahut\s*garm|zyada\s*heat|zyada\s*garm|laptop\s*garm)/.test(pn))
-    return `Laptop overheating issue hai. Please yeh steps follow karein:\n\n1. *Hard Surface* → Laptop ko table par rakhein — bed/sofa par mat rakhein (vents block hote hain)\n2. *Heavy Apps Band Karein* → Ctrl+Shift+Esc → Task Manager → CPU column sort karein → heavy apps End Task karein\n3. *Power Mode* → Settings → Power & battery → Power mode → Balanced select karein\n4. *Restart* → Laptop restart karein — background processes band ho jaate hain\n5. *Vents Check* → Laptop ke vents (sides/bottom) pe dust toh nahi — taaki airflow ho sake\n\nAgar bahut zyada garam ho raha hai ya band ho raha hai, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Laptop overheating issue hai. Please yeh steps follow karein:\n\n1. *Table pe rakho* → Laptop ko table par rakho — bed/sofa pe mat rakho (hawa nahi aati)\n2. *Heavy apps band karo* → Ctrl+Shift+Esc → Task Manager → CPU column → heavy apps End Task karo\n3. *Restart* → Laptop restart karo — background processes band ho jaate hain\n\nAgar bahut zyada garam ho raha hai ya band ho raha hai, type karo *ha* — IT ticket raise karta hoon 🎫`;
 
   // ── Screen black / blank / nothing visible ───────────────────────────────
   // "screen kali ho gyi", "black screen aa gya", "screen pe kuch nahi dikh rha", "monitor black hai"
@@ -1041,7 +1049,7 @@ const getKBAnswer = (problem) => {
   // This only runs if hasPositive check above did NOT return (i.e., user is NOT saying "fixed")
   if (/fan\s*(sound|awaaz|baj|noise|shor|loud|kar\s*rha|chal\s*rha|aa\s*rhi)/i.test(pn) ||
       /\bfan\s+(kar|chal|baj|sound)/i.test(pn)) {
-    return `Fan ki awaaz aa rahi hai — usually heavy apps se hota hai 🔊\nCtrl+Shift+Esc dabao → CPU column sort karo → koi heavy app End Task karo.\nLaptop hard surface pe rakhho (table pe, bed/sofa pe nahi).\nThodi der mein band ho jaaye toh theek hai. Agar bahut tez awaaz ho ya nahi ruki toh batao 🎫`;
+    return `Fan ki awaaz aa rahi hai — usually heavy apps se hota hai 🔊\nCtrl+Shift+Esc dabao → CPU column sort karo → koi heavy app End Task karo.\nLaptop table pe rakhho (bed/sofa pe nahi).\nThodi der mein band ho jaaye toh theek hai. Agar bahut tez awaaz ho ya nahi ruki — type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
   // Fan emergency — fan NOT working at all (safety critical — instant response)
