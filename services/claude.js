@@ -608,6 +608,9 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     .replace(/\barre\b/gi, '')
     .replace(/\byaar\b/gi, '')
     .replace(/\bbhai\b/gi, '')
+    // Remove "common issue/problem" openers — go straight to solution
+    .replace(/yeh\s+ek\s+(common\s+)?(boot|wifi|network|laptop|hardware|software|display|screen|password|account|printer|teams|email|gmail)?\s*(issue|problem|error)\s+hai[.!,—–-]?\s*/gi, '')
+    .replace(/this\s+is\s+a\s+(common\s+)?(issue|problem|error)[.!,—–-]?\s*/gi, '')
     .replace(/\s{2,}/g, ' ')
     .replace(/^[\s,!]+/, '')
     .trim();
