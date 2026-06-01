@@ -2603,51 +2603,81 @@ app.listen(PORT, async () => {
  if (file.mimetype?.startsWith('image/')) {
  try {
  await say({ text: '📸 Screenshot dekh raha hoon...' });
- // Try vision AI if Anthropic available
- const claudeSvc = require('./services/claude');
  const emp = await lookupEmployee(userId, client);
  let diagnosis = null;
- if (process.env.ANTHROPIC_API_KEY) {
- const Anthropic = require('@anthropic-ai/sdk');
- const ant = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
- // Get file URL with bot token
+
+ // ── Download image from Slack ─────────────────────────────────────────
  const fileInfo = await client.files.info({ file: file.id });
  const imgUrl = fileInfo.file?.url_private;
  if (imgUrl) {
- // Download image
- const https = require('https');
- const imgBuffer = await new Promise((resolve, reject) => {
- const chunks = [];
- const req = https.get(imgUrl, { headers: { Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}` } }, (res) => {
- res.on('data', c => chunks.push(c));
- res.on('end', () => resolve(Buffer.concat(chunks)));
- });
- req.on('error', reject);
- req.setTimeout(5000, () => { req.destroy(); reject(new Error('timeout')); });
- });
- const base64 = imgBuffer.toString('base64');
- const ext = (file.name || '').split('.').pop()?.toLowerCase();
- const mediaType = ext === 'png' ? 'image/png' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
- const resp = await ant.messages.create({
- model: 'claude-3-5-haiku-20241022',
- max_tokens: 300,
- system: `You are Zivon, WIOM's IT helpdesk bot. Analyze this screenshot from an employee's laptop/screen. Identify the error/issue and give a SHORT friendly solution in Hindi/Hinglish (3-4 lines max). Be specific about what you see. Format: "Dekha! [what you see]. [solution]. [closing]"`,
- messages: [{ role: 'user', content: [
- { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 }},
- { type: 'text', text: `Employee ${emp?.empName || ''} ne ye screenshot bheja hai. Kya dikha raha hai aur kya fix hai?` }
- ]}]
- });
- diagnosis = resp.content[0]?.text;
+   const https = require('https');
+   const imgBuffer = await new Promise((resolve, reject) => {
+     const chunks = [];
+     const req = https.get(imgUrl, { headers: { Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}` } }, (res) => {
+       res.on('data', c => chunks.push(c));
+       res.on('end', () => resolve(Buffer.concat(chunks)));
+     });
+     req.on('error', reject);
+     req.setTimeout(8000, () => { req.destroy(); reject(new Error('timeout')); });
+   });
+   const base64 = imgBuffer.toString('base64');
+   const ext = (file.name || '').split('.').pop()?.toLowerCase();
+   const mediaType = ext === 'png' ? 'image/png' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
+
+   const visionPrompt = `You are Zivon — WIOM IT helpdesk assistant. An employee sent this screenshot of their laptop/screen showing an IT problem.
+
+Analyze the screenshot carefully and:
+1. Identify exactly what error/issue is visible
+2. Give 2-3 simple steps to fix it (non-technical employee, no CMD, no Device Manager)
+3. If it needs IT admin help → say "Type karo *ha* — IT ticket raise karta hoon 🎫"
+
+Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue" opener.`;
+
+   // ── PRIMARY: Gemini Vision (already connected) ────────────────────────
+   if (process.env.GEMINI_API_KEY) {
+     try {
+       const { GoogleGenerativeAI } = require('@google/generative-ai');
+       const gai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+       const model = gai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+       const result = await model.generateContent([
+         visionPrompt,
+         { inlineData: { data: base64, mimeType: mediaType } }
+       ]);
+       diagnosis = result.response.text()?.trim();
+     } catch (gemErr) {
+       console.error('Gemini vision error:', gemErr.message);
+     }
+   }
+
+   // ── FALLBACK: Claude Vision ───────────────────────────────────────────
+   if (!diagnosis && process.env.ANTHROPIC_API_KEY) {
+     try {
+       const Anthropic = require('@anthropic-ai/sdk');
+       const ant = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+       const resp = await ant.messages.create({
+         model: 'claude-3-5-haiku-20241022', max_tokens: 400,
+         messages: [{ role: 'user', content: [
+           { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 }},
+           { type: 'text', text: visionPrompt }
+         ]}]
+       });
+       diagnosis = resp.content[0]?.text;
+     } catch (antErr) {
+       console.error('Claude vision error:', antErr.message);
+     }
+   }
  }
- }
+
  if (diagnosis) {
- const formatted = diagnosis.replace(/\*\*/g, '*');
- await say({ text: diagnosis, blocks: [
- { type: 'section', text: { type: 'mrkdwn', text: `📸 *Screenshot Analysis:*\n\n${formatted}` }},
- { type: 'context', elements: [{ type: 'mrkdwn', text: '_Zivon AI Vision | Kaam nahi hua toh ticket raise karo: type *ha*_' }]}
- ]});
+   // Apply same phone number filter
+   diagnosis = diagnosis.replace(/📞?\s*9654244281/g, '').replace(/\b9654244281\b/g, '').trim();
+   const formatted = formatForSlack(diagnosis);
+   await say({ text: diagnosis, blocks: [
+     { type: 'section', text: { type: 'mrkdwn', text: `📸 *Screenshot Analysis:*\n\n${formatted}` }},
+     { type: 'context', elements: [{ type: 'mrkdwn', text: '_Zivon Vision — Kaam nahi hua? Type karo *ha* — IT ticket raise karta hoon_' }]}
+   ]});
  } else {
- await say({ text: '📸 Screenshot received. Please type the error message in text — main help karunga.' });
+   await say({ text: '📸 Screenshot received. Error message text mein type karo — main dekh ke help karunga.' });
  }
  } catch (err) {
  console.error('Photo diagnosis error:', err.message);
