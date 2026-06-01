@@ -147,6 +147,9 @@ Then: "Agar phir bhi nahi mila — ABHI Sajan Kumar ko call karo: 9654244281. HR
 - Admin rights: Employees do NOT have admin rights — cannot install/uninstall software themselves
   → Any install, driver update, or software change REQUIRES IT team (raise ticket)
 - WiFi: Office WiFi (spartans500) — no router/modem access for employees
+- TOP 5 MOST COMMON PROBLEMS (in order): 1) WiFi/Net slow, 2) Laptop slow/hang, 3) MS Office not working or not activated, 4) Touchpad stuck, 5) Net slow — give DETAILED steps for these, not generic answers
+- MS Office activation: employees CANNOT self-activate (no admin rights) — always IT ticket for activation
+- Sajan Kumar is the ONLY IT person for 300 users — bot should solve as much as possible independently
 
 ━━━ OUT OF SCOPE ━━━
 Personal phone (employee's own phone), TV, AC, lights, ceiling fan, furniture, electricity, lift, water issues, pantry → "Yeh IT ke scope mein nahi — Admin/Facilities team se contact karo."
@@ -348,8 +351,8 @@ const getKBFallback = (problem) => {
   if (/connect(ed)?.*(nahi chal|work nahi|internet nahi|nahi work)|wifi.*(connected|chal).*(internet nahi|nahi chal)|(no internet|internet nahi).*(connected|connect)/.test(pn))
     return `WiFi connected hai par internet nahi chal raha. Please yeh steps follow karein:\n\n1. Taskbar mein WiFi icon click karein → Disconnect karein → "Wiom office 5g-Test" select karein → Password: spartans500\n2. Win+R → cmd → Enter → ipconfig /flushdns → Enter\n3. netsh winsock reset → Enter → Laptop restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
-  if (pn.includes('slow') || pn.includes('hang') || pn.includes('freez') || pn.includes('dheema'))
-    return `Laptop slow/hang issue hai. Please yeh steps try karein:\n\n1. Ctrl+Shift+Esc → Task Manager → sabse zyada CPU use karne wala process → End Task karein\n2. Startup apps disable karein: Win+R → msconfig → Startup tab → unnecessary apps disable karein → Restart\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+  if (pn.includes('slow') || pn.includes('hang') || pn.includes('freez') || pn.includes('dheema') || pn.includes('lagg'))
+    return `💻 *Laptop Slow/Hang Issue* — yeh steps try karein:\n\n1. *Task Manager* → Ctrl+Shift+Esc → CPU column pe click karo (sort by highest) → jo zyada use kar rha ho, End Task karo\n2. *Restart karo* → Sab se simple fix — laptop properly shut down karo, sleep nahi\n3. *Startup apps band karo* → Win+R → \`msconfig\` → Startup tab → unnecessary apps disable karo → Restart\n4. *Temp files delete karo* → Win+R → \`%temp%\` → Ctrl+A → Delete\n5. *Disk cleanup* → Win+R → \`cleanmgr\` → C: drive → Clean up system files\n6. *Chrome tabs check karo* → Zyada tabs = zyada RAM → unnecessary tabs band karo\n\nAgar in steps ke baad bhi same problem hai, type karo *ha* — IT ticket raise karta hoon (RAM ya SSD upgrade ho sakta hai) 🎫`;
 
   if (pn.includes('wifi') || pn.includes('internet') || pn.includes('network') ||
       /\bnet\b/.test(pn) || pn.includes('net band') || pn.includes('signal nahi') || pn.includes('no internet'))
@@ -967,6 +970,37 @@ const getKBAnswer = (problem) => {
   // "windows crash ho gaya", "windows restart ho rha bar bar", "windows update atak gaya/stuck"
   if (/windows\s*(crash|restart|update|stuck|atak|loop|hang)|update\s*(stuck|atak|hang|nahi|ruka)|restart\s*(bar\s*bar|baar\s*baar|loop|hota\s*rha|ho\s*rha\s*bar)|os\s*(crash|hang|stuck)/.test(pn))
     return `Windows/OS issue hai. Please yeh steps follow karein:\n\n1. *Force Restart* → Power button 10 sec hold karein → band karein → dobara on karein\n2. *Update Wait* → Agar update chal rahi hai → wait karein, band mat karein\n3. *Startup Repair* → On karte waqt F8 press karein → "Repair Your Computer" → Startup Repair\n4. *Last Known Good* → F8 menu → "Last Known Good Configuration" select karein\n5. *Safe Mode* → F8 → Safe Mode with Networking → login karein\n\nAgar 3 baar se zyada restart ho raha hai, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+
+  // ════════════════════════════════════════════════════════════════════════
+  // TOP 5 MOST COMMON WIOM PROBLEMS — optimized for 300 users, 1 IT admin
+  // ════════════════════════════════════════════════════════════════════════
+
+  // ── 📶 WIFI / NET SLOW — most common WIOM issue ─────────────────────────
+  // "wifi slow hai", "net slow hai", "internet slow", "speed nahi"
+  if (/\b(net|wifi|internet|speed|bandwidth)\b.*(slow|dheema|dheemi|kam|bahut\s*slow|bahut\s*dheema|bura|bekar|nahi\s*chal\s*rha\s*theek)|slow.*(net|wifi|internet|speed)|(internet|wifi|net)\s*(bahut)?\s*(slow|dheema|weak|poor)/i.test(pn)) {
+    return `📶 *WiFi/Net Slow Issue* — yeh steps try karein:\n\n1. *Background apps band karo* → Ctrl+Shift+Esc → Task Manager → Network column sort karo → bandwidth kha rahe apps End Task karo (OneDrive sync, Chrome updates, etc.)\n2. *WiFi toggle* → Taskbar WiFi → OFF → 10 sec → ON → "Wiom office" se reconnect karo (password: spartans500)\n3. *Speed test karo* → fast.com ya speedtest.net browser mein open karo → dekho speed kitni aa rahi hai\n4. *Browser cache clear* → Chrome → Ctrl+Shift+Del → All time → Cookies + Cache → Clear\n5. *DNS change karo* → Win+R → ncpa.cpl → WiFi adapter → Properties → IPv4 → DNS: 8.8.8.8 aur 8.8.4.4 → OK\n6. *Laptop restart karo* → sab background processes reset ho jaate hain\n\n💡 *Sirf aapka laptop slow hai ya sab ka?*\n- Sab ka slow → Floor ka access point issue hai, type karo *ha* — IT ticket raise karta hoon\n- Sirf aapka → Steps se fix ho jaayega 👆\n\nAgar resolve nahi hua, type karo *ha* — IT ticket 🎫`;
+  }
+
+  // ── 💻 MS OFFICE NOT ACTIVATED — separate from "not working" ────────────
+  // "MS Office activate nahi hai", "office activated nahi", "product key chahiye"
+  if (/\b(office|word|excel|powerpoint|ms\s*office)\b.*(activ|activat|license|product\s*key|register|genuine|unactivat|not\s*activ|nahi\s*activ|activation\s*error|unlicensed)/i.test(pn) ||
+      /activ.*(office|word|excel|ms\s*office)/i.test(pn)) {
+    return `🔑 *MS Office Activation Issue*\n\nEmployees khud MS Office activate nahi kar sakte — admin rights aur valid license key IT ke paas hoti hai.\n\nIT Admin aapke laptop pe aake activate kar denge.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── ⚙️ MS OFFICE NOT WORKING / CRASHING ─────────────────────────────────
+  // "word nahi khul rha", "excel crash ho rha", "MS Office chal nahi rha"
+  if (/\b(word|excel|powerpoint|ms\s*office|microsoft\s*office)\b.*(nahi\s*khul|not\s*open|crash|band\s*ho|error|kaam\s*nahi|loading|atak|stuck|response\s*nahi|hang)/i.test(pn) ||
+      /(nahi\s*khul|crash|error).*(word|excel|powerpoint|office)/i.test(pn)) {
+    return `⚙️ *MS Office Issue* — yeh steps try karein:\n\n1. *Force close karo* → Ctrl+Shift+Esc → Task Manager → WINWORD.EXE / EXCEL.EXE → End Task → dobara open karo\n2. *Safe Mode mein open karo* → Win+R → \`winword /safe\` (Word ke liye) ya \`excel /safe\` (Excel) → Enter → agar khulta hai toh add-in issue hai\n3. *Recent file hat karo* → Safe mode mein File → Options → Trust Center → Protected View → sab uncheck → OK → restart\n4. *Office Repair* → Settings → Apps → Microsoft Office → Modify → Quick Repair → Repair karo\n5. *Restart* → Laptop restart karo → dobara try karo\n\n⚠️ *Activated nahi hai?* → Type karo *ha* — IT ticket raise karta hoon, Admin activate kar denge 🎫\n\nAgar koi bhi step kaam nahi kiya, type karo *ha* — IT ticket 🎫`;
+  }
+
+  // ── 🖱️ TOUCHPAD STUCK / NOT WORKING — 4th most common ──────────────────
+  // "touchpad kaam nahi kar rha", "cursor stuck", "mouse nahi chal rha"
+  if (/\b(touchpad|trackpad|cursor|mouse)\b.*(nahi|stuck|freeze|chal\s*nahi|kaam\s*nahi|band|work\s*nahi|move\s*nahi|response\s*nahi|hilta\s*nahi|ek\s*jagah)|cursor\s*(stuck|freeze|hilta\s*nahi|ek\s*jagah\s*hai)/i.test(pn) ||
+      /(touchpad|trackpad)\s*(nahi|band|stuck|kharab)/i.test(pn)) {
+    return `🖱️ *Touchpad Issue* — yeh steps try karein:\n\n1. *Touchpad lock key* → Keyboard pe touchpad icon wali key dhundho:\n   • Dell: Fn+F5 dabao\n   • HP: Fn+F12 dabao  \n   • Lenovo: Fn+F6 dabao\n   • (Key pe touchpad/hand icon hoga)\n2. *Settings se on karo* → Settings → Bluetooth & devices → Touchpad → toggle ON karo\n3. *Device Manager* → Win+X → Device Manager → "Mice and other pointing devices" → HID-compliant mouse → right-click → Enable device\n4. *Laptop restart karo* → sab se pehle yeh try karo agar nahi kiya\n5. *External mouse lagao* → USB mouse se kaam chala lo aur type karo *ha* — IT ticket raise karta hoon 🎫\n\nAgar touchpad physically stuck/jammed lag rha hai (physical feel mein problem) → hardware issue hai, type karo *ha* 🎫`;
+  }
 
   // Fan noise/sound (fan IS running but making noise — NOT an emergency)
   // This only runs if hasPositive check above did NOT return (i.e., user is NOT saying "fixed")
