@@ -882,7 +882,7 @@ const getKBAnswer = (problem) => {
   // "chori", "gum", "missing", "stolen", "lost" → NEVER say "resolved"
   if (/\b(chori|cori|churai|churaya|churaye|stolen|theft|gum\s*ho|gum\s*gaya|missing|khoya|khoyi|kho\s*gaya|kho\s*gayi|nahi\s*mila|nahi\s*mili|gum\s*gyi|gum\s*gaya)\b/i.test(pn) &&
       /\b(laptop|device|phone|mobile|tab|bag|charging)\b/i.test(pn)) {
-    return `🚨 *URGENT — Laptop Chori/Gum Report*\n\nGhabrao mat — pehle yeh karo:\n\n1. *Apni desk, drawer aur aas-paas ek baar achhe se check karo* — kabhi kabhi nearby reh jaata hai\n2. *Colleagues se puchho* — kisi ne temporarily liya ho sakta hai\n\nAgar phir bhi nahi mila:\n\n3. *IT Admin ko call karo ABHI* → Sajan Kumar: *9654244281*\n4. *HR ko bhi batao* → Formal report ke liye\n\n*Main aapke liye HIGH PRIORITY ticket bana raha hoon.*\nType karo *ha* — main IT Admin ko alert karunga iska ticket banata hoon 🎫`;
+    return `🚨 *URGENT — Laptop Chori/Gum Report*\n\nPehle yeh karo:\n\n1. *Apni desk, drawer aur aas-paas ek baar achhe se check karo* — kabhi kabhi nearby reh jaata hai\n2. *Colleagues se puchho* — kisi ne temporarily liya ho sakta hai\n\nAgar phir bhi nahi mila:\n\n3. *IT Admin ko call karo ABHI* → Sajan Kumar: *9654244281*\n4. *HR ko bhi batao* → Formal report ke liye\n\n*Main aapke liye HIGH PRIORITY ticket bana raha hoon.*\nType karo *ha* — main IT Admin ko alert karunga iska ticket banata hoon 🎫`;
   }
 
   // ── User saying issue is resolved / working fine now ───────────────────
