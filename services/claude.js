@@ -967,6 +967,12 @@ const getKBAnswer = (problem) => {
   if (/\blaptop\b.*(on\s*nahi|start\s*nahi|band\s*ho|nahi\s*chalta|khulta\s*nahi|nahi\s*khulta|chal\s*nahi|chalti\s*nahi|chalte\s*nahi|nahi\s*chal\s*rh)|boot\s*nahi|(switch|power)\s*on\s*nahi|\blaptop\b.*(nahi\s*(chal|start|on|boot)|on\s*ho\s*nahi)|on\s*nahi\s*ho\s*rh|won.?t\s*(turn\s*on|start|boot)|not\s*turning\s*on|not\s*starting|laptop\s*(is\s*)?(dead|not\s*starting|won.?t\s*start)|no\s*power\s*laptop/.test(pn))
     return `Yeh 3 cheezein try karo:\n\n1. *Charger check karo* — charger properly laga hai? Alag socket mein try karo\n2. *10 second hold* — power button 10 sec tak dabao → chhoddo → 30 sec wait karo → dobara try karo\n3. *Charger nikaal ke try karo* — charger hatao → power button 30 sec hold karo → charger lagao → on karo\n\nType karo *ha* — HIGH PRIORITY ticket raise karta hoon 🎫`;
 
+  // ── Laptop automatic off/on / sudden shutdown / restart loop ────────────
+  // "laptop automatic off on ho rha hai", "laptop khud band ho jaata hai", "sudden shutdown"
+  if (/automatic.*off|automatic.*on|auto.*band|auto.*restart|khud.*band|band.*ho\s*ja|sudden.*shut|achanak.*band|band\s*ho\s*ja\s*rha|restart\s*(ho\s*rha|kar\s*rha|loop)|off\s*on\s*ho\s*rha|on\s*off\s*ho\s*rha/i.test(pn)) {
+    return `⚠️ *Laptop automatically off/restart ho rha hai*\n\nYeh usually overheating ya battery issue hota hai. Yeh try karo:\n\n1. *Table pe rakho* — laptop soft surface (bed/sofa) pe mat rakho, table pe rakho taaki hawa aaye\n2. *Heavy apps band karo* → Ctrl+Shift+Esc → Task Manager → jo zyada CPU use kar raha ho End Task karo\n3. *Charger check karo* — charger properly laga hai? Alag socket try karo\n\nAgar yeh teeno karke bhi band ho raha hai — hardware issue hai, IT ko aana padega.\nType karo *ha* — HIGH PRIORITY ticket raise karta hoon 🎫`;
+  }
+
   // ── System hang + file save — specific scenario, must be BEFORE generic hang handler ──
   // "system hang ho gya file kaise save karu", "laptop hang hai document save nahi hua"
   if ((/hang|freeze|freez|hung|atak|stuck|respond\s*nahi|chal\s*nahi\s*rha|kaam\s*nahi\s*kar\s*rha/i.test(pn)) &&
