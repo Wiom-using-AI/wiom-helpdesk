@@ -796,6 +796,23 @@ const getKBAnswer = (problem) => {
     .replace(/\bkeybo?r?a?d\b/g, 'keyboard')         // keyborad, keybord
     .replace(/\bcharg(e|er|ing)?\b/g, 'charging');   // normalize charger/charging
 
+  // ── 📁 FILE EXPLORER / FOLDER / DRIVE NOT OPENING ───────────────────────
+  // Normalize folder/drive typos for matching
+  const pnFile = pn.replace(/\bfoldar\b/gi, 'folder').replace(/\bfoldor\b/gi, 'folder')
+                   .replace(/\bc\s*drivr\b/gi, 'c drive').replace(/\bexpolrer\b/gi, 'explorer');
+
+  if (/\b(folder|file\s*explorer|c\s*drive|d\s*drive|my\s*computer|this\s*pc|drive\b|explorer)\b/i.test(pnFile) &&
+      /\b(not\s*open|nahi\s*khul|open\s*nahi|nahi\s*open|khul\s*nahi|kholna|open\s*nahi\s*ho|nahi\s*ho\s*rha|chal\s*nahi|access\s*nahi|dikh\s*nahi)\b/i.test(pnFile)) {
+    return `📁 *Folder / Drive nahi khul raha* — yeh try karo:\n\n1. *Windows + E* → keyboard pe Windows key + E dabao → File Explorer directly khulega\n2. *Restart Explorer* → Ctrl+Shift+Esc → Task Manager → "Windows Explorer" → right-click → Restart\n3. *Laptop restart karo* → sab kuch fresh start ho jaata hai\n\nAgar phir bhi nahi khula — type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔒 FOLDER LOCK — needs IT admin (admin rights required) ──────────────
+  // "folder lock kaise karu", "foldar look kise karu" (typos handled)
+  if (/\b(folder|foldar|foldor|file|drive)\b.*(lock|look|password|protect|secure|band\s*karna|chupa|hide)\b/i.test(pn) ||
+      /\b(lock|look|password|protect)\b.*(folder|foldar|file|drive)\b/i.test(pn)) {
+    return `🔒 *Folder Lock / Password Protection*\n\nFolder lock karne ke liye admin rights chahiye — yeh sirf IT Admin kar sakta hai.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
   // ── 🛒 HARDWARE PURCHASE / NEW EQUIPMENT REQUEST ─────────────────────────
   // "headphone chahiye", "mouse ki zarurat hai", "new keyboard chahiye"
   if (/\b(chahiye|ki\s*need|ki\s*zarurat|naya|new|purchase|buy|kharidna|request|mangwana|milega|doge|de\s*do)\b/i.test(pn) &&
