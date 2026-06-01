@@ -938,6 +938,13 @@ const getKBAnswer = (problem) => {
   if (/\blaptop\b.*(on\s*nahi|start\s*nahi|band\s*ho|nahi\s*chalta|khulta\s*nahi|nahi\s*khulta|chal\s*nahi|chalti\s*nahi|chalte\s*nahi|nahi\s*chal\s*rh)|boot\s*nahi|(switch|power)\s*on\s*nahi|\blaptop\b.*(nahi\s*(chal|start|on|boot)|on\s*ho\s*nahi)|on\s*nahi\s*ho\s*rh|won.?t\s*(turn\s*on|start|boot)|not\s*turning\s*on|not\s*starting|laptop\s*(is\s*)?(dead|not\s*starting|won.?t\s*start)|no\s*power\s*laptop/.test(pn))
     return `Laptop on nahi ho raha — yeh ek common boot issue hai. Please yeh steps follow karein:\n\n1. *Force Restart* → Power button 10 sec hold karein → band ho jaayega → dobara on karein\n2. *Charger Check* → Charger lagao aur 5 min wait karein (battery low ho sakti hai) → phir on karein\n3. *Battery Reset* → Charger nikaal lo → Power button 30 sec hold karein → charger lagao → on karein\n4. *Power Drain* → Charger nikaal lo → Power button 60 sec hold karein → charger lagao → on karein\n5. *Safe Mode* → On karte waqt F8 ya Shift+F8 press karein → Safe Mode select karein\n\nAgar kisi bhi step se resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
 
+  // ── System hang + file save — specific scenario, must be BEFORE generic hang handler ──
+  // "system hang ho gya file kaise save karu", "laptop hang hai document save nahi hua"
+  if ((/hang|freeze|freez|hung|atak|stuck|respond\s*nahi|chal\s*nahi\s*rha|kaam\s*nahi\s*kar\s*rha/i.test(pn)) &&
+      (/save|file|document|doc|data|kaam|work|sheet|excel|word/i.test(pn))) {
+    return `💾 *System hang hai, file save karne ke liye yeh karo — order mein:*\n\n1. *Pehle Ctrl+S try karo* — kabhi kabhi mild hang mein bhi kaam karta hai, 30 sec wait karo\n2. *2-3 minute wait karo* — system khud recover ho sakta hai, memory free hoti hai\n3. *Ctrl+Alt+Del dabao* → Task Manager → sabse zyada RAM/CPU use karne wala doosra app End Task karo → system recover ho sakta hai → phir Ctrl+S\n4. *MS Word/Excel hai?* → AutoSave ON hogi — last autosaved version automatically bach jaata hai\n5. *Agar kuch kaam nahi kiya* → Force restart karna padega (Power button 10 sec hold) → MS Word/Excel khud AutoRecover pop-up dega agle start pe\n\n⚠️ *Data loss se bachne ke liye aage se:*\nMS Office → File → Options → Save → "Save AutoRecover every ___ minutes" → *1 minute* set karo\n\nAgar baar baar hang hota hai, type karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
   // ── Overheating ──────────────────────────────────────────────────────────
   // "laptop bahut garam ho rha", "laptop heat ho rha", "laptop garm hai", "zyada heat"
   if (/\blaptop\b.*(garm|garam|heat|hot\b)|garm.{0,10}laptop|(overheat|over\s*heat|bahut\s*garam|bahut\s*garm|zyada\s*heat|zyada\s*garm|laptop\s*garm)/.test(pn))
