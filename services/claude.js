@@ -1,7 +1,10 @@
 const Groq                              = require('groq-sdk');
 const { GoogleGenerativeAI }            = require('@google/generative-ai');
 
-const groq   = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Conditional init — prevent crash if API keys missing on Railway
+const groq = process.env.GROQ_API_KEY
+  ? new Groq({ apiKey: process.env.GROQ_API_KEY })
+  : null;
 const gemini = process.env.GEMINI_API_KEY
   ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null;
@@ -493,6 +496,7 @@ const callGemini = async (systemPrompt, history) => {
 
 // ── Call Groq (LLaMA fallback) ────────────────────────────────────────────────
 const callGroq = async (systemPrompt, history) => {
+  if (!groq) throw new Error('GROQ_API_KEY not configured');
   const completion = await groq.chat.completions.create({
     model      : 'llama-3.3-70b-versatile',
     messages   : [{ role: 'system', content: systemPrompt }, ...history],
