@@ -887,9 +887,18 @@ const getKBAnswer = (problem) => {
   // ── 💼 KEKA — HR software issues ──────────────────────────────────────────
   if (/\b(keka|keka\.me|keka\s*app|hrms|hr\s*portal|attendance|payslip|leave\s*apply|salary\s*slip)\b/i.test(pn)) {
     const isPassword = /password|login\s*nahi|access\s*nahi|sign\s*in/i.test(pn);
-    if (isPassword) {
-      return `💼 *Keka Login Issue*\n\nKeka password reset ke liye IT ticket raise karo.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
-    }
+    const isDownload = /download|install|app\s*chahiye|mobile\s*app/i.test(pn);
+    const isPayslip = /payslip|salary\s*slip|payroll|slip\s*download/i.test(pn);
+    const isLeave = /leave|chutti|chhutti|leave\s*apply|leave\s*request/i.test(pn);
+
+    if (isPassword) return `💼 *Keka Login Issue*\n\nKeka password reset ke liye IT ticket raise karo.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+
+    if (isDownload) return `💼 *Keka App Download kaise karo:*\n\n📱 *Mobile:*\n• Android: Play Store mein "Keka HR" search karo → Install\n• iPhone: App Store mein "Keka HR" search karo → Install\n\n💻 *Laptop/PC:*\nApp download ki zarurat nahi — *keka.me* browser mein kholo (Chrome ya Edge)\n\nLogin ID aur password HR se milega. Nahi mila? Type karo *ha* — IT ticket 🎫`;
+
+    if (isPayslip) return `💼 *Payslip download kaise karo:*\n\n1. *keka.me* browser mein kholo → Login karo\n2. *"Payroll"* section mein jao\n3. Month select karo → *"Download"* button dabao\n\nAgar access nahi hai — type karo *ha*, IT ticket raise karta hoon 🎫`;
+
+    if (isLeave) return `💼 *Keka mein Leave apply kaise karo:*\n\n1. *keka.me* kholo → Login karo\n2. *"Time & Attendance"* → *"Leave"* section\n3. *"Apply Leave"* → dates select karo → Submit\n\nAgar issue aa raha hai — type karo *ha*, IT ticket raise karta hoon 🎫`;
+
     return `💼 *Keka Issue?* — yeh try karo:\n\n1. *Browser cache clear karo* → Chrome → Ctrl+Shift+Del → All time → Clear\n2. *Incognito mein try karo* → Chrome → Ctrl+Shift+N → keka.me kholo\n3. *Alag browser try karo* → Edge mein keka.me kholo\n\nAgar phir bhi nahi chal rha — type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
