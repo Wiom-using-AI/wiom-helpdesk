@@ -43,8 +43,8 @@ Hinglish message → Reply in Hinglish (same Hindi-English mix as the user)
 - Confident and clear — "Please do this:" not "aap try kar sakte hain"
 - No slang, no overly casual phrases
 - No "Dekho", "Haan yaar", "Achha suno" — too casual
-- Good openers: "Sure, here are the steps:", "Please try the following:", "Understood. Here's what to do:"
-- Hinglish openers: "Please yeh steps try karein:", "Samajh gaya, yeh karein:", "Yeh steps follow karein:"
+- Good openers: "Sure, here are the steps:", "Try the following:", "Understood. Here's what to do:"
+- Hinglish openers: "Yeh try karo:", "Samajh gaya, yeh karo:", "Yeh steps karo:"
 - NEVER say "yeh ek common issue hai" or "this is a common issue" — sounds dismissive, go straight to solution
 - Emojis: use sparingly — only where genuinely useful (✅ 🎫 ⚠️)
 - No excessive "😊😊😊" — maximum 1 emoji per reply
@@ -60,7 +60,7 @@ Troubleshooting problem → ALL numbered steps at once, end with ticket option
   Q: "My laptop is slow" → Give ALL steps in English
 
 Vague (zero info) → ONE clear clarifying question
-  Q: "problem hai" → A: "Please batayein — laptop, WiFi, ya koi aur issue hai?"
+  Q: "problem hai" → A: "Batao — laptop, WiFi, ya koi aur issue hai?"
   Q: "there's an issue" → A: "Could you describe the issue? Is it related to your laptop, WiFi, or something else?"
   But if ANY symptom is given → skip question, give steps directly
 
@@ -86,24 +86,24 @@ Format: bold the step name, then arrow, then clear action.
 *Step name* → what to do exactly
 
 End every troubleshooting reply with:
-"Agar resolve nahi hua — type karo *ha*, IT ko bhejta hoon 🎫"
+"Agar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫"
 
 ━━━ REAL EXAMPLES — match tone and quality ━━━
 
 [HINGLISH] User: "kal se laptop ka windows open nahi ho rha"
 You:
-Please yeh steps follow karein:
+Yeh try karo:
 
 1. *Restart* → Power button se properly shut down karo → dobara on karo
-2. *Wait* → Agar Windows update chal rahi hai → wait karo, band mat karo
+2. *Update hai?* → Agar Windows update chal rahi hai → wait karo, band mat karo
 
-Agar 3 baar se zyada restart ho raha hai ya nahi ruk raha — type karo *ha* — IT ticket raise karta hoon 🎫
+Agar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫
 
 ---
 
 [ENGLISH] User: "My WiFi is not working"
 You:
-Please try the following steps:
+Try these steps:
 
 1. *WiFi Toggle* → Taskbar WiFi → OFF → 10 sec → ON → connect to "Wiom office" (password: spartans500)
 2. *Forget & Reconnect* → WiFi settings → right-click the network → Forget → reconnect
@@ -115,13 +115,13 @@ If still not resolved — type *ha*, IT ticket raise karta hoon 🎫
 
 [HINGLISH] User: "wifi nahi chal rha"
 You:
-Please yeh steps try karein — har step ke baad check karein ki connect hua ya nahi:
+Yeh try karo — har step ke baad check karo ki connect hua ya nahi:
 
 1. *Toggle* → Taskbar WiFi → OFF → 10 sec → ON → "Wiom office" se connect karo (password: spartans500)
 2. *Forget & Reconnect* → WiFi settings → network → Forget → dobara connect karo
 3. *Restart* → Laptop restart karo
 
-Resolve nahi hua → type karein *ha* — IT ticket raise kar deta hoon 🎫
+Agar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫
 
 ━━━ 🔧 PHYSICAL DAMAGE — IMMEDIATE TICKET ━━━
 Agar user bole "water damage", "paani gira", "liquid spill", "bhig gaya" — CRITICAL EMERGENCY hai. Steps: TURANT band karo, charger nikalo, ulta rakho, hairdryer mat lagao (battery remove NAHI — modern laptops mein battery andar sealed hoti hai). CRITICAL ticket raise karo.
@@ -198,7 +198,7 @@ Software install: Ticket only — needs IT permission and license
 VPN: WIOM mein use nahi hota — tell user this directly
 
 ━━━ SHORT REPLIES (no steps needed) ━━━
-Ticket status → match language: "Your ticket is with the IT team — type *my tickets* to check status." / "Aapka ticket IT team ke paas hai — type karein *my tickets* status ke liye."
+Ticket status → match language: "Your ticket is with the IT team — type *my tickets* to check status." / "Aapka ticket IT team ke paas hai — type karo *my tickets* status ke liye."
 Compliments/thanks → brief professional acknowledgement, offer further help
 Bye/done → "Feel free to reach out if anything else comes up." / "Koi aur issue ho toh batayein."
 Non-IT topic → "I can assist with IT-related issues. Do you have a tech problem I can help with?" / "Main IT issues mein help kar sakta hoon — koi tech problem hai?"
@@ -356,14 +356,14 @@ const getKBFallback = (problem) => {
 
   // WiFi connected but no internet
   if (/connect(ed)?.*(nahi chal|work nahi|internet nahi|nahi work)|wifi.*(connected|chal).*(internet nahi|nahi chal)|(no internet|internet nahi).*(connected|connect)/.test(pn))
-    return `WiFi connected hai par internet nahi chal raha. Yeh try karo:\n\n1. *WiFi toggle* → Taskbar WiFi → OFF → 10 sec → ON\n2. *Chrome reopen* → Chrome band karo → dobara open karo → gmail.com try karo\n3. *Restart* → Laptop restart karo\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `WiFi connected hai par internet nahi chal raha. Yeh try karo:\n\n1. *WiFi toggle* → Taskbar WiFi → OFF → 10 sec → ON\n2. *Chrome reopen* → Chrome band karo → dobara open karo → gmail.com try karo\n3. *Restart* → Laptop restart karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('slow') || pn.includes('hang') || pn.includes('freez') || pn.includes('dheema') || pn.includes('lagg'))
     return `💻 *Laptop Slow/Hang* — yeh try karo:\n\n1. *Task Manager* → Ctrl+Shift+Esc → CPU column → jo zyada use kar raha ho End Task karo\n2. *Browser tabs* → unnecessary Chrome/Edge tabs band karo\n3. *Restart* → Laptop properly shut down karo (restart, sleep nahi)\n\nAgar in teeno se theek nahi hua, type karo *ha* — IT ticket raise karta hoon (RAM ya SSD check hogi) 🎫`;
 
   if (pn.includes('wifi') || pn.includes('internet') || pn.includes('network') ||
       /\bnet\b/.test(pn) || pn.includes('net band') || pn.includes('signal nahi') || pn.includes('no internet'))
-    return `WiFi/Internet issue. Yeh try karo:\n\n1. *Toggle* → Taskbar WiFi → OFF → 10 sec → ON → "Wiom office" se connect karo (password: spartans500)\n2. *Restart* → Laptop restart karo\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `WiFi/Internet issue. Yeh try karo:\n\n1. *Toggle* → Taskbar WiFi → OFF → 10 sec → ON → "Wiom office" se connect karo (password: spartans500)\n2. *Restart* → Laptop restart karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   // Laptop won't start / boot / turn on
   // ISSUE 5 fix: added English boot phrases ("won't turn on", "not turning on", "laptop dead")
@@ -372,11 +372,11 @@ const getKBFallback = (problem) => {
 
   // Overheating
   if (/\b(laptop|leptop|lptop|latop)\b.*(garm|garam|heat|hot\b)|garm.*(laptop|leptop)|(overheat|over\s*heat|bahut\s*garam|bahut\s*garm|zyada\s*heat|zyada\s*garm)/.test(pn))
-    return `Laptop overheating issue hai. Please yeh steps follow karein:\n\n1. *Hard Surface* → Laptop ko table par rakhein — bed/sofa par mat rakhein (vents block hote hain)\n2. *Heavy Apps Band Karein* → Ctrl+Shift+Esc → Task Manager → CPU column sort karein → heavy apps End Task karein\n3. *Restart* → Laptop restart karein — background processes band ho jaate hain\n\nAgar bahut zyada garam ho raha hai ya band ho raha hai, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Laptop overheating issue hai. Yeh try karo:\n\n1. *Table pe rakho* → Laptop ko table par rakho — bed/sofa pe mat rakho (hawa nahi aati)\n2. *Heavy apps band karo* → Ctrl+Shift+Esc → Task Manager → CPU column → heavy apps End Task karo\n3. *Restart* → Laptop restart karo — background processes band ho jaate hain\n\nAgar bahut zyada garam ho raha hai ya band ho raha hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   // Screen black / blank / nothing visible
   if (/screen\s*(kali|kala|black|blank|kuch\s*nahi)|black\s*screen|kali\s*screen|monitor\s*(black|kala|kali|blank)|display\s*(black|kali|blank|nahi\s*aa)|screen\s*pe\s*kuch\s*nahi|(nahi\s*dikh|dikhna\s*band)/.test(pn))
-    return `Black/blank screen issue hai. Please yeh steps follow karein:\n\n1. *Brightness Keys* → Fn+F5 ya Fn+F8 press karein (brightness keys) — screen dim ho sakti hai\n2. *Force Restart* → Power button 10 sec hold karein → band karein → dobara on karein\n3. *External Monitor Test* → HDMI cable se bahar monitor connect karein — agar bahar dikh raha toh laptop screen hardware issue hai\n4. *Charger Check* → Battery completely dead ho sakti hai → charger lagao → 10 min wait karein → on karein\n\nAgar ab bhi screen nahi aa rahi, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Black/blank screen issue hai. Yeh try karo:\n\n1. *Brightness Keys* → Fn+F5 ya Fn+F8 dabao (brightness keys) — screen dim ho sakti hai\n2. *Force Restart* → Power button 10 sec hold karo → band karo → dobara on karo\n3. *External Monitor Test* → HDMI cable se bahar monitor connect karo — bahar dikh raha toh laptop screen hardware issue hai\n4. *Charger Check* → Battery dead ho sakti hai → charger lagao → 10 min wait karo → on karo\n\nAgar screen ab bhi nahi aayi → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   // Screen color distortion / flickering / lines
   if ((/colorful|colorfull|colarful|colarfull|colour|color\s*aa|rang\s*aa|pink\s*screen|green\s*screen|screen\s*pe\s*rang|display.*color|color.*display|screen\s*kharab/.test(pn) ||
@@ -390,13 +390,13 @@ const getKBFallback = (problem) => {
     return `Windows issue hai. Yeh try karo:\n\n1. *Restart* → Power button se properly shut down karo → dobara on karo\n2. *Wait* → Agar Windows update chal rahi hai → wait karo, band mat karo\n\nAgar 3 baar se zyada restart ho raha hai ya nahi ruk raha — type karo *ha* — IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('sound') || pn.includes('audio') || pn.includes('speaker') || pn.includes('headphone'))
-    return `Audio issue. Please yeh steps try karein:\n\n1. Taskbar mein speaker icon par right-click karein → Sound settings\n2. Output device mein sahi device select karein\n3. Volume check karein — 0% ya mute toh nahi hai\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Audio issue. Yeh try karo:\n\n1. *Sound settings* → Taskbar mein speaker icon pe right-click karo → Sound settings\n2. *Output device* → sahi device select karo\n3. *Volume check* → 0% ya mute toh nahi?\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('blue screen') || pn.includes('bsod'))
-    return `Blue Screen issue. Please yeh steps follow karein:\n\n1. Screen par jo error code tha — note karein\n2. Laptop restart karein — zyada tar ek restart mein theek ho jaata hai\n3. Agar 3 baar se zyada aaya hai → please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Blue Screen issue. Yeh karo:\n\n1. *Error code note karo* — screen pe jo likha tha woh\n2. *Restart karo* — aksar ek restart se theek ho jaata hai\n3. Agar 3 baar se zyada aaya hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charging/.test(pn))
-    return `Battery/Charging issue. Please yeh steps try karein:\n\n1. Charger dono taraf firmly connect karein (laptop side aur socket side)\n2. Alag power socket try karein\n3. Laptop shut down karein → charger disconnect karein → power button 30 sec hold karein → charger reconnect karein → on karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Battery/Charging issue. Yeh try karo:\n\n1. *Charger check karo* → dono taraf firmly laga hai? (laptop side + socket side)\n2. *Alag socket try karo*\n3. *Reset karo* → Laptop band karo → charger nikalo → power button 30 sec hold karo → charger lagao → on karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   // ISSUE 4 fix: removed dead code — black screen already handled above (line ~361)
 
@@ -404,53 +404,53 @@ const getKBFallback = (problem) => {
     return `Keyboard issue. Yeh try karo:\n\n1. *Restart* → Laptop restart karo\n2. *On-screen keyboard* → Start menu mein "On-Screen Keyboard" type karo → open karo → kaam chalao\n\nType karo *ha* — IT ticket raise karta hoon, IT aake fix karega 🎫`;
 
   if (pn.includes('touchpad') || pn.includes('mouse'))
-    return `Touchpad issue. Please yeh steps try karein:\n\n1. Fn + touchpad lock key press karein (keyboard par lock icon wali key)\n2. Settings → Bluetooth & devices → Touchpad → ON karein\n3. Laptop restart karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Touchpad issue. Yeh try karo:\n\n1. *Fn key* → Fn + touchpad lock key dabao (keyboard pe lock icon wali key)\n2. *Settings* → Settings → Bluetooth & devices → Touchpad → ON karo\n3. *Restart* → Laptop restart karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('printer'))
-    return `Printer issue. Yeh try karo:\n\n1. *Printer restart* → Printer band karo → 30 sec → on karo\n2. *Laptop restart* → Laptop restart karo → dobara print karo\n\nAgar resolve nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
+    return `Printer issue. Yeh try karo:\n\n1. *Printer restart* → Printer band karo → 30 sec → on karo\n2. *Laptop restart* → Laptop restart karo → dobara print karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('teams'))
-    return `Microsoft Teams issue. Yeh try karo:\n\n1. *Quit & Reopen* → Taskbar pe Teams icon right-click → Quit → dobara open karo\n2. *Browser mein try karo* → teams.microsoft.com Chrome mein open karo\n\nAgar resolve nahi hua, type karein *ha* — IT ticket raise karta hoon 🎫`;
+    return `Microsoft Teams issue. Yeh try karo:\n\n1. *Quit & Reopen* → Taskbar pe Teams icon right-click → Quit → dobara open karo\n2. *Browser mein try karo* → teams.microsoft.com Chrome mein open karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('zoom'))
-    return `Zoom issue. Please yeh steps try karein:\n\n1. Zoom close karein → dobara open karein\n2. Internet connection check karein → zoom.us/wc/join browser mein try karein\n3. Zoom Settings → Audio/Video → correct device select karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Zoom issue. Yeh try karo:\n\n1. *Restart karo* → Zoom close karo → dobara open karo\n2. *Browser mein try karo* → zoom.us/wc/join Chrome mein kholо\n3. *Settings* → Zoom Settings → Audio/Video → correct device select karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   // WIOM uses Gmail (Google Workspace) — NOT Outlook
   // "email nahi chal rha", "gmail nahi khul rha", "mail nahi aa rha"
   if (pn.includes('outlook')) {
-    return `ℹ️ WIOM mein Outlook use nahi hota — *Gmail* use hoti hai.\n\nGmail se koi problem hai? gmail.com open karein Chrome mein aur batayein kya issue aa raha hai.`;
+    return `ℹ️ WIOM mein Outlook use nahi hota — *Gmail* use hoti hai.\n\nGmail se koi problem hai? gmail.com Chrome mein kholo aur batao kya issue aa raha hai.`;
   }
   if (pn.includes('email') || pn.includes('gmail') || pn.includes('mail')) {
-    return `📧 *Gmail Issue* — yeh steps try karein:\n\n1. *Incognito mein check karein* → Chrome → Ctrl+Shift+N → gmail.com → dekho khulta hai ya nahi\n2. *Chrome cache clear karein* → Ctrl+Shift+Del → "All time" → Cookies + Cache → Clear\n3. *Alag browser try karein* → Edge mein gmail.com kholein\n\nAgar phir bhi nahi hua, type karein *ha* — IT ticket raise karta hoon 🎫`;
+    return `📧 *Gmail Issue* — yeh try karo:\n\n1. *Incognito test* → Chrome → Ctrl+Shift+N → gmail.com → dekho khulta hai ya nahi\n2. *Cache clear karo* → Ctrl+Shift+Del → "All time" → Cookies + Cache → Clear\n3. *Alag browser* → Edge mein gmail.com kholo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
   if (pn.includes('password') || pn.includes('locked') || pn.includes('login') || /pas?w?ro?d/.test(pn)) {
     // Gmail/Google password — IT handles (no admin rights to self-reset company Google accounts)
     if (/google|gmail|email|mail/.test(pn))
-      return `🔑 *Gmail/Google Account Password*\n\nCompany Gmail account ka password reset IT karta hai — employees khud reset nahi kar sakte.\n\nType karein *ha* — IT ticket raise karta hoon, jaldi reset ho jaayega 🎫`;
-    return `🔑 *Password/Login Issue*\n\nPassword reset sirf IT team kar sakti hai.\n\nType karein *ha* — IT ticket raise karta hoon, team jaldi reset kar degi 🎫`;
+      return `🔑 *Gmail/Google Account Password*\n\nCompany Gmail account ka password reset IT karta hai — employees khud reset nahi kar sakte.\n\nType karo *ha* — IT ticket raise karta hoon, jaldi reset ho jaayega 🎫`;
+    return `🔑 *Password/Login Issue*\n\nPassword reset sirf IT team kar sakti hai.\n\nType karo *ha* — IT ticket raise karta hoon, team jaldi reset kar degi 🎫`;
   }
 
   if (pn.includes('bluetooth'))
-    return `Bluetooth issue. Yeh try karo:\n\n1. *Toggle* → Settings → Bluetooth → OFF → ON karein\n2. *Re-pair* → Device remove karein → dobara pair karein\n3. *Restart* → Laptop restart karo\n\nAgar resolve nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
+    return `Bluetooth issue. Yeh try karo:\n\n1. *Toggle* → Settings → Bluetooth → OFF → ON karo\n2. *Re-pair* → Device remove karo → dobara pair karo\n3. *Restart* → Laptop restart karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('camera') || pn.includes('webcam') || /\bcam\b/.test(pn))
-    return `Camera issue. Yeh try karo:\n\n1. *Privacy check* → Settings → Privacy & Security → Camera → ON karein\n2. *App settings* → Teams/Zoom mein Settings → Video → correct camera select karein\n3. *Restart* → Laptop restart karo\n\nAgar resolve nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
+    return `Camera issue. Yeh try karo:\n\n1. *Privacy check* → Settings → Privacy & Security → Camera → ON karo\n2. *App settings* → Teams/Zoom mein Settings → Video → correct camera select karo\n3. *Restart* → Laptop restart karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('mic') || pn.includes('microphone'))
-    return `Microphone issue. Please yeh steps try karein:\n\n1. Settings → Privacy & Security → Microphone → ON karein\n2. Sound settings → Input → correct mic select karein\n3. Teams: Settings → Devices → mic test karein\n\nAgar resolve nahi hua, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Microphone issue. Yeh try karo:\n\n1. *Privacy check* → Settings → Privacy & Security → Microphone → ON karo\n2. *Input device* → Sound settings → Input → correct mic select karo\n3. *Teams test* → Teams Settings → Devices → mic test karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('usb') || pn.includes('pendrive'))
-    return `USB issue. Yeh try karo:\n\n1. *Alag port* → USB device dusre port mein lagao\n2. *Restart* → Laptop restart karo → dobara lagao\n\nAgar resolve nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
+    return `USB issue. Yeh try karo:\n\n1. *Alag port* → USB device dusre port mein lagao\n2. *Restart* → Laptop restart karo → dobara lagao\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   if (pn.includes('storage') || pn.includes('disk full'))
     return `Storage/disk full issue. Yeh try karo:\n\n1. *Recycle Bin* → Desktop pe Recycle Bin → Empty Recycle Bin\n2. *Downloads folder* → File Explorer → Downloads → jo files zaruri nahi unhe delete karo\n\nAgar ab bhi issue hai, type karo *ha* — IT ticket raise karta hoon (IT baaki cleanup karega) 🎫`;
 
   if (pn.includes('virus') || pn.includes('malware') || pn.includes('antivirus'))
-    return `Possible virus/malware issue. Please yeh steps follow karein:\n\n1. Windows Security → Virus & threat protection → Quick Scan\n2. Agar suspicious activity lag rahi hai → internet disconnect karein\n\nPlease type karein *ha* — IT team ko escalate karna zaroori hai 🎫`;
+    return `Possible virus/malware issue. Yeh karo:\n\n1. *Quick Scan* → Windows Security → Virus & threat protection → Quick Scan\n2. *Internet band karo* → agar suspicious activity lag rahi hai\n\nType karo *ha*, IT ticket raise karta hoon — yeh serious ho sakta hai 🎫`;
 
   if (pn.includes('kaise ho') || pn.includes('kaisa hai') || pn.includes('how are you') || pn.includes('kya haal'))
-    return 'All good, thank you. Please batayein — koi IT issue hai jisme help kar sakta hoon?';
+    return 'Sab theek hai, shukriya. Koi IT issue hai? Batao — help karunga.';
 
   if (pn.includes('thanks') || pn.includes('shukriya') || pn.includes('thank you') || pn.includes('dhanyawad'))
     return 'You are welcome. Feel free to reach out if anything else comes up.';
@@ -459,7 +459,7 @@ const getKBFallback = (problem) => {
     return 'Hello! I am Zivon — WIOM IT Support Assistant. How can I help you today?';
 
   if (/\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(pn) || /\b(tum|aap)\s*(kya|kise|kaun)\b/i.test(pn))
-    return `Main *Zivon* hoon — WIOM ka IT support assistant.\nLaptop, WiFi, software, password — kisi bhi IT issue mein help kar sakta hoon.\nPlease batayein aapka issue kya hai.`;
+    return `Main *Zivon* hoon — WIOM ka IT support assistant.\nLaptop, WiFi, software, password — kisi bhi IT issue mein help kar sakta hoon.\nBatao kya problem hai.`;
 
   if (pn.includes('sajan') || pn.includes('admin') || pn.includes('it head') || pn.includes('phone number') || pn.includes('number do'))
     return 'IT: *Sajan Kumar* | 📧 sajan.kumar@wiom.in';
@@ -862,7 +862,7 @@ const getKBAnswer = (problem) => {
 
   // ── 📹 CCTV — not IT scope, Admin handles ────────────────────────────────
   if (/\b(cctv|camera\s*footage|security\s*camera|recording|footage|surveillance)\b/i.test(pn)) {
-    return `📹 CCTV access IT helpdesk ke scope mein nahi aata.\n\nCCTV ke liye *Admin team* se contact karein.\nKoi laptop ya IT problem ho toh batao.`;
+    return `📹 CCTV access IT helpdesk ke scope mein nahi aata.\n\nCCTV ke liye *Admin team* se contact karo.\nKoi laptop ya IT problem ho toh batao.`;
   }
 
   // ── 🚫 OUT OF SCOPE — TV, AC, furniture, electricity etc. ───────────────
@@ -911,7 +911,7 @@ const getKBAnswer = (problem) => {
       return `🖨️ *Network Printer Access*\n\nPrinter network pe add karna IT team ka kaam hai — direct access nahi diya ja sakta.\nType karo *ha* — IT ticket raise karta hoon, IT team aapko network printer se connect kar degi 🎫`;
     }
     // Printer visible but not printing → give steps
-    return `🖨️ *Printer Issue* — yeh try karo:\n\n1. *Printer restart* → Printer band karo → 30 sec → on karo\n2. *Pending jobs cancel* → Taskbar mein printer icon → cancel all pending jobs\n3. *Default printer* → Settings → Bluetooth & devices → Printers → correct printer default set karo\n4. *Laptop restart* → Laptop restart karo → dobara print karo\n\nAgar resolve nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
+    return `🖨️ *Printer Issue* — yeh try karo:\n\n1. *Printer restart* → Printer band karo → 30 sec → on karo\n2. *Pending jobs cancel* → Taskbar mein printer icon → cancel all pending jobs\n3. *Default printer* → Settings → Bluetooth & devices → Printers → correct printer default set karo\n4. *Laptop restart* → Laptop restart karo → dobara print karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
   // ── 📺 SCREEN SHARE — Teams / Zoom (software, not HDMI) ─────────────────
@@ -921,7 +921,7 @@ const getKBAnswer = (problem) => {
 
   // ── 📽️ HDMI / PROJECTOR — conference room ────────────────────────────────
   if (/\b(hdmi|projector|project|external\s*screen|external\s*monitor|conference\s*room|meeting\s*room|display\s*nahi|second\s*screen|dual\s*screen|extend\s*display)\b/i.test(pn)) {
-    return `📽️ *HDMI/Projector Issue* — yeh steps try karein:\n\n1. *Cable check karo* → HDMI cable properly plugged in dono sides\n2. *Win+P* → keyboard pe Win+P dabao → "Extend" ya "Duplicate" select karo\n3. *Alag port try karo* → laptop ya projector pe dusra HDMI port lagao\n4. *Restart karo* → cable laga ke laptop restart karo\n\nAgar phir bhi nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
+    return `📽️ *HDMI/Projector Issue* — yeh try karo:\n\n1. *Cable check karo* → HDMI cable properly plugged in dono sides\n2. *Win+P* → keyboard pe Win+P dabao → "Extend" ya "Duplicate" select karo\n3. *Alag port try karo* → laptop ya projector pe dusra HDMI port lagao\n4. *Restart karo* → cable laga ke laptop restart karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
   // ── 💿 SOFTWARE INSTALLATION REQUEST — needs IT, no script can install ──
@@ -1071,12 +1071,12 @@ const getKBAnswer = (problem) => {
   // ── Overheating ──────────────────────────────────────────────────────────
   // "laptop bahut garam ho rha", "laptop heat ho rha", "laptop garm hai", "zyada heat"
   if (/\blaptop\b.*(garm|garam|heat|hot\b)|garm.{0,10}laptop|(overheat|over\s*heat|bahut\s*garam|bahut\s*garm|zyada\s*heat|zyada\s*garm|laptop\s*garm)/.test(pn))
-    return `Laptop overheating issue hai. Please yeh steps follow karein:\n\n1. *Table pe rakho* → Laptop ko table par rakho — bed/sofa pe mat rakho (hawa nahi aati)\n2. *Heavy apps band karo* → Ctrl+Shift+Esc → Task Manager → CPU column → heavy apps End Task karo\n3. *Restart* → Laptop restart karo — background processes band ho jaate hain\n\nAgar bahut zyada garam ho raha hai ya band ho raha hai, type karo *ha* — IT ticket raise karta hoon 🎫`;
+    return `Laptop overheating issue hai. Yeh try karo:\n\n1. *Table pe rakho* → Laptop ko table par rakho — bed/sofa pe mat rakho (hawa nahi aati)\n2. *Heavy apps band karo* → Ctrl+Shift+Esc → Task Manager → CPU column → heavy apps End Task karo\n3. *Restart* → Laptop restart karo — background processes band ho jaate hain\n\nAgar bahut zyada garam ho raha hai ya band ho raha hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   // ── Screen black / blank / nothing visible ───────────────────────────────
   // "screen kali ho gyi", "black screen aa gya", "screen pe kuch nahi dikh rha", "monitor black hai"
   if (/screen\s*(kali|kala|black|blank|kuch\s*nahi\s*dikh|pe\s*kuch\s*nahi)|black\s*screen|kali\s*screen|monitor\s*(black|kala|kali|blank)|display\s*(black|kali|blank|nahi\s*aa)|(nahi\s*dikh|dikhna\s*band)\s*(rha|rhi|raha)/.test(pn))
-    return `Black/blank screen issue hai. Please yeh steps follow karein:\n\n1. *Brightness Keys* → Fn+F5 ya Fn+F8 press karein (brightness keys) — screen dim ho sakti hai\n2. *Force Restart* → Power button 10 sec hold karein → band karein → dobara on karein\n3. *External Monitor Test* → HDMI cable se bahar monitor connect karein — agar bahar dikh raha toh laptop screen hardware issue hai\n4. *Charger Check* → Battery completely dead ho sakti hai → charger lagao → 10 min wait karein → on karein\n\nAgar ab bhi screen nahi aa rahi, please type karein *ha* — IT ticket raise kar deta hoon 🎫`;
+    return `Black/blank screen issue hai. Yeh try karo:\n\n1. *Brightness Keys* → Fn+F5 ya Fn+F8 dabao (brightness keys) — screen dim ho sakti hai\n2. *Force Restart* → Power button 10 sec hold karo → band karo → dobara on karo\n3. *External Monitor Test* → HDMI cable se bahar monitor connect karo — bahar dikh raha toh laptop screen hardware issue hai\n4. *Charger Check* → Battery dead ho sakti hai → charger lagao → 10 min wait karo → on karo\n\nAgar screen ab bhi nahi aayi → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   // ── Windows Diagnosis / Safe Mode / Diagnostic Tool — IT only ─────
   // Employee sees "Windows Diagnosis" screen or asks about Safe Mode/Diagnostic Tool
@@ -1096,7 +1096,7 @@ const getKBAnswer = (problem) => {
   // ── 📶 WIFI / NET SLOW — most common WIOM issue ─────────────────────────
   // "wifi slow hai", "net slow hai", "internet slow", "speed nahi"
   if (/\b(net|wifi|internet|speed|bandwidth)\b.*(slow|dheema|dheemi|kam|bahut\s*slow|bahut\s*dheema|bura|bekar|nahi\s*chal\s*rha\s*theek)|slow.*(net|wifi|internet|speed)|(internet|wifi|net)\s*(bahut)?\s*(slow|dheema|weak|poor)/i.test(pn)) {
-    return `📶 *WiFi/Net Slow* — yeh try karo:\n\n1. *Background apps* → Ctrl+Shift+Esc → Network column → bandwidth kha rahe apps End Task karo\n2. *WiFi toggle* → Taskbar WiFi → OFF → 10 sec → ON → "Wiom office" se connect karo\n3. *Speed test* → fast.com browser mein open karo — speed dekho\n4. *Browser cache* → Chrome → Ctrl+Shift+Del → All time → Cache → Clear\n5. *Restart* → Laptop restart karo\n\n💡 Sirf aapka slow hai ya sab ka? Sab ka slow → floor ka network issue → type karo *ha* — IT ticket 🎫\n\nAgar resolve nahi hua, type karo *ha* — IT ticket 🎫`;
+    return `📶 *WiFi/Net Slow* — yeh try karo:\n\n1. *Background apps* → Ctrl+Shift+Esc → Network column → bandwidth kha rahe apps End Task karo\n2. *WiFi toggle* → Taskbar WiFi → OFF → 10 sec → ON → "Wiom office" se connect karo\n3. *Browser cache* → Chrome → Ctrl+Shift+Del → All time → Cache → Clear\n4. *Restart* → Laptop restart karo\n\n💡 Sirf aapka slow hai ya sab ka? Sab ka slow → floor ka network issue hai.\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
   // ── 💻 MS OFFICE NOT ACTIVATED — separate from "not working" ────────────
