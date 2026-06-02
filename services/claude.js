@@ -346,7 +346,12 @@ const detectIntent = (messages) => {
     return { category: 'BATTERY', hint: 'BATTERY/CHARGING ISSUE. User may have typed "battry" or "week" (weak). Give steps directly:\n1. Charger dono taraf firmly lagao (laptop side + socket side)\n2. Alag power socket try karo\n3. Laptop band karo → charger nikalo → power button 30 sec hold → charger lagao → on karo\n4. Agar battery 0% pe stuck hai → ticket raise karo\nDo NOT ask diagnostic question — give these steps now.' };
   }
 
-  return { category: 'GENERAL', hint: 'ISSUE UNCLEAR. Ask ONE specific diagnostic question: "Thoda aur batao — exactly kya ho raha hai? Koi error message aaya kya?" — do NOT give any solution before they answer.' };
+  // HARDWARE / PORTS — LAN, USB hub, docking station, ports
+  if (/\b(lan\s*port|ethernet|rj45|docking|dock\s*station|hub|port\s*me\s*prob|port\s*kaam\s*nahi|port\s*nahi|usb\s*hub|type\s*c)\b/i.test(recentText))
+    return { category: 'HARDWARE_PORT', hint: 'HARDWARE PORT ISSUE. Give steps: 1) Cable check karo (click sound) 2) Alag cable try karo 3) Alag port try karo 4) Restart karo. If port physically damaged → IT ticket. NO Device Manager steps.' };
+
+  // GENERAL — try to answer directly rather than asking "batao"
+  return { category: 'GENERAL', hint: 'You are a Desktop Support Engineer. Even if the issue is vague, USE YOUR IT KNOWLEDGE to give a helpful response. Do NOT just say "Thoda aur batao". If you can identify the issue from context — give steps. If truly unclear — ask ONE very specific question like "Kaunsi app mein problem hai?" or "Kab se ho raha hai?" — never a generic "batao".' };
 };
 
 // ── Extract steps already tried (to prevent repeats) ─────────────────────────
