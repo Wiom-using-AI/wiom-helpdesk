@@ -265,7 +265,7 @@ const detectIntent = (messages) => {
     return { category: 'PERFORMANCE', hint: 'PERFORMANCE ISSUE. If user already said slow/hang/lagg → give 3 steps directly (Task Manager End Task, close browser tabs, restart). Do NOT ask follow-up if symptom is clear. Maximum 3 steps only.' };
 
   // DISPLAY COLOR DISTORTION — colorful screen, color lines, tint
-  if (/colorful|colorfull|colarful|colarfull|colour|color\s*aa|rang\s*aa|pink\s*screen|green\s*screen|tint|lines\s*aa|horizontal\s*line|vertical\s*line|screen\s*pe\s*rang|display.*rang|rang.*display/.test(recentText))
+  if (/colorful|colorfull|colour|color\s*aa|rang\s*aa|pink\s*screen|green\s*screen|tint|lines?\s*aa|lines?\s*dikh|screen.*lines?|horizontal\s*line|vertical\s*line|screen\s*pe\s*rang|display.*rang|rang.*display/.test(recentText))
     return { category: 'DISPLAY_COLOR', hint: 'Screen color issue. Step 1: Restart laptop (driver glitch usually fixes on restart). Step 2: If external monitor available, test HDMI — if external fine, laptop screen hardware issue. Agar nahi hua → ticket.' };
 
   // SIMPLE HOW-TO — brightness/wallpaper/zoom-in: answer directly, no diagnostic questions
@@ -475,7 +475,7 @@ const getKBFallback = (problem) => {
     return 'IT contact: *Sajan Kumar* | 📧 sajan.kumar@wiom.in';
 
   // Conversational / non-IT responses
-  if (/\b(bye|goodbye|alvida|baad\s*mein|chalte\s*hain|nikalta\s*hoon|nikal\s*rha)\b/i.test(pn))
+  if (/^(bye|goodbye|exit|quit|close|band\s*karo|niklo|alvida|baad\s*mein|chalte\s*hain|nikalta\s*hoon|nikal\s*rha)\s*[!.]*$/i.test(pn.trim()))
     return 'Theek hai! Koi aur IT issue ho toh batayein. 👍';
 
   if (/\b(ok\b|okay|theek\s*hai|accha|achha|haan\s*theek|kal\s*bataunga|dekh\s*leta)\b/i.test(pn))
@@ -1086,6 +1086,10 @@ const getKBAnswer = (problem) => {
     }
   }
 
+  // ── Exit/close/bye ────────────────────────────────────────────────────────
+  if (/^(bye|goodbye|exit|quit|close|band\s*karo|alvida|chalte\s*hain|nikalta)\s*[!.]*$/i.test(pn.trim()))
+    return 'Theek hai! Koi aur IT issue ho toh batayein. 👍';
+
   // ── Brand name only (no problem) → ask what problem ──────────────────────
   // "hp laptop", "dell laptop", "lenovo" alone = vague, ask for problem
   const isBrandOnly = /^(hp|dell|lenovo|apple|macbook|thinkpad|latitude|inspiron|elitebook|probook)\s*(laptop|pc|computer|m[0-9]|gen\s*\d+)?\s*$/i.test(pn.trim());
@@ -1157,7 +1161,8 @@ const getKBAnswer = (problem) => {
   // ISSUE 3 fix: screen\s*kharab removed — "screen kharab" = physical damage, not distortion
   if ((/\b(colorful|colorfull|colarful|colarfull|colour|color\s*aa|color\s*ho|color\s*dikh|rang\s*aa|rang\s*ho|pink\s*screen|green\s*screen|yellow\s*screen|purple\s*screen|red\s*screen|tint|hue|screen\s*pe\s*rang|puri\s*screen)\b/i.test(pn) ||
        /distort|flicker|flickring/i.test(pn) ||
-       /\blines\s*(aa|on|pe)\b/i.test(pn) ||
+       /\blines?\s*(aa|on|pe|dikh|nazar)\b/i.test(pn) ||
+       /screen.*\blines?\b|\blines?\b.*screen/i.test(pn) ||
        /horizontal\s*lines?|vertical\s*lines?/i.test(pn)) &&
       /\b(screen|display|monitor|laptop)\b/i.test(pn)) {
     return `Screen color/display issue hai. Yeh try karo:\n\n1. *Restart* → Laptop restart karo — driver glitch aksar restart se theek ho jaata hai\n2. *External monitor test* → HDMI se monitor connect karo — bahar sahi dikh raha toh laptop screen hardware issue hai\n\nAgar restart se theek nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
