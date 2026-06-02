@@ -1077,6 +1077,15 @@ const getKBAnswer = (problem) => {
     return `Personal phone IT helpdesk ke scope mein nahi hai.\n\nHam sirf *company-provided office phones* handle karte hain.\n\nKoi laptop, WiFi, ya software problem ho toh batao — main help karunga! 💻`;
   }
 
+  // ── 💤 SLEEP MODE / SCREEN OFF / POWER SETTINGS ─────────────────────────
+  // "laptop sleep mode me ja rha hai", "screen band ho jaati hai", "sleep band kaise karu"
+  if (/\b(sleep\s*mode|sleep\s*me\s*ja|screen\s*off\s*ho|screen\s*band\s*ho|hibernate|screen\s*saver|auto.*off|automatically.*off|khud.*sleep|sleep.*band|power\s*setting|neend\s*mode)\b/i.test(pn)) {
+    const isTurnOff = /band\s*karna|band\s*karo|hatana|disable|nahi\s*chahiye|rok\s*do|rukna/i.test(pn);
+    if (isTurnOff || true) { // always give settings steps
+      return `💤 *Laptop sleep mode se kaise rokein:*\n\n1. *Settings* kholo → *System* → *Power & Sleep*\n2. *"Sleep"* section mein → dono dropdowns → *"Never"* select karo\n3. *"Screen"* section mein bhi → *"Never"* ya zyada time set karo → OK\n\nAb laptop automatically sleep mein nahi jaayega. 👍`;
+    }
+  }
+
   // ── Brand name only (no problem) → ask what problem ──────────────────────
   // "hp laptop", "dell laptop", "lenovo" alone = vague, ask for problem
   const isBrandOnly = /^(hp|dell|lenovo|apple|macbook|thinkpad|latitude|inspiron|elitebook|probook)\s*(laptop|pc|computer|m[0-9]|gen\s*\d+)?\s*$/i.test(pn.trim());
