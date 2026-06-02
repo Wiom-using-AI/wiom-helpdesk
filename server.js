@@ -781,14 +781,9 @@ app.listen(PORT, async () => {
 
  // ── HEADER ──────────────────────────────────────────────────────────────
  blocks.push({
-   type: 'image',
-   image_url: 'https://wiom-helpdesk-production.up.railway.app/images/zivon-robot.png',
-   alt_text: 'WIOM IT Helpdesk',
-   title: { type: 'plain_text', text: 'WIOM IT Helpdesk — Powered by Zivon AI' }
- });
- blocks.push({
    type: 'section',
-   text: { type: 'mrkdwn', text: `👋 *Hello ${name}!* Welcome to *WIOM IT Helpdesk*\n\n🟢 *Zivon is Online* — Anytime, Anywhere${openCnt > 0 ? `   |   🔔 *${openCnt} Open Ticket${openCnt > 1 ? 's' : ''}*` : ''}` }
+   text: { type: 'mrkdwn', text: `👋 *Hello ${name}!* Welcome to *WIOM IT Helpdesk*\n🟢 *Zivon is Online* — Anytime, Anywhere${openCnt > 0 ? `   |   🔔 *${openCnt} Open Ticket${openCnt > 1 ? 's' : ''}*` : ''}` },
+   accessory: { type: 'image', image_url: 'https://wiom-helpdesk-production.up.railway.app/wiom-logo.webp', alt_text: 'WIOM Logo' }
  });
  blocks.push({ type: 'divider' });
  blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '📂  *Select a Category*\n_Apni problem select karo — Zivon turant help karega!_ 👇' } });
