@@ -1588,10 +1588,10 @@ const getKBAnswer = (problem) => {
     return `⚠️ *Laptop automatically off/restart ho rha hai*\n\nYeh usually overheating ya battery issue hota hai. Yeh try karo:\n\n1. *Table pe rakho* — laptop soft surface (bed/sofa) pe mat rakho, table pe rakho taaki hawa aaye\n2. *Heavy apps band karo* → Ctrl+Shift+Esc → Task Manager → jo zyada CPU use kar raha ho End Task karo\n3. *Charger check karo* — charger properly laga hai? Alag socket try karo\n\nAgar yeh teeno karke bhi band ho raha hai — hardware issue hai, IT ko aana padega.\nType karo *ha* — HIGH PRIORITY ticket raise karta hoon 🎫`;
   }
 
-  // ── System hang + file save — specific scenario, must be BEFORE generic hang handler ──
-  // "system hang ho gya file kaise save karu", "laptop hang hai document save nahi hua"
-  if ((/hang|freeze|freez|hung|atak|stuck|respond\s*nahi|chal\s*nahi\s*rha|kaam\s*nahi\s*kar\s*rha/i.test(pn)) &&
-      (/save|file|document|doc|data|kaam|work|sheet|excel|word/i.test(pn))) {
+  // ── System hang + file save — "system hang ho gya file kaise save karu" ──
+  // IMPORTANT: Only fires if "save/save karna" is in the message — otherwise Excel hang goes to Excel KB
+  if ((/han+g|ha+g|freeze|freez|hung|atak|stuck/i.test(pn)) &&
+      (/save|bachao|data\s*bachana|save\s*kaise|save\s*karna|save\s*nahi\s*hua/i.test(pn))) {
     return `💾 *System hang hai, file save karne ke liye yeh karo — order mein:*\n\n1. *Pehle Ctrl+S try karo* — kabhi kabhi mild hang mein bhi kaam karta hai, 30 sec wait karo\n2. *2-3 minute wait karo* — system khud recover ho sakta hai, memory free hoti hai\n3. *Ctrl+Alt+Del dabao* → Task Manager → sabse zyada RAM/CPU use karne wala doosra app End Task karo → system recover ho sakta hai → phir Ctrl+S\n4. *MS Word/Excel hai?* → AutoSave ON hogi — last autosaved version automatically bach jaata hai\n5. *Agar kuch kaam nahi kiya* → Force restart karna padega (Power button 10 sec hold) → MS Word/Excel khud AutoRecover pop-up dega agle start pe\n\n⚠️ *Data loss se bachne ke liye aage se:*\nMS Office → File → Options → Save → "Save AutoRecover every ___ minutes" → *1 minute* set karo\n\nAgar baar baar hang hota hai, type karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
@@ -1634,9 +1634,11 @@ const getKBAnswer = (problem) => {
   }
 
   // ── ⚙️ MS OFFICE NOT WORKING / CRASHING ─────────────────────────────────
-  // "word nahi khul rha", "excel crash ho rha", "MS Office chal nahi rha"
-  if (/\b(word|excel|powerpoint|ms\s*office|microsoft\s*office)\b.*(nahi\s*khul|not\s*open|crash|band\s*ho|error|kaam\s*nahi|loading|atak|stuck|response\s*nahi|hang)/i.test(pn) ||
-      /(nahi\s*khul|crash|error).*(word|excel|powerpoint|office)/i.test(pn)) {
+  // "word nahi khul rha", "excel crash ho rha", "laptop hag ho jata hai excel se"
+  // hag/hagg = typo for hang; jab bhi + app + hang = app-specific freeze
+  if (/\b(word|excel|powerpoint|ms\s*office|microsoft\s*office)\b.*(nahi\s*khul|not\s*open|crash|band\s*ho|error|kaam\s*nahi|loading|atak|stuck|response\s*nahi|han+g|ha+g|freeze|freez)/i.test(pn) ||
+      /(nahi\s*khul|crash|error|han+g|ha+g|freeze).*(word|excel|powerpoint|office)/i.test(pn) ||
+      (/\b(excel|word|powerpoint|office)\b/i.test(pn) && /\b(han+g|ha+g|freeze|atak|stuck|slow|ruk)\b/i.test(pn))) {
     return `⚙️ *MS Office Issue* — yeh try karo:\n\n1. *Force close* → Ctrl+Shift+Esc → Task Manager → 'Microsoft Word' ya 'Microsoft Excel' dhundho → End Task karo → dobara open karo\n2. *Restart* → Laptop restart karo → dobara open karo\n\nAgar ab bhi nahi khul raha — type karo *ha* — IT ticket raise karta hoon (IT aake repair karega) 🎫`;
   }
 
