@@ -902,6 +902,100 @@ const getKBAnswer = (problem) => {
     return `💼 *Keka Issue?* — yeh try karo:\n\n1. *Browser cache clear karo* → Chrome → Ctrl+Shift+Del → All time → Clear\n2. *Incognito mein try karo* → Chrome → Ctrl+Shift+N → keka.me kholo\n3. *Alag browser try karo* → Edge mein keka.me kholo\n\nAgar phir bhi nahi chal rha — type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // ── 🆕 COMMON INDIAN OFFICE SOFTWARE — added for 300-user coverage ────────
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── 💬 WHATSAPP WEB — "whatsapp web nahi chal rha", "scan nahi ho rha" ──────
+  if (/\b(whatsapp|whats\s*app|wa\b)\b.*(web|scan|qr|desktop|nahi\s*chal|chal\s*nahi|nahi\s*khul|nahi\s*ho\s*rha|connect)/i.test(pn) ||
+      /whatsapp.*nahi|whatsapp.*scan|whatsapp.*qr/i.test(pn)) {
+    return `💬 *WhatsApp Web Issue* — yeh try karo:\n\n1. *web.whatsapp.com kholo* → Chrome mein kholo → QR code aayega\n2. *Phone camera se scan karo* → WhatsApp app open karo → top-right menu (3 dots) → Linked Devices → Link a Device → QR scan karo\n3. *Refresh karo* → Agar QR expire ho gaya toh page refresh karo → dobara scan karo\n4. *Phone internet check karo* → Phone ka data/WiFi on hai?\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🎥 GOOGLE MEET — "meet nahi chal rha", "meet join nahi ho rha" ──────────
+  if (/\b(google\s*meet|gmeet|meet\.google)\b/i.test(pn) ||
+      (/\bmeet\b/i.test(pn) && /nahi\s*chal|join\s*nahi|nahi\s*khul|camera|mic|audio|video|nahi\s*ho|problem/i.test(pn))) {
+    return `🎥 *Google Meet Issue* — yeh try karo:\n\n1. *Chrome mein kholo* → meet.google.com Chrome browser mein kholo (Chrome recommended hai)\n2. *Camera/Mic allow karo* → Browser mein permission maange toh "Allow" karo\n3. *Link se join karo* → Meeting link pe click karo → "Join Now" dabao\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── ☁️ ONEDRIVE — "onedrive sync nahi", "onedrive file nahi aa rhi" ──────────
+  if (/\b(onedrive|one\s*drive|one-drive)\b/i.test(pn)) {
+    return `☁️ *OneDrive Issue* — yeh try karo:\n\n1. *Taskbar icon* → Taskbar mein OneDrive cloud icon dhundho → click karo → status check karo\n2. *Pause & Resume* → OneDrive icon → "Pause syncing" → 2 min baad → "Resume syncing"\n3. *Sign out & Sign in* → OneDrive icon → Settings → Account → "Sign out" → dobara sign in karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔄 WINDOWS UPDATE STUCK / FAILING ───────────────────────────────────────
+  // "windows update stuck 0%", "update install nahi ho rha" (basic variant already in KB above;
+  //  this catches 0% stuck, "download nahi", "error" variants)
+  if (/windows\s*update.*(stuck|0\s*%|zero|nahi\s*ho|install\s*nahi|download\s*nahi|fail|error|ruka|atak)|update.*(stuck\s*0|0\s*%|install\s*fail|nahi\s*install)/i.test(pn)) {
+    return `🔄 *Windows Update Stuck* — yeh karo:\n\n1. *30 min wait karo* → Kabhi kabhi update slowly download hoti hai — band mat karo\n2. *Agar ab bhi stuck hai* → Laptop restart karo (Update apne aap resume ho jaayegi)\n\nAgar restart ke baad bhi koi error aa raha hai — type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🗂️ NETWORK / SHARED / MAPPED DRIVE — "network drive nahi dikh rha" ───────
+  if (/\b(network\s*drive|mapped\s*drive|shared\s*drive|shared\s*folder|network\s*folder|server\s*path|\\\\server|\\\\[a-z])\b/i.test(pn) ||
+      (/\b(drive|folder)\b/i.test(pn) && /\b(network|mapped|disconnect|nahi\s*dikh|dikh\s*nahi|nahi\s*aa\s*rha|gaya)\b/i.test(pn))) {
+    return `🗂️ *Network / Shared Drive Issue* — yeh try karo:\n\n1. *This PC check karo* → File Explorer open karo → "This PC" → dekho drive visible hai ya nahi\n2. *Restart karo* → Laptop restart karo — drive aksar restart se reconnect ho jaati hai\n3. *Dobara connect karo* → File Explorer → address bar mein server path type karo (IT se path lo)\n\nAgar phir bhi nahi dikh rhi → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🖥️ REMOTE DESKTOP / RDP — "remote desktop nahi chal rha" ────────────────
+  if (/\b(remote\s*desktop|rdp|remote\s*access|remote\s*connect|anydesk|teamviewer)\b/i.test(pn) &&
+      /nahi\s*chal|connect\s*nahi|nahi\s*ho\s*rha|fail|error|nahi\s*khul/i.test(pn)) {
+    return `🖥️ *Remote Desktop (RDP) Issue* — yeh try karo:\n\n1. *Internet check karo* → WiFi properly connected hai?\n2. *Dobara try karo* → Remote Desktop band karo → dobara open karo → connect try karo\n\nAgar phir bhi connect nahi ho rha — yeh network/firewall issue ho sakta hai.\nType karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📹 SCREEN RECORDING — "screen record kaise karu", "screen capture" ────────
+  if (/screen\s*(record|recording|capture|video)|record.*screen|capture.*screen/i.test(pn) &&
+      !/cctv|surveillance|footage|security\s*camera/i.test(pn)) {
+    return `📹 *Screen Record / Capture* — built-in tools hain:\n\n• *Screen Record:* Windows + G dabao → Xbox Game Bar → Record button\n• *Screenshot (area):* Windows + Shift + S dabao → area select karo\n• *Full screenshot:* PrtSc key dabao → Paint mein paste karo\n\nKoi aur IT issue ho toh batayein!`;
+  }
+
+  // ── 🎤 TEAMS MEETING — CAMERA / MIC NAHI — meeting-specific ─────────────────
+  // (general camera/mic already handled above; this catches meeting-context specifically)
+  if (/\b(teams)\b.*(meeting|call|join|joining).*(camera|mic|audio|video|nahi|nahi\s*aa|nahi\s*chal)|teams.*(camera|mic).*(meeting|call)/i.test(pn) ||
+      /(meeting|call).*(camera|mic).*(nahi|nahi\s*aa|band|work\s*nahi)/i.test(pn)) {
+    return `🎤 *Teams Meeting Camera/Mic Issue* — yeh try karo:\n\n1. *Join karne se pehle* → "Device settings" check karo — camera aur mic select karo\n2. *Settings* → Teams → Settings → Devices → sahi camera aur mic select karo\n3. *Permission check karo* → Windows Settings → Privacy → Camera / Microphone → Teams ke liye ON karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📄 EXCEL / WORD FILE CORRUPT — "file corrupt", "file damaged" ────────────
+  if ((/\b(excel|word|powerpoint|office)\b/i.test(pn) || /\b(file|document|doc|sheet)\b/i.test(pn)) &&
+      /\b(corrupt|damaged|kharab\s*ho\s*gaya|kharab\s*ho\s*gyi|open\s*nahi\s*ho\s*rhi|nahi\s*khul\s*rhi|invalid|repai|repair)\b/i.test(pn)) {
+    return `📄 *File Corrupt / Damaged* — yeh try karo:\n\n1. *Repair try karo* → File ko open karo → agar error aaye → "Repair" option milega, click karo\n2. *MS Office mein:* File → Info → "Check for Issues" → Repair\n3. *Previous version* → File pe right-click → "Restore previous versions" → dekho backup hai?\n\nAgar data recover nahi hua → type karo *ha*, IT ticket raise karta hoon — data recovery possible hai 🎫`;
+  }
+
+  // ── 🚨 SPAM / PHISHING EMAIL — "suspicious email", "fraud email" ─────────────
+  if (/\b(spam|phishing|phising|fraud|suspicious|fake|scam|suspicious\s*email|fraud\s*email|scam\s*email|dubious|unknown\s*email)\b/i.test(pn) ||
+      (/\b(email|mail)\b/i.test(pn) && /\b(suspicious|fraud|fake|scam|link|click|karna\s*chahiye|kya\s*karu|karna\s*chahiye)\b/i.test(pn))) {
+    return `🚨 *Suspicious / Phishing Email* — TURANT yeh karo:\n\n1. *Link pe CLICK MAT KARO* — koi bhi link ya attachment mat kholna\n2. *Email delete karo* — directly Trash/Spam mein bhejo\n3. *IT ko batao* — yeh important hai\n\nType karo *ha*, IT ko URGENT batata hoon 🎫`;
+  }
+
+  // ── 🔐 WINDOWS HELLO / FINGERPRINT / FACE RECOGNITION / PIN ─────────────────
+  if (/\b(fingerprint|finger\s*print|face\s*recognition|face\s*id|windows\s*hello|pin\s*bhool|pin\s*forgot|pin\s*nahi|biometric\s*login|hello\s*nahi)\b/i.test(pn)) {
+    return `🔐 *Windows Hello / Fingerprint / PIN Issue* — yeh try karo:\n\n1. *Password se login karo* → Login screen pe "Sign-in options" → Password select karo\n2. *Fingerprint re-enroll karo* → Settings → Accounts → Sign-in options → Windows Hello Fingerprint → Remove → Setup again\n3. *PIN bhool gaye?* → PIN reset ke liye admin rights chahiye — IT karega\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🦠 ANTIVIRUS ALERT / WINDOWS DEFENDER WARNING ───────────────────────────
+  if (/\b(antivirus|anti\s*virus|windows\s*defender|defender|windows\s*security)\b.*(alert|warning|notification|threat|detected|aa\s*rha|aa\s*rhi|popup|pop\s*up)/i.test(pn) ||
+      /\b(virus\s*detected|threat\s*detected|malware\s*detected|antivirus\s*aa|defender\s*aa)\b/i.test(pn)) {
+    return `🦠 *Antivirus / Defender Alert* — IMPORTANT:\n\n1. *Ignore MAT karo* — yeh serious ho sakta hai\n2. *Windows Security kholo* → Start → Windows Security → check karo kya warning hai\n3. *IT ko batao* — alert dismiss mat karo\n\nType karo *ha*, IT URGENT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📊 EXCEL / GOOGLE SHEETS FORMULA ISSUE ───────────────────────────────────
+  if (/\b(formula|vlookup|hlookup|pivot|index\s*match|sumif|countif|iferror|xlookup)\b/i.test(pn) &&
+      /\b(kaam\s*nahi|nahi\s*chal|error|nahi\s*ho|problem|wrong|galat|result\s*nahi)\b/i.test(pn)) {
+    return `📊 *Excel / Sheets Formula Issue*\n\nYeh software usage ka sawal hai, IT issue nahi hai.\n\n• *Formula syntax check karo* → = sign se start, brackets theek se lage hain?\n• *VLOOKUP help:* =VLOOKUP(lookup_value, table_array, col_index, FALSE)\n• *Online help:* support.microsoft.com ya Google pe formula naam search karo\n\nAgar Excel khud crash ya open nahi ho rha — type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🌐 INTERNET EXPLORER / EDGE ISSUE ───────────────────────────────────────
+  if (/\b(internet\s*explorer|ie\b|msie)\b/i.test(pn) ||
+      (/\b(edge|microsoft\s*edge)\b/i.test(pn) && /\b(crash|nahi\s*chal|nahi\s*khul|band|slow|error|problem)\b/i.test(pn))) {
+    return `🌐 *Browser Issue* — yeh try karo:\n\n1. *Chrome use karo* → Internet Explorer outdated hai aur sites nahi kholta — Google Chrome use karo\n2. *Edge crash?* → Edge band karo → dobara open karo → agar phir bhi crash → cache clear karo: Ctrl+Shift+Del → All time → Clear\n\nAgar Chrome bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 💬 SLACK — "slack nahi chal rha", "slack messages nahi aa rhe" ────────────
+  if (/\b(slack)\b/i.test(pn) &&
+      /\b(nahi\s*chal|nahi\s*aa\s*rhe|nahi\s*aa\s*rha|messages\s*nahi|crash|band|error|problem|slow|nahi\s*khul|login\s*nahi)\b/i.test(pn)) {
+    return `💬 *Slack Issue* — yeh try karo:\n\n1. *Quit & Reopen* → Taskbar mein Slack icon pe right-click → Quit → dobara open karo\n2. *Restart karo* → Laptop restart karo → Slack khud reconnect ho jaata hai\n3. *Browser mein try karo* → app.slack.com Chrome mein kholo\n\nAgar phir bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
   // ── 🌐 COMMON OFFICE APPS — Teams, Zoom, Chrome (already in KB) ───────────
   // ── 🎬 MEDIA FILES — video/audio not playing ──────────────────────────────
   if (/\b(video\s*nahi|audio\s*nahi|mp4\s*nahi|mp3\s*nahi|media\s*player|vlc|codec|mkv|avi)\b/i.test(pn)) {
