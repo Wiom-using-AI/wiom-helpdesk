@@ -53,7 +53,7 @@ app.use(helmet({
  styleSrc : ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
  fontSrc : ["'self'", "https://fonts.gstatic.com"],
  imgSrc : ["'self'", "data:", "https:"],
- connectSrc : ["'self'", "https://web-production-ef6c1.up.railway.app"]
+ connectSrc : ["'self'", "https://wiom-helpdesk-production.up.railway.app"]
  }
  }
 }));
@@ -77,7 +77,7 @@ app.get('/api', (req, res) => {
  status : 'ok',
  service : 'WIOM IT Helpdesk API',
  version : '1.0.0',
- portal : 'https://web-production-ef6c1.up.railway.app',
+ portal : 'https://wiom-helpdesk-production.up.railway.app',
  time : new Date().toISOString()
  });
 });
@@ -473,7 +473,7 @@ app.listen(PORT, async () => {
  [
  { text:'Teams Issue', value:'Microsoft Teams not working call dropping or not opening', id:'home_quick_13' },
  { text:'️ Zoom Issue', value:'Zoom not working cannot join meeting or Zoom crashing', id:'home_quick_27' },
- { text:'Outlook Issue', value:'Outlook not opening or cannot send receive emails', id:'home_quick_50' },
+ { text:'Gmail Issue', value:'Gmail not opening or cannot send receive emails in Chrome', id:'home_quick_50' },
  { text:'Browser Issue', value:'Browser is slow crashing or freezing Chrome Firefox Edge', id:'home_quick_31' },
  { text:'Word / Excel Issue', value:'Microsoft Word or Excel not opening showing error', id:'home_quick_23' }
  ],
@@ -590,7 +590,7 @@ app.listen(PORT, async () => {
  };
 
  // ── Download Script mapping: 1-click .bat scripts hosted on server ───
- const PORTAL = process.env.API_BASE_URL || 'https://web-production-ef6c1.up.railway.app';
+ const PORTAL = process.env.API_BASE_URL || 'https://wiom-helpdesk-production.up.railway.app';
  const SCRIPT_MAP = {
  // ── Laptop Hardware & Performance ─────────────────────────────────────
  'home_quick_1' : { file: 'fix-slow-laptop.bat', label: 'Slow Laptop Fix' },
@@ -780,14 +780,18 @@ app.listen(PORT, async () => {
  const blocks = [];
 
  // ── HEADER ──────────────────────────────────────────────────────────────
- blocks.push({ type: 'header', text: { type: 'plain_text', text: `👋  Hello ${name}!  Welcome to WIOM IT Helpdesk`, emoji: true } });
+ blocks.push({
+   type: 'image',
+   image_url: 'https://wiom-helpdesk-production.up.railway.app/images/zivon-robot.png',
+   alt_text: 'WIOM IT Helpdesk',
+   title: { type: 'plain_text', text: 'WIOM IT Helpdesk — Powered by Zivon AI' }
+ });
  blocks.push({
    type: 'section',
-   text: { type: 'mrkdwn', text: `*How can we help you today?* 😊\n🟢 *Zivon is Online* — Anytime, Anywhere${openCnt > 0 ? `   |   🔔 *${openCnt} Open Ticket${openCnt > 1 ? 's' : ''}*` : ''}` },
-   accessory: { type: 'image', image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif', alt_text: 'Zivon AI' }
+   text: { type: 'mrkdwn', text: `👋 *Hello ${name}!* Welcome to *WIOM IT Helpdesk*\n\n🟢 *Zivon is Online* — Anytime, Anywhere${openCnt > 0 ? `   |   🔔 *${openCnt} Open Ticket${openCnt > 1 ? 's' : ''}*` : ''}` }
  });
  blocks.push({ type: 'divider' });
- blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '*📂   Select a Category*\n_Apni problem select karo — Zivon turant help karega!_ 👇' } });
+ blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '📂  *Select a Category*\n_Apni problem select karo — Zivon turant help karega!_ 👇' } });
 
  // ── ALL CATEGORIES — flat, all sub-issues visible ────────────────────
  for (const cat of CATEGORIES) {
@@ -848,7 +852,7 @@ app.listen(PORT, async () => {
    {
      type: 'section',
      text: { type: 'mrkdwn', text: `*Hey ${firstName}! 👋*\n\nMain *Zivon* hoon — WIOM ka IT assistant.\nLaptop, WiFi, software, password — koi bhi problem batao, abhi fix karunga!\n\n_Category choose karo ya seedha type karo_ 👇` },
-     accessory: { type: 'image', image_url: 'https://web-production-ef6c1.up.railway.app/images/zivon-robot.gif', alt_text: 'Zivon' }
+     accessory: { type: 'image', image_url: 'https://wiom-helpdesk-production.up.railway.app/images/zivon-robot.gif', alt_text: 'Zivon' }
    },
    { type: 'divider' },
    {
@@ -2844,7 +2848,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
      ],
      software: [
        { text: '📹 Teams Not Working', val: 'teams_issue' },
-       { text: '📧 Outlook Issue', val: 'outlook_issue' },
+       { text: '📧 Gmail Issue', val: 'outlook_issue' },
        { text: '💥 App Crashing', val: 'app_crash' },
        { text: '🔄 Windows Update', val: 'windows_update' },
        { text: '❓ Something Else', val: 'software_other' },
@@ -2887,7 +2891,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
      touchpad_issue: 'mouse touchpad not working cursor stuck',
      numlock_issue: 'numlock numpad not working',
      teams_issue: 'Microsoft Teams not working crashing',
-     outlook_issue: 'Outlook not working email issue',
+     outlook_issue: 'Gmail not working email issue',
      app_crash: 'app crashing not opening',
      windows_update: 'windows update stuck failing',
      software_other: 'software app issue not specified',
@@ -2951,7 +2955,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
  ]},
  { type:'actions', elements: [
  { type:'button', text:{ type:'plain_text', text:'🖨️ Printer', emoji:true }, action_id:'vague_pick_printer', value:'printer not working' },
- { type:'button', text:{ type:'plain_text', text:'📧 Email / Outlook', emoji:true }, action_id:'vague_pick_outlook_issue', value:'Outlook not working' },
+ { type:'button', text:{ type:'plain_text', text:'📧 Email / Gmail', emoji:true }, action_id:'vague_pick_outlook_issue', value:'Outlook not working' },
  { type:'button', text:{ type:'plain_text', text:'📹 Teams / Zoom', emoji:true }, action_id:'vague_pick_teams_issue', value:'Microsoft Teams not working' },
  { type:'button', text:{ type:'plain_text', text:'🎫 Create Ticket', emoji:true }, style:'primary', action_id:'vague_pick_create_ticket', value:'create ticket' },
  ]},
