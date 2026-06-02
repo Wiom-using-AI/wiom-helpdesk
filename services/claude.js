@@ -1086,6 +1086,16 @@ const getKBAnswer = (problem) => {
     }
   }
 
+  // ── 💾 DATA LOSS / DELETED FILES / RECOVERY ──────────────────────────────
+  // "data lost", "file delete ho gayi", "C drive ka data nahi mil rha", "recover karna"
+  if (/\b(data\s*lost|data\s*loss|data\s*delete|data\s*nahi\s*mil|data\s*gum|file\s*delete|files?\s*gum|files?\s*nahi\s*mil|recover|recovery|deleted?\s*data|deleted?\s*files?|c\s*drive.*data|data.*c\s*drive|recycle|nekal\s*sakta|wapas\s*lana|wapas\s*aa)\b/i.test(pn)) {
+    const isRecover = /recover|wapas|nekal|restore|delete.*wapas|wapas.*delete/i.test(pn);
+    if (isRecover) {
+      return `💾 *Deleted data recover karna hai?*\n\n1. *Recycle Bin check karo* — Desktop pe Recycle Bin kholo → file dhundho → right-click → Restore\n2. *Permanently delete hua?* → Recycle Bin mein nahi hai? → IT ticket raise karo — data recovery possible hai\n\nType karo *ha* — HIGH PRIORITY IT ticket raise karta hoon 🎫\n\n⚠️ *Abhi laptop use karna band karo* — jitna zyada use karoge, recover hone ke chances kam honge`;
+    }
+    return `💾 *Data nahi mil rha?* — yeh check karo:\n\n1. *Recycle Bin* → Desktop pe Recycle Bin kholo → deleted files wahan milti hain\n2. *Hidden files* → File Explorer → View → Show → Hidden items ON karo → dobara check karo\n3. *Alag drive check karo* → D: ya E: drive mein check karo\n\nAgar wahan bhi nahi → type karo *ha* — IT ticket raise karta hoon, data recovery try karenge 🎫`;
+  }
+
   // ── Exit/close/bye ────────────────────────────────────────────────────────
   if (/^(bye|goodbye|exit|quit|close|band\s*karo|alvida|chalte\s*hain|nikalta)\s*[!.]*$/i.test(pn.trim()))
     return 'Theek hai! Koi aur IT issue ho toh batayein. 👍';
