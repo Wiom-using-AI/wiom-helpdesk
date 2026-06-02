@@ -622,6 +622,11 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     .replace(/%appdata%[^\s]*/gi, '')
     .replace(/\bcleanmgr\b/gi, '')
     .replace(/\bservices\.msc\b/gi, '')
+    .replace(/\bDevice Manager\b[^.!?\n]*/gi, 'IT ticket raise karo')
+    .replace(/\bHP Support Assistant\b[^.!?\n]*/gi, '')
+    .replace(/\bDell\s+(Support|SupportAssist|Diagnostics)[^.!?\n]*/gi, '')
+    .replace(/\bLenovo\s+(Vantage|Support)[^.!?\n]*/gi, '')
+    .replace(/Update\s+[Dd]river[^.!?\n]*/gi, 'IT ticket raise karo (driver update IT karega)')
     // Remove Safe Mode / F8 / Diagnostic Tool suggestions — IT only
     .replace(/safe\s*mode\s*(mein|me|boot|open|karo|se)[^.!?\n]*/gi, 'IT ticket raise karo')
     .replace(/F8\s*(key|dabao|press)[^.!?\n]*/gi, '')
@@ -839,6 +844,13 @@ const getKBAnswer = (problem) => {
   }
   if (isPersonalPhone && !isOfficePhone) {
     return `Personal phone IT helpdesk ke scope mein nahi hai.\n\nHam sirf *company-provided office phones* handle karte hain.\n\nKoi laptop, WiFi, ya software problem ho toh batao — main help karunga! 💻`;
+  }
+
+  // ── Brand name only (no problem) → ask what problem ──────────────────────
+  // "hp laptop", "dell laptop", "lenovo" alone = vague, ask for problem
+  const isBrandOnly = /^(hp|dell|lenovo|apple|macbook|thinkpad|latitude|inspiron|elitebook|probook)\s*(laptop|pc|computer|m[0-9]|gen\s*\d+)?\s*$/i.test(pn.trim());
+  if (isBrandOnly) {
+    return `Kya problem ho rahi hai laptop mein? Thoda describe karo — main help karunga.`;
   }
 
   // ── 🚫 VPN — WIOM mein use nahi hota ─────────────────────────────────────
