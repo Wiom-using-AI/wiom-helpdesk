@@ -776,13 +776,53 @@ app.listen(PORT, async () => {
  const blocks = [];
 
  // ── HEADER ──────────────────────────────────────────────────────────────
+ // IT Admin availability (Mon-Fri 9AM-7PM IST)
+ const nowIST = new Date(Date.now() + 5.5 * 3600000);
+ const istDay = nowIST.getUTCDay(); // 0=Sun, 1=Mon...5=Fri, 6=Sat
+ const istHour = nowIST.getUTCHours();
+ const isWeekday = istDay >= 1 && istDay <= 5;
+ const isWorkHour = istHour >= 9 && istHour < 19;
+ const adminAvail = isWeekday && isWorkHour;
+ const adminStatus = adminAvail
+   ? '🟢 *IT Admin Available* — Mon–Fri, 9AM–7PM'
+   : `🔴 *IT Admin Unavailable* — ${!isWeekday ? 'Weekend' : 'Office hours: 9AM–7PM Mon–Fri'}`;
+
  blocks.push({
    type: 'section',
-   text: { type: 'mrkdwn', text: `👋 *Hello ${name}!* Welcome to *WIOM IT Helpdesk*\n🟢 *Zivon is Online* — Anytime, Anywhere${openCnt > 0 ? `   |   🔔 *${openCnt} Open Ticket${openCnt > 1 ? 's' : ''}*` : ''}` },
+   text: { type: 'mrkdwn', text: `👋 *Hello ${name}!* Welcome to *WIOM IT Helpdesk*\n🤖 *Zivon is Online* — 24/7   |   ${adminStatus}` },
    accessory: { type: 'image', image_url: 'https://wiom-helpdesk-production.up.railway.app/wiom-logo.webp', alt_text: 'WIOM Logo' }
  });
+
+ // ── QUICK ACTIONS — Top 3 most used ─────────────────────────────────
  blocks.push({ type: 'divider' });
- blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '📂  *Select a Category*\n_Apni problem select karo — Zivon turant help karega!_ 👇' } });
+ blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '⚡ *Quick Actions*' } });
+ blocks.push({
+   type: 'actions',
+   elements: [
+     { type: 'button', text: { type: 'plain_text', text: '📶 WiFi Password', emoji: true }, value: 'wifi password kya hai', action_id: 'home_quick_wifi_pwd_quick', style: 'primary' },
+     { type: 'button', text: { type: 'plain_text', text: '🔑 Password Reset', emoji: true }, value: 'Windows ya Gmail ka password bhool gaya', action_id: 'home_quick_55b' },
+     { type: 'button', text: { type: 'plain_text', text: '🎫 Raise Ticket', emoji: true }, value: 'create ticket', action_id: 'vague_pick_create_ticket', style: 'danger' }
+   ]
+ });
+
+ // ── MY TICKETS — prominently shown ──────────────────────────────────
+ blocks.push({ type: 'divider' });
+ if (myTickets.length > 0) {
+   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `🎫 *My Recent Tickets* ${openCnt > 0 ? `— 🔴 *${openCnt} Open*` : '— ✅ All Resolved'}` } });
+   for (const t of myTickets.slice(0, 3)) {
+     const hrs = Math.floor((Date.now() - new Date(t.createdAt)) / 3600000);
+     const timeStr = hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs/24)}d ago`;
+     blocks.push({
+       type: 'section',
+       text: { type: 'mrkdwn', text: `${statEmoji[t.status]||'🔵'} \`${t.ticketId}\` — *${t.status}* ${priEmoji2[t.priority]||'🟡'} ${t.priority}\n_${(t.description||'').substring(0,60)}${(t.description||'').length>60?'...':''}_\n📅 ${timeStr} · ${t.category||'Other'}` }
+     });
+   }
+ } else {
+   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '🎫 *My Tickets* — ✅ No tickets yet!' } });
+ }
+
+ blocks.push({ type: 'divider' });
+ blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '📂  *Select a Category*\n_Apni problem select karo — Zivon help karega!_ 👇' } });
 
  // ── ALL CATEGORIES — flat, all sub-issues visible ────────────────────
  for (const cat of CATEGORIES) {
@@ -804,18 +844,7 @@ app.listen(PORT, async () => {
    blocks.push({ type: 'divider' });
  }
 
- // ── MY TICKETS ───────────────────────────────────────────────────────────
- if (myTickets.length > 0) {
-   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `*🎫   My Tickets*${openCnt > 0 ? ` — 🔴 *${openCnt} Open*` : ''}` } });
-   for (const t of myTickets.slice(0, 3)) {
-     const hrs = Math.floor((Date.now() - new Date(t.createdAt)) / 3600000);
-     blocks.push({
-       type: 'section',
-       text: { type: 'mrkdwn', text: `${statEmoji[t.status]||'🔵'} \`${t.ticketId}\`  ${priEmoji2[t.priority]||'🟡'} *${t.priority}* — ${(t.description||'').substring(0,55)}...\n_${t.category||'Other'} · ${hrs}h ago · ${t.status}${t.resolution ? ' · ✅ Resolved' : ''}_` }
-     });
-   }
-   blocks.push({ type: 'divider' });
- }
+ // My Tickets moved to top section above categories
 
  // ── EMPLOYEE FOOTER ───────────────────────────────────────────────────────
  if (emp?.empId) {
@@ -2025,7 +2054,7 @@ app.listen(PORT, async () => {
  };
 
  // ── Quick Action buttons from Home tab ────────────────────────────────
- const homeQuickActions = ['home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_7b','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_quick_38','home_quick_39','home_quick_40','home_quick_41','home_quick_42','home_quick_43','home_quick_44','home_quick_45','home_quick_46','home_quick_47','home_quick_48','home_quick_49','home_quick_50','home_quick_51','home_quick_52','home_quick_53','home_quick_54','home_quick_55','home_quick_55b','home_quick_56','home_quick_57','home_quick_58','home_quick_59','home_quick_60','home_quick_61','home_quick_62','home_quick_63','home_quick_63b','home_quick_64','home_quick_65','home_quick_66','home_quick_67','home_quick_68','home_quick_69','home_quick_70','home_quick_71','home_quick_72','home_quick_73','home_quick_74','home_quick_75','home_quick_76','home_quick_77','home_sos'];
+ const homeQuickActions = ['home_quick_wifi_pwd_quick','home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_7b','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_quick_38','home_quick_39','home_quick_40','home_quick_41','home_quick_42','home_quick_43','home_quick_44','home_quick_45','home_quick_46','home_quick_47','home_quick_48','home_quick_49','home_quick_50','home_quick_51','home_quick_52','home_quick_53','home_quick_54','home_quick_55','home_quick_55b','home_quick_56','home_quick_57','home_quick_58','home_quick_59','home_quick_60','home_quick_61','home_quick_62','home_quick_63','home_quick_63b','home_quick_64','home_quick_65','home_quick_66','home_quick_67','home_quick_68','home_quick_69','home_quick_70','home_quick_71','home_quick_72','home_quick_73','home_quick_74','home_quick_75','home_quick_76','home_quick_77','home_sos'];
  homeQuickActions.forEach(actionId => {
  slackApp.action(actionId, async ({ body, ack, client }) => {
  await ack();
