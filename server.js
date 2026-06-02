@@ -3330,38 +3330,79 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
    });
  });
 
- // ── 👎 Wrong Answer feedback — notify admin, log for improvement ────────────
+ // ── ❌ Kaam Nahi Aaya — auto-learn: generate better answer + save to DB ────────
  slackApp.action('wrong_answer_btn', async ({ body, ack, client }) => {
    await ack();
    const userId = body.user.id;
    const channelId = body.channel?.id || body.container?.channel_id;
-   const question = body.actions?.[0]?.value || 'Unknown question';
+   const question = body.actions?.[0]?.value || '';
 
    try {
-     // Tell employee we heard them
-     await client.chat.postMessage({
-       channel: channelId,
-       text: 'Feedback mila — IT team ko improve karne mein help milegi.',
-       blocks: [
-         { type: 'section', text: { type: 'mrkdwn', text: `👍 *Feedback mila, shukriya!*\n\nIT team ko bataya — yeh improve hoga.\n\nAbhi help chahiye? Type karo *ha* — IT ticket raise karta hoon 🎫` }}
-       ]
-     });
-
-     // Notify admin with the flagged question
-     const adminId = process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID;
      const emp = await lookupEmployee(userId, client).catch(() => null);
      const empName = emp?.empName || emp?.name || userId;
 
+     // 1. Tell employee immediately
+     await client.chat.postMessage({
+       channel: channelId,
+       text: 'Samajh gaya — main theek kar raha hoon.',
+       blocks: [{ type: 'section', text: { type: 'mrkdwn', text:
+         `🔧 *Samajh gaya — main theek kar raha hoon.*\n\nAbhi IT ticket chahiye? Type karo *ha* — IT ticket raise karta hoon 🎫`
+       }}]
+     });
+
+     // 2. Auto-generate better answer using AI and save to DB
+     if (question && question.length > 3) {
+       const claudeSvc = require('./services/claude');
+       const LearnedResponse = require('./models/LearnedResponse').catch ? null : require('./models/LearnedResponse');
+
+       // Generate correct answer using AI
+       const fixMessages = [{ role: 'user', content: question }];
+       const empInfo = { empId: emp?.empId || userId, empName: empName, source: 'slack',
+         laptop: emp?.laptop, dept: emp?.dept, floor: emp?.floor };
+       const { reply } = await claudeSvc.chat(fixMessages, empInfo).catch(() => ({ reply: null }));
+
+       // Save to MongoDB for future use
+       if (reply && Conversation) {
+         await Conversation.findOneAndUpdate(
+           { sessionId: `learned-${question.toLowerCase().replace(/\s+/g, '-').substring(0,50)}` },
+           { $set: { sessionId: `learned-${question.toLowerCase().replace(/\s+/g, '-').substring(0,50)}`,
+               empId: 'system', empName: 'LearnedResponse', source: 'learned',
+               messages: [{ role: 'user', content: question }, { role: 'assistant', content: reply }],
+               learnedQ: question.toLowerCase(), learnedA: reply, lastActive: new Date() }},
+           { upsert: true }
+         );
+         console.log(`🧠 Auto-learned: "${question.substring(0,60)}" → saved`);
+       }
+
+       // Send improved answer to employee
+       if (reply) {
+         const formatted = formatForSlack(reply);
+         await client.chat.postMessage({
+           channel: channelId,
+           text: 'Yeh try karo:',
+           blocks: [
+             { type: 'section', text: { type: 'mrkdwn', text: `✅ *Sahi jawab yeh hai:*\n\n${formatted}` }},
+             { type: 'actions', elements: [
+               { type: 'button', text: { type: 'plain_text', text: '✅ Ho gaya!', emoji: true },
+                 action_id: 'resolved_yes_btn', style: 'primary', value: 'Medium' },
+               { type: 'button', text: { type: 'plain_text', text: '🎫 IT Ticket Banao', emoji: true },
+                 action_id: 'quick_ticket_btn', style: 'danger', value: 'Medium' }
+             ]}
+           ]
+         });
+       }
+     }
+
+     // 3. Notify admin
+     const adminId = process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID;
      if (adminId && adminId !== 'FILL_KARO') {
        await client.chat.postMessage({
          channel: adminId,
-         text: `👎 Galat jawab flag kiya gaya`,
+         text: `❌ Bot answer flagged — auto-fixed`,
          blocks: [
-           { type: 'header', text: { type: 'plain_text', text: '👎 Bot Answer Flagged as Wrong', emoji: true }},
            { type: 'section', text: { type: 'mrkdwn', text:
-             `*Employee:* ${empName}\n*Unka sawaal:* _${question.substring(0, 200)}_\n\n*Matlab:* Bot ne galat ya incomplete answer diya — yeh improve karna hai.`
-           }},
-           { type: 'context', elements: [{ type: 'mrkdwn', text: '_IT bot ko behtar banane ke liye yeh info use hogi_' }]}
+             `❌ *Bot ka jawab kaam nahi aaya*\n*Employee:* ${empName}\n*Sawaal:* _${question.substring(0, 150)}_\n\n🔧 Bot ne automatically better answer generate kiya aur employee ko diya.`
+           }}
          ]
        });
      }
