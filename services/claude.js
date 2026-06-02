@@ -866,6 +866,49 @@ const getKBAnswer = (problem) => {
     return `🔒 *Folder Lock / Password Protection*\n\nFolder lock karne ke liye admin rights chahiye — yeh sirf IT kar sakta hai.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
+  // ── 🗜️ ZIP / RAR / 7-ZIP — file extraction issues ───────────────────────
+  if (/\b(zip|rar|7zip|7-zip|winrar|winzip|extract|extraction|compressed|archive|\.zip|\.rar)\b/i.test(pn)) {
+    const isInstall = /instal|chahiye|nahi\s*hai|need/i.test(pn);
+    if (isInstall) {
+      return `🗜️ *ZIP/RAR Extractor chahiye?*\n\nInstallation ke liye IT ticket raise karo — admin rights chahiye.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+    }
+    return `🗜️ *ZIP File open nahi ho rhi?* — yeh try karo:\n\n1. *Right-click* karo ZIP file pe → *"Extract All"* select karo → OK\n2. *Windows mein hi ZIP support hai* — alag software ki zarurat nahi\n3. *Alag folder mein extract karo* — Desktop pe try karo\n\nAgar phir bhi nahi khuli (RAR file hai?) — type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📄 PDF — file open issues ──────────────────────────────────────────────
+  if (/\b(pdf|adobe|acrobat|\.pdf|pdf\s*nahi|pdf\s*open)\b/i.test(pn)) {
+    const isInstall = /install|chahiye|nahi\s*hai|reader|adobe/i.test(pn);
+    if (isInstall) {
+      return `📄 *Adobe/PDF Reader chahiye?*\n\nInstallation ke liye IT ticket raise karo — admin rights chahiye.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+    }
+    return `📄 *PDF nahi khul rha?* — yeh try karo:\n\n1. *Chrome/Edge mein open karo* → PDF file pe right-click → "Open with" → Google Chrome ya Microsoft Edge\n2. *Browser pe drag karo* → Chrome/Edge open karo → PDF file ko browser mein drag & drop karo\n\nAgar phir bhi nahi khula — type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 💼 KEKA — HR software issues ──────────────────────────────────────────
+  if (/\b(keka|keka\.me|keka\s*app|hrms|hr\s*portal|attendance|payslip|leave\s*apply|salary\s*slip)\b/i.test(pn)) {
+    const isPassword = /password|login\s*nahi|access\s*nahi|sign\s*in/i.test(pn);
+    if (isPassword) {
+      return `💼 *Keka Login Issue*\n\nKeka password reset ke liye IT ticket raise karo.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+    }
+    return `💼 *Keka Issue?* — yeh try karo:\n\n1. *Browser cache clear karo* → Chrome → Ctrl+Shift+Del → All time → Clear\n2. *Incognito mein try karo* → Chrome → Ctrl+Shift+N → keka.me kholo\n3. *Alag browser try karo* → Edge mein keka.me kholo\n\nAgar phir bhi nahi chal rha — type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🌐 COMMON OFFICE APPS — Teams, Zoom, Chrome (already in KB) ───────────
+  // ── 🎬 MEDIA FILES — video/audio not playing ──────────────────────────────
+  if (/\b(video\s*nahi|audio\s*nahi|mp4\s*nahi|mp3\s*nahi|media\s*player|vlc|codec|mkv|avi)\b/i.test(pn)) {
+    return `🎬 *Media file nahi chal rhi?* — yeh try karo:\n\n1. *VLC chahiye* → VLC ek free media player hai jo sab format chal karta hai\n   IT ticket raise karo — admin rights se install hoga\n2. *Online try karo* → file ko browser mein open karo (MP4 support hota hai)\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔑 BIOS / FIRMWARE — IT only, employees should not touch ──────────────
+  if (/\b(bios|firmware|uefi|boot\s*order|bios\s*update|bios\s*password)\b/i.test(pn)) {
+    return `⚙️ *BIOS/Firmware* — yeh IT ka kaam hai, employees khud mat karo.\nGalti se kuch change ho gaya toh laptop kharab ho sakta hai.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📝 NOTEPAD / TEXT FILES ────────────────────────────────────────────────
+  if (/\b(notepad|text\s*file|\.txt|wordpad)\b/i.test(pn) && /nahi\s*khul|open\s*nahi|issue|problem/i.test(pn)) {
+    return `📝 *Text file nahi khul rhi?*\n\nFile pe right-click karo → "Open with" → Notepad select karo\n\nAgar phir bhi nahi khula — type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
   // ── 🛒 HARDWARE PURCHASE / NEW EQUIPMENT REQUEST ─────────────────────────
   // "headphone chahiye", "mouse ki zarurat hai", "new keyboard chahiye"
   if (/\b(chahiye|ki\s*need|ki\s*zarurat|naya|new|purchase|buy|kharidna|request|mangwana|milega|doge|de\s*do)\b/i.test(pn) &&
