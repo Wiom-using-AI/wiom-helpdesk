@@ -1378,6 +1378,13 @@ const getKBAnswer = (problem) => {
     return `⚠️ *Unauthorized Software Policy:*\n\nPolicy ke hisaab se company laptop pe *sirf approved software* install kar sakte ho.\nUnauthorized software install karna disciplinary action ka karan ban sakta hai.\n\nKoi software chahiye? Type karo *ha* — IT ticket raise karta hoon (IT approve karke install karega) 🎫`;
   }
 
+  // ── 🔌 LAN PORT / ETHERNET PORT ISSUES ──────────────────────────────────
+  if (/\b(lan\s*port|ethernet\s*port|lan\s*cable|ethernet\s*cable|rj45|network\s*port|port\s*me\s*prob|lan\s*me\s*prob|lan\s*nahi\s*chal|lan\s*detect|lan\s*connect|wired\s*connect|cable\s*connect)\b/i.test(pn)) {
+    const isPhysical = /damage|toot|broken|bend|physical|kharab\s*ho\s*gaya|tod/i.test(pn);
+    if (isPhysical) return `🔌 *LAN Port physically damage hai*\n\nHardware repair ke liye IT ticket raise karo.\nType karo *ha* — HIGH PRIORITY IT ticket raise karta hoon 🎫`;
+    return `🔌 *LAN Port issue?* — yeh try karo:\n\n1. *Cable check karo* → Cable dono ends mein properly laga hai? Click sound aana chahiye\n2. *Cable badlo* → Alag LAN cable try karo — cable kharab ho sakti hai\n3. *Alag port try karo* → Switch/router ka dusra port try karo\n4. *Restart karo* → Laptop restart karo — port driver reload hota hai\n\nAgar phir bhi detect nahi ho rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
   // ── 💤 SLEEP MODE / SCREEN OFF / POWER SETTINGS ─────────────────────────
   // "laptop sleep mode me ja rha hai", "screen band ho jaati hai", "sleep band kaise karu"
   if (/\b(sleep\s*mode|sleep\s*me\s*ja|screen\s*off\s*ho|screen\s*band\s*ho|hibernate|screen\s*saver|auto.*off|automatically.*off|khud.*sleep|sleep.*band|power\s*setting|neend\s*mode)\b/i.test(pn)) {
