@@ -983,7 +983,7 @@ app.listen(PORT, async () => {
        }]
      });
    } else {
-     // Steps mode — Ho gaya + Ticket
+     // Steps mode — Ho gaya + Ticket + Wrong Answer feedback
      blocks.push({
        type: 'actions',
        elements: [
@@ -1006,6 +1006,12 @@ app.listen(PORT, async () => {
              confirm: { type: 'plain_text', text: '✅ Ha, Banao!' },
              deny: { type: 'plain_text', text: 'Ruko' }
            }
+         },
+         {
+           type: 'button',
+           text: { type: 'plain_text', text: '👎  Galat Jawab', emoji: true },
+           action_id: 'wrong_answer_btn',
+           value: problemText || ''
          }
        ]
      });
@@ -3322,6 +3328,47 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
      text: '✅ Problem solve ho gayi!',
      blocks: [{ type:'section', text:{ type:'mrkdwn', text: msg }}]
    });
+ });
+
+ // ── 👎 Wrong Answer feedback — notify admin, log for improvement ────────────
+ slackApp.action('wrong_answer_btn', async ({ body, ack, client }) => {
+   await ack();
+   const userId = body.user.id;
+   const channelId = body.channel?.id || body.container?.channel_id;
+   const question = body.actions?.[0]?.value || 'Unknown question';
+
+   try {
+     // Tell employee we heard them
+     await client.chat.postMessage({
+       channel: channelId,
+       text: 'Feedback mila — IT team ko improve karne mein help milegi.',
+       blocks: [
+         { type: 'section', text: { type: 'mrkdwn', text: `👍 *Feedback mila, shukriya!*\n\nIT team ko bataya — yeh improve hoga.\n\nAbhi help chahiye? Type karo *ha* — IT ticket raise karta hoon 🎫` }}
+       ]
+     });
+
+     // Notify admin with the flagged question
+     const adminId = process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID;
+     const emp = await lookupEmployee(userId, client).catch(() => null);
+     const empName = emp?.empName || emp?.name || userId;
+
+     if (adminId && adminId !== 'FILL_KARO') {
+       await client.chat.postMessage({
+         channel: adminId,
+         text: `👎 Galat jawab flag kiya gaya`,
+         blocks: [
+           { type: 'header', text: { type: 'plain_text', text: '👎 Bot Answer Flagged as Wrong', emoji: true }},
+           { type: 'section', text: { type: 'mrkdwn', text:
+             `*Employee:* ${empName}\n*Unka sawaal:* _${question.substring(0, 200)}_\n\n*Matlab:* Bot ne galat ya incomplete answer diya — yeh improve karna hai.`
+           }},
+           { type: 'context', elements: [{ type: 'mrkdwn', text: '_IT bot ko behtar banane ke liye yeh info use hogi_' }]}
+         ]
+       });
+     }
+     console.log(`👎 Wrong answer flagged by ${empName}: "${question.substring(0, 100)}"`);
+   } catch (err) {
+     console.error('wrong_answer_btn error:', err.message);
+   }
  });
 
  // ── ❌ Not resolved — give next steps, escalate on 2nd failure ───────────────
