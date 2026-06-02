@@ -515,13 +515,11 @@ app.listen(PORT, async () => {
  {
  key: 'access', label: 'Access & Permissions',
  emoji: '🔒', color: 'primary',
- desc: 'System access, App access, VPN, Permission requests',
+ desc: 'System access, App access, Account Locked',
  rows: [
  [
- { text:'🔐 VPN Issue', value:'VPN not connecting or VPN is not working', id:'home_quick_73' },
  { text:'🔑 Access Request', value:'Need access to a system software or application', id:'home_quick_74' },
- { text:'Account Locked', value:'Account is locked cannot login to Windows or any account', id:'home_quick_55b' },
- { text:'👤 New User Setup', value:'New employee needs laptop and account setup', id:'home_quick_75' }
+ { text:'Account Locked', value:'Account is locked cannot login to Windows or any account', id:'home_quick_55b' }
  ]
  ]
  },
@@ -531,8 +529,6 @@ app.listen(PORT, async () => {
  desc: 'Printer, Mouse, Keyboard, USB, External devices',
  rows: [
  [
- { text:'🖨️ Printer Offline', value:'Printer is offline not working cannot print', id:'home_quick_54' },
- { text:'Print Queue Stuck', value:'Printer showing error document stuck in print queue', id:'home_quick_76' },
  { text:'Mouse Issue', value:'Mouse not working cursor not moving properly', id:'home_quick_77' },
  { text:'Keyboard Issue', value:'Laptop keyboard not working some keys not responding', id:'home_quick_7b' },
  { text:'USB Not Working', value:'USB port not working pendrive or device not detected', id:'home_quick_63b' }
@@ -759,11 +755,11 @@ app.listen(PORT, async () => {
  // ── Category color config ─────────────────────────────────────────────
  const CAT_COLORS = {
    laptop:      { icon: '🔵 💻', label: 'Laptop & Display',        desc: 'Screen · Battery · Keyboard · Audio · Camera and more' },
-   network:     { icon: '🟢 🌐', label: 'Network & Internet',       desc: 'Wi-Fi · Internet Slow · Website · VPN and more' },
+   network:     { icon: '🟢 🌐', label: 'Network & Internet',       desc: 'Wi-Fi · Internet Slow · Website and more' },
    software:    { icon: '🟣 ⚙️',  label: 'Software, Apps & Account', desc: 'Teams · Outlook · Password · Virus · Storage and more' },
    replacement: { icon: '🟠 🔄', label: 'Replacement / Upgrade',    desc: 'Laptop · Mouse · Keyboard · Monitor replacement' },
-   access:      { icon: '🔴 🔒', label: 'Access & Permissions',     desc: 'VPN · Access Request · Account Locked · New User Setup' },
-   printer:     { icon: '🩵 🖨️', label: 'Printer & Peripheral',    desc: 'Printer · Print Queue · Mouse · USB devices' },
+   access:      { icon: '🔴 🔒', label: 'Access & Permissions',     desc: 'Access Request · Account Locked' },
+   printer:     { icon: '🩵 🖨️', label: 'Printer & Peripheral',    desc: 'Mouse · Keyboard · USB devices' },
  };
 
  // ── Build flat Home Tab blocks — ALL categories visible, no expand needed ──
