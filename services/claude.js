@@ -197,6 +197,14 @@ Password (Windows/email/account): Ticket only — IT resets
 Software install: Ticket only — needs IT permission and license
 VPN: WIOM mein use nahi hota — tell user this directly
 
+━━━ HANDLING DIFFICULT MESSAGES ━━━
+Rude/abusive message → calm, professional: "Samajh gaya. Koi IT issue ho toh batayein — main help karunga."
+Frustration ("bakwas hai", "useless bot") → acknowledge: "Samajh gaya. Koi bhi IT problem batao — main try karunga."
+Food/chai/personal requests → "Yeh IT helpdesk hai — sirf laptop, WiFi aur software problems handle karta hoon."
+User introduces themselves ("mera naam X hai") → "Hi X! Koi IT issue hai? Batao — main help karunga."
+Casual chat/greetings → brief warm response + offer help
+NEVER lecture, never apologize excessively, never ignore
+
 ━━━ SHORT REPLIES (no steps needed) ━━━
 Ticket status → match language: "Your ticket is with the IT team — type *my tickets* to check status." / "Aapka ticket IT team ke paas hai — type karo *my tickets* status ke liye."
 Compliments/thanks → brief professional acknowledgement, offer further help
@@ -461,10 +469,41 @@ const getKBFallback = (problem) => {
   if (/\b(kise|kaun)\s*(ho|hain|hai)\b/i.test(pn) || /\b(tum|aap)\s*(kya|kise|kaun)\b/i.test(pn))
     return `Main *Zivon* hoon — WIOM ka IT support assistant.\nLaptop, WiFi, software, password — kisi bhi IT issue mein help kar sakta hoon.\nBatao kya problem hai.`;
 
-  if (pn.includes('sajan') || pn.includes('admin') || pn.includes('it head') || pn.includes('phone number') || pn.includes('number do'))
-    return 'IT: *Sajan Kumar* | 📧 sajan.kumar@wiom.in';
+  // FIX: "sajan" only for contact-intent, not when user introduces themselves
+  if ((pn.includes('sajan') && /contact|email|se\s*baat|number|kaun\s*hai|it\s*wala/.test(pn)) ||
+      pn.includes('it head') || pn.includes('phone number') || pn.includes('number do'))
+    return 'IT contact: *Sajan Kumar* | 📧 sajan.kumar@wiom.in';
 
-  return `Thoda aur batao — screen pe kya dikh raha hai? Kaunsa error message aa raha hai? Main help karunga.`;
+  // Conversational / non-IT responses
+  if (/\b(bye|goodbye|alvida|baad\s*mein|chalte\s*hain|nikalta\s*hoon|nikal\s*rha)\b/i.test(pn))
+    return 'Theek hai! Koi aur IT issue ho toh batayein. 👍';
+
+  if (/\b(ok\b|okay|theek\s*hai|accha|achha|haan\s*theek|kal\s*bataunga|dekh\s*leta)\b/i.test(pn))
+    return 'Theek hai. Koi aur IT issue ho toh batayein.';
+
+  if (/good\s*(morning|evening|night|afternoon)|subah|shaam\s*ko|kal\s*milte|good\s*day/i.test(pn))
+    return 'Hello! Koi IT issue hai? Batao — main help karunga.';
+
+  if (/\b(haha|hehe|lol|lmao|xd|😂|😄)\b/i.test(pn))
+    return 'Koi IT issue ho toh batayein — main help karunga. 😊';
+
+  if (/\b(call\s*karo|phone\s*karo|ring\s*karo|call\s*karna\s*hai)\b/i.test(pn))
+    return 'Yeh bot text-based support hai. Apni problem yahan type karo — main help karunga.';
+
+  if (/\b(bhook|khaana|khana|chai|coffee|pani|water|pantry|canteen|lunch|dinner|breakfast)\b/i.test(pn) &&
+      !/\blaptop\b|\bwifi\b|\bscreen\b/.test(pn))
+    return 'Yeh IT helpdesk hai — sirf laptop, WiFi aur software problems handle karta hoon. Koi IT issue ho toh batayein!';
+
+  if (/\b(bakwas|useless|bekar|faltu|kaam\s*nahi|farq\s*nahi|chodo|ignore)\b/i.test(pn))
+    return 'Samajh gaya. Koi bhi IT issue ho toh batayein — main help karunga.';
+
+  if (/ticket\s*(kahan|ka\s*kya\s*hua|raise\s*kiya|status|kab\s*tak)|kab\s*tak\s*(kaam|resolve|theek|fix)/i.test(pn))
+    return 'Aapka ticket IT team ke paas hai. Status dekhne ke liye type karo: *my tickets*';
+
+  if (/are\s*you\s*(ai|human|bot|robot)|kya\s*aap\s*(human|ai|bot|robot|real)\s*hain/i.test(pn))
+    return `Main *Zivon* hoon — WIOM ka IT support AI assistant.\nLaptop, WiFi, software, password — kisi bhi IT issue mein help kar sakta hoon.`;
+
+  return `Thoda aur batao — kya problem ho rahi hai? Main help karunga.`;
 };
 
 // ── Call Gemini (Google FREE fallback) ───────────────────────────────────────
@@ -869,6 +908,12 @@ const getKBAnswer = (problem) => {
   // Personal phones OUT OF SCOPE — but office/company phones = IT handles
   const isPersonalPhone = /\b(apna|mera|personal|apni)\b/i.test(pn) && /\b(phone|mobile)\b/i.test(pn);
   const isOfficePhone = /\b(office|company|testing|wiom)\b/i.test(pn) && /\b(phone|mobile)\b/i.test(pn);
+  // Food/pantry/personal requests — completely out of scope
+  if (/\b(bhook|khaana|khana|chai\b|coffee|pani\b|water|pantry|canteen|lunch|dinner|breakfast|snack|biscuit|mujhe\s*chahiye)\b/i.test(pn) &&
+      !/\b(laptop|wifi|screen|keyboard|password|teams|gmail|printer)\b/i.test(pn)) {
+    return `Yeh IT helpdesk hai — sirf laptop, WiFi aur software problems handle karta hoon.\nKoi IT issue ho toh batayein!`;
+  }
+
   if (/\b(tv|television|telly|ac\b|air\s*condition|ceiling\s*fan|light\b|bulb|electricity|current\s*nahi|power\s*cut|generator|geyser|pantry|canteen|chair|table|furniture|lift|elevator|ac\s*nahi|ac\s*band)\b/i.test(pn) &&
       !/\b(laptop|wifi|internet|software|password|teams|outlook|chrome|window|screen|monitor|keyboard|mouse|bluetooth|usb)\b/i.test(pn)) {
     return `Yeh IT ke scope mein nahi aata.\n\n*TV, AC, lights, furniture* ke liye → *Admin / Facilities team* se contact karo.\n\nIT helpdesk handle karta hai: 💻 Laptop | 🌐 WiFi | 🔑 Password | ⚙️ Software | 🖨️ Printer | 📱 Office phones\n\nKoi laptop ya IT problem ho toh batao.`;
@@ -1051,7 +1096,9 @@ const getKBAnswer = (problem) => {
 
   // ── Laptop won't start / turn on / boot ─────────────────────────────────
   // Hindi/Hinglish + English variants (ISSUE 1 fix: added English patterns)
-  if (/\blaptop\b.*(on\s*nahi|start\s*nahi|band\s*ho|nahi\s*chalta|khulta\s*nahi|nahi\s*khulta|chal\s*nahi|chalti\s*nahi|chalte\s*nahi|nahi\s*chal\s*rh)|boot\s*nahi|(switch|power)\s*on\s*nahi|\blaptop\b.*(nahi\s*(chal|start|on|boot)|on\s*ho\s*nahi)|on\s*nahi\s*ho\s*rh|won.?t\s*(turn\s*on|start|boot)|not\s*turning\s*on|not\s*starting|laptop\s*(is\s*)?(dead|not\s*starting|won.?t\s*start)|no\s*power\s*laptop/.test(pn))
+  // FIX: exclude "wifi/net/internet nahi chal rha" from laptop won't start (greedy .* bug)
+  const noWifiInMsg = !/\b(wifi|net|internet|browser|chrome|teams|outlook|gmail)\b/.test(pn);
+  if (noWifiInMsg && /\blaptop\b.*(on\s*nahi|start\s*nahi|band\s*ho|nahi\s*chalta|khulta\s*nahi|nahi\s*khulta|chal\s*nahi|chalti\s*nahi|chalte\s*nahi|nahi\s*chal\s*rh)|boot\s*nahi|(switch|power)\s*on\s*nahi|\blaptop\b.*(nahi\s*(chal|start|on|boot)|on\s*ho\s*nahi)|on\s*nahi\s*ho\s*rh|won.?t\s*(turn\s*on|start|boot)|not\s*turning\s*on|not\s*starting|laptop\s*(is\s*)?(dead|not\s*starting|won.?t\s*start)|no\s*power\s*laptop/.test(pn))
     return `Yeh 3 cheezein try karo:\n\n1. *Charger check karo* — charger properly laga hai? Alag socket mein try karo\n2. *10 second hold* — power button 10 sec tak dabao → chhoddo → 30 sec wait karo → dobara try karo\n3. *Charger nikaal ke try karo* — charger hatao → power button 30 sec hold karo → charger lagao → on karo\n\nType karo *ha* — HIGH PRIORITY ticket raise karta hoon 🎫`;
 
   // ── Laptop automatic off/on / sudden shutdown / restart loop ────────────
