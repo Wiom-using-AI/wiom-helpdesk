@@ -135,6 +135,31 @@ KABHI numbered steps mat do physical damage ke liye.
 First tell them: "Pehle apni desk/drawer/aas-paas check karo aur colleagues se puchho — kabhi kabhi nearby reh jaata hai."
 Then: "Agar phir bhi nahi mila — Sajan Kumar ko email karo: sajan.kumar@wiom.in. HR ko bhi batao. Type karo *ha* — HIGH PRIORITY ticket raise karta hoon."
 
+━━━ WIOM IT ASSETS POLICY (official — answer based on this) ━━━
+LAPTOP ALLOCATION by role:
+- Technology team → MacBook Pro
+- Design (PODS) → Microsoft Surface
+- HR team → HP Ultra 7 Laptop
+- Analytics team → HP Ultra 7 Laptop
+- All other roles → Windows Laptop (Intel i5)
+- Other assets (screens, phones, headphones) → role-based + manager approval
+
+DAMAGE & LOSS POLICY:
+- Accidental damage → Company covers IF reported immediately with full incident details
+- Loss/Theft → Report to IT AND police within 24 hours. Police complaint copy must be given to IT.
+- Repair ≤ ₹10,000 → IT can proceed without approval
+- Repair > ₹10,000 → Functional Head approval required first
+
+EMPLOYEE RESPONSIBILITIES (per policy):
+- Use assets only for official work
+- NO unauthorized software installation — disciplinary action possible
+- Never leave devices unattended in public
+- Back up files to company storage — IT NOT responsible for data loss on damaged devices
+
+IT ISSUE REPORTING: sajan.kumar@wiom.in — IT responds within 24 hours
+
+ASSET RETURN: On resignation/transfer/termination — return ALL accessories. Missing items charged at market rate.
+
 ━━━ WIOM OFFICE ENVIRONMENT (CRITICAL — affects scope and responses) ━━━
 - Laptops: Dell, HP, Lenovo, Apple MacBook (mix) — scripts (.bat) only for Windows laptops, NEVER for Mac
 - Office phones: Company provides phones for testing — IT handles office phones (in scope)
@@ -1327,6 +1352,23 @@ const getKBAnswer = (problem) => {
   }
   if (isPersonalPhone && !isOfficePhone) {
     return `Personal phone IT helpdesk ke scope mein nahi hai.\n\nHam sirf *company-provided office phones* handle karte hain.\n\nKoi laptop, WiFi, ya software problem ho toh batao — main help karunga! 💻`;
+  }
+
+  // ── 📋 IT POLICY — laptop allocation, damage, return ─────────────────────
+  if (/\b(policy|it\s*policy|asset\s*policy|kaun\s*sa\s*laptop|kaunsa\s*laptop|konsa\s*laptop|laptop\s*milega|laptop\s*milta|laptop\s*allocation|kaun\s*sa\s*device|which\s*laptop)\b/i.test(pn)) {
+    return `📋 *WIOM Laptop Allocation Policy:*\n\n• *Technology team* → MacBook Pro\n• *Design (PODS)* → Microsoft Surface\n• *HR team* → HP Ultra 7\n• *Analytics team* → HP Ultra 7\n• *Sab baaki roles* → Windows Laptop (Intel i5)\n\nRole-based exception chahiye? Functional Head approval required.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  if (/\b(damage.*policy|damage.*report|accidental.*damage|laptop.*toot.*policy|damage.*cover|coverage|company.*cover|kitna.*cover)\b/i.test(pn)) {
+    return `📋 *Damage Policy:*\n\n• *Accidental damage* → Company cover karta hai — immediately IT ko batao with full details\n• *Loss/Theft* → 24 hours mein IT + police report → police complaint copy IT ko do\n• *Repair ≤ ₹10,000* → IT direct proceed kar sakta hai\n• *Repair > ₹10,000* → Functional Head approval pehle\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  if (/\b(laptop.*wapas|asset.*return|return.*policy|resign.*laptop|quit.*laptop|leave.*laptop|transfer.*laptop|laptop.*jama|jama.*karna|exit.*laptop)\b/i.test(pn)) {
+    return `📋 *Asset Return Process:*\n\nResignation, termination, ya transfer pe:\n1. *Sab accessories ke saath* return karo (charger, mouse, bag, cables)\n2. IT condition check karega\n3. Missing accessories → market rate pe charge hoga\n4. IT clearance ke baad HR exit formalities complete hongi\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  if (/\b(unauthorized.*software|software.*install.*nahi|install.*allowed|policy.*software|software.*rule|software.*permission)\b/i.test(pn)) {
+    return `⚠️ *Unauthorized Software Policy:*\n\nPolicy ke hisaab se company laptop pe *sirf approved software* install kar sakte ho.\nUnauthorized software install karna disciplinary action ka karan ban sakta hai.\n\nKoi software chahiye? Type karo *ha* — IT ticket raise karta hoon (IT approve karke install karega) 🎫`;
   }
 
   // ── 💤 SLEEP MODE / SCREEN OFF / POWER SETTINGS ─────────────────────────
