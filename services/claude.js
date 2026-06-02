@@ -876,12 +876,21 @@ const getKBAnswer = (problem) => {
   }
 
   // ── 📄 PDF — file open issues ──────────────────────────────────────────────
-  if (/\b(pdf|adobe|acrobat|\.pdf|pdf\s*nahi|pdf\s*open)\b/i.test(pn)) {
+  if (/\b(pdf|adobe|acrobat|\.pdf)\b/i.test(pn)) {
     const isInstall = /install|chahiye|nahi\s*hai|reader|adobe/i.test(pn);
-    if (isInstall) {
-      return `📄 *Adobe/PDF Reader chahiye?*\n\nInstallation ke liye IT ticket raise karo — admin rights chahiye.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
-    }
-    return `📄 *PDF nahi khul rha?* — yeh try karo:\n\n1. *Chrome/Edge mein open karo* → PDF file pe right-click → "Open with" → Google Chrome ya Microsoft Edge\n2. *Browser pe drag karo* → Chrome/Edge open karo → PDF file ko browser mein drag & drop karo\n\nAgar phir bhi nahi khula — type karo *ha*, IT ticket raise karta hoon 🎫`;
+    const isConvert = /to\s*word|to\s*excel|convert|word\s*mein|word\s*me\s*kaise|word\s*banana|change\s*karna|badaln/i.test(pn);
+    const isEdit = /edit\s*karna|edit\s*kaise|type\s*karna|likhna|fill\s*karna/i.test(pn);
+    const isPrint = /print\s*nahi|print\s*kaise|print\s*ho/i.test(pn);
+
+    if (isInstall) return `📄 *Adobe/PDF Reader chahiye?*\n\nInstallation ke liye IT ticket raise karo — admin rights chahiye.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+
+    if (isConvert) return `📄 *PDF to Word convert karna hai?*\n\n*Option 1 — Microsoft Word se (Free):*\n1. Word open karo → File → Open → PDF file select karo\n2. Word automatically convert kar dega → Save As → Word Document\n\n*Option 2 — Online tool (Free):*\n• ilovepdf.com ya smallpdf.com kholo\n• "PDF to Word" select karo → file upload karo → Download\n\nKoi problem ho → type karo *ha*, IT ticket raise karta hoon 🎫`;
+
+    if (isEdit) return `📄 *PDF mein editing karna hai?*\n\n*Method 1:* PDF ko Word mein convert karo (Word → File → Open → PDF) → edit karo → save karo\n*Method 2:* Online: ilovepdf.com → "Edit PDF" tool\n\nNote: Company documents ke liye IT se poochho pehle.`;
+
+    if (isPrint) return `📄 *PDF print nahi ho rha?*\n\n1. Chrome mein PDF kholo → Ctrl+P → printer select karo → Print\n2. Alag PDF try karo — file corrupt ho sakti hai\n\nAgar phir bhi nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+
+    return `📄 *PDF issue?* — yeh try karo:\n\n1. *Chrome/Edge mein open karo* → PDF file pe right-click → "Open with" → Chrome ya Edge\n2. *Browser pe drag karo* → Chrome kholo → PDF file drag & drop karo\n\nAgar phir bhi nahi khula → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
   // ── 💼 KEKA — HR software issues ──────────────────────────────────────────
