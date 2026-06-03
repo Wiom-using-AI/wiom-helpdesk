@@ -668,9 +668,10 @@ app.listen(PORT, async () => {
                       !/\b(laptop|my\s*laptop|mera\s*laptop)\b/.test(t);
    if (isPhone || isOfficeEq) return null;
 
-   // ── Fan — ONLY laptop fan, not office/ceiling fan ──────────────────────
-   // "laptop fan", "fan noise laptop", "laptop ki awaaz" — NOT "office fan band"
-   if (/\bfan\b/.test(t) && /laptop|pc|computer/.test(t)) return { file: 'fix-fan-noise.bat', label: '🌬️ Auto-Fix: Fan Noise' };
+   // ── Fan — laptop fan or fan + awaaz (IT context = device fan) ────────────
+   // "laptop fan", "fan noise laptop", "fan ki awaaz" — NOT "office fan band"
+   // FIX-27: "fan ki awaaz aa rhi hai" has no "laptop" word but is clearly device fan noise
+   if (/\bfan\b/.test(t) && (/laptop|pc|computer/.test(t) || /awaaz|noise|sound|nahi\s*band/.test(t))) return { file: 'fix-fan-noise.bat', label: '🌬️ Auto-Fix: Fan Noise' };
 
    // ── Blue/Black screen before general screen ───────────────────────────
    if (/blue.?screen|bsod|bluescreen/.test(t)) return { file: 'fix-bluescreen.bat', label: '💙 Auto-Fix: Blue Screen' };
@@ -681,11 +682,13 @@ app.listen(PORT, async () => {
    if (/overheat|garam|hot laptop|laptop garm/.test(t)) return { file: 'fix-overheating.bat', label: '🌡️ Auto-Fix: Overheating' };
 
    // ── Camera — laptop/webcam only, not phone camera ─────────────────────
-   if (/webcam|laptop.*camera|camera.*laptop|video\s*call.*camera|camera.*video\s*call|camra|cam\s*nahi/.test(t)) return { file: 'fix-camera.bat', label: '📷 Auto-Fix: Camera' };
+   // FIX-39: added \bcamera\b so "camera nahi chal rha" is caught (previously only laptop.*camera etc matched)
+   if (/webcam|laptop.*camera|camera.*laptop|video\s*call.*camera|camera.*video\s*call|camra|cam\s*nahi|\bcamera\b/.test(t)) return { file: 'fix-camera.bat', label: '📷 Auto-Fix: Camera' };
 
    // ── Mic/Audio — laptop only (not phone/conference room speaker) ────────
    if (/mic|microphone/.test(t)) return { file: 'fix-mic.bat', label: '🎤 Auto-Fix: Microphone' };
-   if (/headphone|earphone|earbuds/.test(t)) return { file: 'fix-headphone.bat', label: '🎧 Auto-Fix: Headphone' };
+   // FIX-6: "headphone chahiye" = equipment request → null; only show fix if clearly broken
+   if (/headphone|earphone|earbuds/.test(t) && !/\b(chahiye|need|request|naya|buy|khareed|lena\s*hai)\b/.test(t)) return { file: 'fix-headphone.bat', label: '🎧 Auto-Fix: Headphone' };
 
    // ── Projector — only laptop-to-projector connection issues ───────────
    if (/projector/.test(t) && /connect|nahi\s*dikh|screen\s*share|laptop/.test(t)) return { file: 'fix-projector.bat', label: '📽️ Auto-Fix: Projector' };
@@ -695,8 +698,10 @@ app.listen(PORT, async () => {
 
    // ── Sound — laptop audio only, not phone/room speaker ─────────────────
    // Exclude: "phone mein awaaz", "room mein speaker", "conference speaker"
+   // FIX-27: also exclude when fan is present — "fan ki awaaz" is fan noise, already handled above
    if (/sound|audio|speaker|awaaz/.test(t) &&
-       !/\b(phone|mobile|room|conference|meeting|hall|reception)\b/.test(t)) {
+       !/\b(phone|mobile|room|conference|meeting|hall|reception)\b/.test(t) &&
+       !/\bfan\b/.test(t)) {
      return { file: 'fix-sound.bat', label: '🔊 Auto-Fix: Sound' };
    }
 
@@ -723,8 +728,14 @@ app.listen(PORT, async () => {
    if (/outlook/.test(t)) return { file: 'fix-browser.bat', label: '📧 Auto-Fix: Gmail (Browser)' };
 
    // ── Network ───────────────────────────────────────────────────────────
-   if (/wifi|wi-fi|internet|\bnet\b|network|hotspot|broadband|ping/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
+   // FIX-10: "wifi password kya hai" = info query → null (IT team provides password, no script)
+   if (/wifi|wi-fi|internet|\bnet\b|network|hotspot|broadband|ping/.test(t) &&
+       !/\b(password|pass|pwd)\b/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
+   if (/wifi|wi-fi|internet|\bnet\b|network|hotspot|broadband|ping/.test(t) &&
+       /\b(password|pass|pwd)\b/.test(t)) return null;
    if (/onedrive|one drive/.test(t)) return { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' };
+   // FIX-13: "pdf to word kaise karu" = conversion question → null (no script fixes a conversion task)
+   if (/\bpdf\b/.test(t) && /\b(to\s*word|to\s*excel|convert|kaise|karu|banana|change\s*karna)\b/.test(t)) return null;
    if (/\bpdf\b/.test(t)) return { file: 'fix-pdf.bat', label: '📄 Auto-Fix: PDF' };
 
    // ── Office apps — fix scripts only for already-installed Office (not fresh installs) ──
@@ -734,9 +745,12 @@ app.listen(PORT, async () => {
    if (!isInstallRequest && (/\bword\b|\bexcel\b|\bpowerpoint\b/.test(t))) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };
    if (!isInstallRequest && (/\bms\s*office\b|\bmicrosoft\s*office\b/.test(t))) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };
 
-   if (/chrome|browser|firefox|edge|safari/.test(t)) return { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser' };
+   // FIX-50: added common Chrome typos — chrmo, chorme, crome, googl chrom
+   if (/chrome|browser|firefox|edge|safari|chrmo|chorme|\bcrome\b|google\s*chr/.test(t)) return { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser' };
    // "printout chahiye / need printout" = request, not fix — no script
    if (/\b(printout|print\s*out)\b/.test(t) && /need|chahiye|karo|dena|lena|nikalna/i.test(t)) return null;
+   // FIX-8: "printer chahiye" = equipment request → null (IT procures hardware, no script)
+   if (/\bprinter\b/.test(t) && /\b(chahiye|need|naya|request|khareed|buy|lena\s*hai)\b/.test(t)) return null;
    if (/printer|print/.test(t)) return { file: 'fix-printer.bat', label: '🖨️ Auto-Fix: Printer' };
    if (/windows update|win update/.test(t)) return { file: 'fix-windows-update.bat', label: '🔄 Auto-Fix: Windows Update' };
    if (/copy.?paste|clipboard|ctrl.?c|ctrl.?v/.test(t)) return { file: 'fix-clipboard.bat', label: '📋 Auto-Fix: Copy-Paste' };
