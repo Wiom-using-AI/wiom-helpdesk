@@ -333,8 +333,8 @@ const detectIntent = (messages) => {
     return { category: 'ACCOUNT', hint: 'ACCOUNT/PASSWORD ISSUE. WIOM uses Gmail (Google Workspace) NOT Outlook. Windows password reset = ticket only (IT handles). Gmail/Google password reset = ticket only (IT handles company Google accounts — employees cannot self-reset). Do NOT give self-service Google password steps. Raise ticket directly.' };
 
   // SECURITY
-  if (/virus|malware|hack|ransomware|suspicious|phishing/.test(recentText))
-    return { category: 'SECURITY', hint: 'SECURITY ISSUE. Urgent — say "Windows Security → Quick Scan karo, aur internet disconnect karo agar serious lage." Then ticket.' };
+  if (/virus|malware|hack|ransomware|suspicious|phishing|data\s*leak|unauthorized|breach|credential/.test(recentText))
+    return { category: 'SECURITY', hint: 'SECURITY ISSUE. Urgent — say "Windows Security → Quick Scan karo, aur internet disconnect karo agar serious lage." Then ticket. If query is ambiguous (single word, or unclear context), ask ONE specific clarifying question. If query is clear (has device/app/symptom), give answer directly without asking.' };
 
   // BATTERY / CHARGING — typo-tolerant: battry, battey, week=weak, backup kam
   if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b|charg|plug.*power|low.*power|backup\s*(nahi|low|kam)|draining|week.*batt|batt.*week/.test(recentText)) {
@@ -351,7 +351,13 @@ const detectIntent = (messages) => {
     return { category: 'HARDWARE_PORT', hint: 'HARDWARE PORT ISSUE. Give steps: 1) Cable check karo (click sound) 2) Alag cable try karo 3) Alag port try karo 4) Restart karo. If port physically damaged → IT ticket. NO Device Manager steps.' };
 
   // GENERAL — try to answer directly rather than asking "batao"
-  return { category: 'GENERAL', hint: 'You are a Desktop Support Engineer. Even if the issue is vague, USE YOUR IT KNOWLEDGE to give a helpful response. Do NOT just say "Thoda aur batao". If you can identify the issue from context — give steps. If truly unclear — ask ONE very specific question like "Kaunsi app mein problem hai?" or "Kab se ho raha hai?" — never a generic "batao".' };
+  // Confidence scoring: short/vague queries → ask clarifying question
+  const lastQ = recentText.trim().split(/\s+/).filter(Boolean);
+  const hasSpecificKeyword = /\b(wifi|laptop|internet|bluetooth|keyboard|touchpad|mouse|screen|display|camera|mic|microphone|speaker|audio|printer|teams|zoom|chrome|browser|password|windows|excel|word|onedrive|usb|battery|charger|network|slow|hang|crash|headphone|projector|hdmi|monitor|fan)\b/i.test(recentText);
+  if (lastQ.length <= 3 && !hasSpecificKeyword) {
+    return { category: 'GENERAL_VAGUE', hint: 'Query is ambiguous (3 words or fewer, no specific IT keyword). Ask ONE specific clarifying question: "Kya problem ho rahi hai — laptop, WiFi, software, ya kuch aur?" — do NOT give steps or guess.' };
+  }
+  return { category: 'GENERAL', hint: 'You are a Desktop Support Engineer. Even if the issue is vague, USE YOUR IT KNOWLEDGE to give a helpful response. Do NOT just say "Thoda aur batao". If you can identify the issue from context — give steps. If truly unclear — ask ONE very specific question like "Kaunsi app mein problem hai?" or "Kab se ho raha hai?" — never a generic "batao". If query is ambiguous (single word, or unclear context), ask ONE specific clarifying question. If query is clear (has device/app/symptom), give answer directly without asking.' };
 };
 
 // ── Extract steps already tried (to prevent repeats) ─────────────────────────
@@ -392,12 +398,22 @@ const getKBFallback = (problem) => {
   const pn = p
     .replace(/\bwiffi\b/g, 'wifi')
     .replace(/\bwifi+\b/g, 'wifi')
-    .replace(/\bl[ae]?p?to?p\b/g, 'laptop')        // leptop, lptop, latop, laptoop
-    .replace(/\bpas?w?ro?d\b/g, 'password')          // pasword, paswrod, pasord
+    .replace(/\bl[ae]?p?to?[op]{1,2}\b|\blaotop\b|\blaptoop\b|\blaptp\b/g, 'laptop') // leptop, lptop, latop, laptoop
+    .replace(/\bpas?w?ro?d\b|\bpasswrod\b|\bpaswrod\b|\bpasword\b/g, 'password')       // pasword, paswrod
     .replace(/\btims?\b/g, 'teams')                  // tims, tim (Teams typo)
     .replace(/\bcamra\b/g, 'camera')                 // camra
-    .replace(/\bkeybo?r?a?d\b/g, 'keyboard')         // keyborad, keybord
-    .replace(/\bcharg(e|er|ing)?\b/g, 'charging');   // normalize charger/charging variants
+    .replace(/\bkeybo?r?a?d\b|\bkeybord\b|\bkeyborad\b|\bkeybrd\b/g, 'keyboard')       // keyborad, keybord
+    .replace(/\bcharg(e|er|ing)?\b/g, 'charging')    // normalize charger/charging variants
+    .replace(/\bprinte\b|\bprintr\b|\bpirnt\b|\bprntr\b/g, 'printer')  // printer typos
+    .replace(/\bmonitr\b|\bmoniter\b/g, 'monitor')                       // monitor typos
+    .replace(/\bbluetoth\b|\bbluethooth\b/g, 'bluetooth')                // bluetooth typos
+    .replace(/\bsceern\b|\bscren\b|\bscrren\b|\bscrean\b/g, 'screen')   // screen typos
+    .replace(/\bmicrofone\b|\bmicrophne\b|\bmicrphone\b/g, 'microphone') // microphone typos
+    .replace(/\bspeakr\b|\bspeeker\b|\bspekar\b/g, 'speaker')           // speaker typos
+    .replace(/\bheadfone\b|\bheadfoan\b|\bearfone\b/g, 'headphone')     // headphone typos
+    .replace(/\bprojekter\b|\bprojetor\b|\bprojctor\b/g, 'projector')   // projector typos
+    .replace(/\bscanar\b|\bscaner\b|\bscannr\b/g, 'scanner')            // scanner typos
+    .replace(/\brooter\b|\bmodem\b/g, 'router');     // router synonyms
 
   // WiFi connected but no internet
   if (/connect(ed)?.*(nahi chal|work nahi|internet nahi|nahi work)|wifi.*(connected|chal).*(internet nahi|nahi chal)|(no internet|internet nahi).*(connected|connect)/.test(pn))
@@ -884,15 +900,25 @@ const getKBAnswer = (problem) => {
   const pn = p
     .replace(/\bwiffi\b/g, 'wifi')
     .replace(/\bwifi+\b/g, 'wifi')
-    .replace(/\bl[ae]?p?to?p\b/g, 'laptop')        // leptop, lptop, latop
-    .replace(/\bpas?w?ro?d\b/g, 'password')          // pasword, paswrod
+    .replace(/\bl[ae]?p?to?[op]{1,2}\b|\blaotop\b|\blaptoop\b|\blaptp\b/g, 'laptop') // leptop, lptop, latop, laptoop, laotop, laptp
+    .replace(/\bpas?w?ro?d\b|\bpasswrod\b|\bpaswrod\b|\bpasword\b/g, 'password')       // pasword, paswrod, pasword
     .replace(/\btims?\b/g, 'teams')                  // tims (Teams typo)
     .replace(/\bcamra\b/g, 'camera')                 // camra
-    .replace(/\bkeybo?r?a?d\b/g, 'keyboard')         // keyborad, keybord
+    .replace(/\bkeybo?r?a?d\b|\bkeybord\b|\bkeyborad\b|\bkeybrd\b/g, 'keyboard')       // keyborad, keybord, keybrd
     .replace(/\bcharg(e|er|ing)?\b/g, 'charging')    // normalize charger/charging
     .replace(/\bply\b/g, 'play')                     // ply → play typo
     .replace(/\bvido\b|\bvedio\b|\bvidio\b/g, 'video') // video typos
-    .replace(/\bkise\b|\bkese\b|\bkase\b|\bkaisay\b/g, 'kaise'); // kaise typos unified
+    .replace(/\bkise\b|\bkese\b|\bkase\b|\bkaisay\b/g, 'kaise') // kaise typos unified
+    .replace(/\bprinte\b|\bprintr\b|\bpirnt\b|\bprntr\b/g, 'printer')  // printer typos
+    .replace(/\bmonitr\b|\bmoniter\b|\bmonitor\b/g, 'monitor')           // monitor typos
+    .replace(/\bbluetoth\b|\bbluethooth\b|\bbluetoth\b/g, 'bluetooth')   // bluetooth typos
+    .replace(/\bsceern\b|\bscren\b|\bscrren\b|\bscrean\b/g, 'screen')   // screen typos
+    .replace(/\bmicrofone\b|\bmicrophne\b|\bmicrphone\b/g, 'microphone') // microphone typos
+    .replace(/\bspeakr\b|\bspeeker\b|\bspekar\b/g, 'speaker')           // speaker typos
+    .replace(/\bheadfone\b|\bheadfoan\b|\bheadfon\b|\bearfone\b/g, 'headphone') // headphone typos
+    .replace(/\bprojekter\b|\bprojetor\b|\bprojctor\b|\bprojektr\b/g, 'projector') // projector typos
+    .replace(/\bscanar\b|\bscaner\b|\bscannr\b/g, 'scanner')            // scanner typos
+    .replace(/\brooter\b|\bmodem\b/g, 'router');     // router synonyms
 
   // ── 📁 FILE EXPLORER / FOLDER / DRIVE NOT OPENING ───────────────────────
   // Normalize folder/drive typos for matching

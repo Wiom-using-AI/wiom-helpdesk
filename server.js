@@ -654,20 +654,55 @@ app.listen(PORT, async () => {
  };
 
  // ── INTENT CLASSIFIER — classify before matching any script ─────────────────
- // Returns: 'incident' | 'request' | 'information' | 'access' | 'asset'
- // Auto-Fix scripts are ONLY shown for 'incident' intent
+ // Returns: { intent: 'incident'|'request'|'information'|'access'|'asset'|'security'|'unknown', confidence: 50|70|90 }
+ // Auto-Fix scripts are ONLY shown for 'incident' intent with confidence >= 60
  const classifyIntent = (text) => {
    const t = text.toLowerCase();
+   const words = t.trim().split(/\s+/).filter(Boolean);
+
+   // SECURITY — virus, malware, phishing, data leak, suspicious, unauthorized, hacked
+   if (/\b(virus|malware|phishing|phising|ransomware|data\s*leak|suspicious|unauthorized|hacked|hack\s*ho|hack\s*gaya|credential|breach)\b/i.test(t))
+     return { intent: 'security', confidence: 90 };
+
+   // ACCESS — check BEFORE request because "X access chahiye" is access, not generic request
+   if (/\b(access\s*chahiye|access\s*de|permission\s*chahiye|role\s*chahiye|account\s*bana|account\s*banana|create\s*account|user\s*banana)\b/i.test(t))
+     return { intent: 'access', confidence: 90 };
+   // ACCESS — "X access chahiye" pattern (any app/system name before "access")
+   if (/\b\w+\s+access\s+(chahiye|de|do|milega|lena|chahte)\b/i.test(t))
+     return { intent: 'access', confidence: 90 };
+   // ACCESS — admin rights
+   if (/\b(admin\s*rights|admin\s*access|rights\s*chahiye|rights\s*de)\b/i.test(t))
+     return { intent: 'access', confidence: 90 };
+
    // INFORMATION / HOW-TO — covers kaise/kise/kese/kase typos
-   if (/\b(kya\s*hai|kaise|kise|kese|kase|kaisey|kaise\s*karu|kaise\s*karte|kaise\s*hota|how\s*to|how\s*do|how\s*can|kaise\s*karein|batao|bataiye|password\s*kya|kya\s*hoga|samjhao|explain|tell\s*me|steps|process|guide)\b/i.test(t)) return 'information';
+   if (/\b(kya\s*hai|kaise|kise|kese|kase|kaisey|kaise\s*karu|kaise\s*karte|kaise\s*hota|how\s*to|how\s*do|how\s*can|kaise\s*karein|batao|bataiye|password\s*kya|kya\s*hoga|samjhao|explain|tell\s*me|steps|process|guide)\b/i.test(t))
+     return { intent: 'information', confidence: 90 };
+
    // REQUEST — chahiye / need / mangwana → never show Auto-Fix
-   if (/\b(chahiye|ki\s*need|mangwana|de\s*do|milega|kharidna|buy|new\s*\w+\s*chahiye|naya\s*\w+\s*chahiye|lena\s*hai|request|order\s*karna)\b/i.test(t)) return 'request';
-   // ACCESS — access/permission chahiye → never show Auto-Fix
-   if (/\b(access\s*chahiye|access\s*de|permission\s*chahiye|role\s*chahiye|account\s*bana|account\s*banana|create\s*account|user\s*banana)\b/i.test(t)) return 'access';
+   if (/\b(chahiye|ki\s*need|mangwana|de\s*do|milega|kharidna|buy|new\s*\w+\s*chahiye|naya\s*\w+\s*chahiye|lena\s*hai|request|order\s*karna|ki\s*zarurat)\b/i.test(t))
+     return { intent: 'request', confidence: 90 };
+
    // ASSET — replace/return/upgrade asset → never show Auto-Fix
-   if (/\b(replace|upgrade|wapas\s*karna|wapas\s*do|return|asset\s*return|exit\s*me|transfer\s*karna|jama\s*karna)\b/i.test(t)) return 'asset';
-   // Default: incident — scripts allowed
-   return 'incident';
+   if (/\b(replace|upgrade|wapas\s*karna|wapas\s*do|return|asset\s*return|exit\s*me|transfer\s*karna|jama\s*karna)\b/i.test(t))
+     return { intent: 'asset', confidence: 90 };
+
+   // UNKNOWN — single-word with no specific IT keyword → too vague
+   // Also covers common typos for detection
+   const hasSpecificIT = /\b(wifi|wiffi|laptop|leptop|lptop|latop|laptoop|laotop|internet|bluetooth|bluetoth|bluethooth|keyboard|keybord|keyborad|keybrd|touchpad|mouse|screen|sceern|scren|scrren|display|camera|camra|mic|microfone|microphne|microphone|speaker|speakr|speeker|audio|printer|printe|printr|teams|tims|zoom|chrome|chrmo|chorme|crome|browser|password|passwrod|paswrod|windows|excel|word|onedrive|usb|battery|battry|battey|batr|charger|network|slow|hang|crash|virus|malware|headphone|headfone|projector|projekter|projetor|hdmi|monitor|monitr|moniter|fan|fingerprint|fingerpint)\b/i.test(t);
+   if (words.length <= 1 && !hasSpecificIT)
+     return { intent: 'unknown', confidence: 50 };
+   if (words.length <= 3 && !hasSpecificIT)
+     return { intent: 'unknown', confidence: 70 };
+
+   // INCIDENT — specific IT problem with clear symptoms
+   const hasSymptom = /\b(nahi\s*chal|nahi\s*khul|kaam\s*nahi|work\s*nahi|not\s*work|issue|problem|error|crash|slow|hang|band|kharab|nahi\s*ho|chal\s*nahi|boot\s*nahi|stuck|freeze|flickering|damage)\b/i.test(t);
+   if (hasSpecificIT && hasSymptom)
+     return { intent: 'incident', confidence: 90 };
+   if (hasSpecificIT)
+     return { intent: 'incident', confidence: 70 };
+
+   // Default: incident at medium confidence
+   return { intent: 'incident', confidence: 70 };
  };
 
  // ── DM Script detector: maps free-text issue → script file + label ────
@@ -676,9 +711,9 @@ app.listen(PORT, async () => {
    if (!text) return null;
    const t = text.toLowerCase();
 
-   // ── INTENT CHECK FIRST — if not an incident, no script ever ─────────────
-   const intent = classifyIntent(t);
-   if (intent !== 'incident') return null;
+   // ── INTENT CHECK FIRST — if not an incident with enough confidence, no script ever ─────────────
+   const { intent, confidence } = classifyIntent(t);
+   if (intent !== 'incident' || confidence < 60) return null;
 
    // ── GUARD: Physical damage → NO Auto-Fix (script can't fix broken hardware) ──
    if (/\b(damage|damag|toot|tuti|tuta|phoot|foota|crack|cracked|broken|tod|toda|physically)\b/.test(t)) return null;
