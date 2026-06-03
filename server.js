@@ -2887,6 +2887,12 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
    { regex: /^(software\s*(issue|problem|nahi|not)|app\s*(crash|not|nahi|issue)|teams\s*(nahi|not|issue)|outlook\s*(nahi|not|issue)|windows\s*(issue|problem))/i, type: 'software' },
    // Account / Password
    { regex: /^(password\s*(bhool|forgot|reset|issue|nahi\s*pata)|account\s*(locked|issue|nahi)|login\s*(nahi|issue|problem))/i, type: 'account' },
+   // Printer — "printer problem", "printer issue", "print nahi ho rha"
+   { regex: /^printer\s*(problem|issue|nahi|not|kaam\s*nahi|offline|chal\s*nahi)?$|^print\s*(nahi|issue|problem|nahi\s*ho\s*rha)?$/i, type: 'printer' },
+   // Email — "email issue", "gmail problem", "mail nahi aa rha" (vague)
+   { regex: /^(email|gmail|mail)\s*(issue|problem|nahi|not)?$|^mail\s*(nahi\s*aa|problem|issue)$/i, type: 'email_vague' },
+   // Generic vague — "problem hai", "issue hai", "kuch nahi chal rha"
+   { regex: /^(problem\s*hai|issue\s*hai|kuch\s*nahi\s*chal|kuch\s*problem|koi\s*issue|help\s*chahiye|help\s*karo|madad\s*karo|issue)$/i, type: 'generic' },
  ];
 
  const vagueMatch = vaguePatterns.find(p => p.regex.test(text.trim()));
@@ -2948,6 +2954,24 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
        { text: '📧 Email Password', val: 'email_password' },
        { text: '📱 2FA / OTP Issue', val: 'otp_issue' },
      ],
+     printer: [
+       { text: '🖨️ Not Printing', val: 'printer_not_printing' },
+       { text: '📴 Printer Offline', val: 'printer_offline' },
+       { text: '🔍 Not Detected', val: 'printer_not_detected' },
+       { text: '🖼️ Print Quality Issue', val: 'printer_quality' },
+     ],
+     email_vague: [
+       { text: '🔑 Login Issue', val: 'email_password' },
+       { text: '📥 Not Receiving Emails', val: 'email_not_receiving' },
+       { text: '📤 Cannot Send Email', val: 'email_not_sending' },
+       { text: '💾 Mailbox Full', val: 'email_mailbox_full' },
+     ],
+     generic: [
+       { text: '💻 Laptop Issue', val: 'laptop_other' },
+       { text: '📶 WiFi / Internet', val: 'wifi_not_connect' },
+       { text: '🔑 Password / Login', val: 'password_reset' },
+       { text: '⚙️ Software / App', val: 'software_other' },
+     ],
    };
 
    const vagueAIMap = {
@@ -2988,6 +3012,13 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
      account_locked: 'account locked cannot login',
      email_password: 'email Google account password reset',
      otp_issue: '2FA OTP not received',
+     printer_not_printing: 'printer not printing document stuck in queue',
+     printer_offline: 'printer showing offline cannot print',
+     printer_not_detected: 'printer not detected not showing in devices',
+     printer_quality: 'print quality issue faded blurry printing',
+     email_not_receiving: 'email not receiving emails not coming in gmail',
+     email_not_sending: 'cannot send email gmail not sending',
+     email_mailbox_full: 'gmail mailbox storage full cannot receive',
    };
 
    const categoryLabels = {
@@ -2999,6 +3030,9 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
      keyboard: '⌨️ Keyboard / Mouse',
      software: '⚙️ Software / App',
      account: '🔑 Account / Password',
+     printer: '🖨️ Printer',
+     email_vague: '📧 Email / Gmail',
+     generic: '🤔 IT Issue',
    };
 
    const btns = quickButtons[vagueMatch.type] || [];
