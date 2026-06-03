@@ -658,8 +658,8 @@ app.listen(PORT, async () => {
  // Auto-Fix scripts are ONLY shown for 'incident' intent
  const classifyIntent = (text) => {
    const t = text.toLowerCase();
-   // INFORMATION — how-to, info queries → never show Auto-Fix
-   if (/\b(kya\s*hai|kaise\s*karu|kaise\s*karte|kaise\s*hota|how\s*to|kaise\s*karein|batao|bataiye|password\s*kya|kya\s*hoga|samjhao|explain|tell\s*me)\b/i.test(t)) return 'information';
+   // INFORMATION / HOW-TO — covers kaise/kise/kese/kase typos
+   if (/\b(kya\s*hai|kaise|kise|kese|kase|kaisey|kaise\s*karu|kaise\s*karte|kaise\s*hota|how\s*to|how\s*do|how\s*can|kaise\s*karein|batao|bataiye|password\s*kya|kya\s*hoga|samjhao|explain|tell\s*me|steps|process|guide)\b/i.test(t)) return 'information';
    // REQUEST — chahiye / need / mangwana → never show Auto-Fix
    if (/\b(chahiye|ki\s*need|mangwana|de\s*do|milega|kharidna|buy|new\s*\w+\s*chahiye|naya\s*\w+\s*chahiye|lena\s*hai|request|order\s*karna)\b/i.test(t)) return 'request';
    // ACCESS — access/permission chahiye → never show Auto-Fix

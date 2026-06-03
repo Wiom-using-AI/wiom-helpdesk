@@ -1313,6 +1313,22 @@ const getKBAnswer = (problem) => {
     return `🔐 *Two-Factor Authentication (2FA) setup?*\n\nCompany accounts pe 2FA setup IT karega — employee khud galti se account lock ho sakta hai.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
+  // ── 📹 HOW-TO: ZOOM/TEAMS MEETING JOIN ─────────────────────────────────────
+  if (/\b(zoom|teams|google\s*meet)\b/i.test(pn) &&
+      /\b(join|kaise|kise|kese|kese\s*join|joining|enter|karna|link\s*se)\b/i.test(pn) &&
+      !/\b(nahi\s*chal|not\s*work|issue|problem|crash)\b/i.test(pn)) {
+    const app = /zoom/i.test(pn) ? 'Zoom' : /meet/i.test(pn) ? 'Google Meet' : 'Teams';
+    const link = app === 'Zoom' ? 'zoom.us/join' : app === 'Google Meet' ? 'meet.google.com' : 'teams.microsoft.com';
+    return `📹 *${app} meeting join karne ka tarika:*\n\n1. *Link pe click karo* — invite email ya calendar mein meeting link hoga → click karo → ${app} automatically join kar dega\n2. *${app} app open hai?* → Agar app nahi khula → browser mein ${link} pe jaao\n3. *Join karte waqt* → Camera/mic allow karo jab permission maange\n\nKoi issue? Type karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🎬 VIDEO / MEDIA PLAY — "video kaise play karu", "video open nahi ho rhi" ──
+  if (/\b(video|mp4|mkv|avi|mov|media)\b/i.test(pn) &&
+      /\b(play|kaise|kise|kese|open|chalu|chalao|dekhna|karna)\b/i.test(pn) &&
+      !/\b(nahi\s*chal|nahi\s*khul|issue|problem|error)\b/i.test(pn)) {
+    return `🎬 *Video play kaise karo:*\n\n1. *Double-click* karo video file pe — Windows Media Player mein khulega\n2. *Right-click* → "Open with" → *VLC Media Player* (sabse best, sab formats chalata hai)\n3. VLC nahi hai? Chrome/Edge mein drag & drop karo — MP4 browser mein chalta hai\n\nVLC install karna hai? Type karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
   // ── 🔑 PASSWORD MANAGER — "password manager recommend karo" ─────────────────
   if (/\b(password\s*manager|password\s*save|save\s*password|password\s*bhool\s*jaata|paassword\s*yaad\s*nahi|password\s*store)\b/i.test(pn)) {
     return `🔑 *Password kaise yaad rakhe?*\n\nSabse easy tarika: *Browser ka built-in password manager use karo*\n\n• Chrome: Password save karne ke liye "Save password" pe click karo jab prompt aaye\n• Saved passwords dekhne ke liye: Chrome → Settings → Passwords\n\nNote: Company accounts ke passwords browser mein save karna generally OK hai company devices pe.\n\nKoi aur IT issue ho toh batayein!`;
@@ -1972,6 +1988,12 @@ const getKBAnswer = (problem) => {
   // ── 🏷️ WARRANTY CHECK ────────────────────────────────────────────────────
   if (/\b(warranty\s*check|warranty\s*kya|warranty\s*kitni|warranty\s*hai\s*kya|warranty\s*dekhna|warranty\s*status|warranty\s*kab\s*tak)\b/i.test(pn)) {
     return `🏷️ *Laptop warranty check karna hai?*\n\nWarranty check ke liye IT ke paas laptop records hote hain.\n\nBatao:\n• Laptop ka model/brand kya hai?\n• Laptop ke neeche sticker pe serial number likha hai — woh share karo\n\nType karo *ha* — IT ticket raise karta hoon, IT warranty status check karke batayega 🎫`;
+  }
+
+  // ── 📋 HOW-TO FALLBACK — if nothing matched and it's a how-to question ─────
+  // Only fires LAST — after ALL specific KB entries have been checked
+  if (/\b(kaise|kise|kese|kase|kaisey|how\s*to|how\s*do|how\s*can)\b/i.test(pn)) {
+    return `Batao kya karna hai — main step-by-step guide karunga!\n\nApni problem thoda detail mein likho, main seedha bataunga.`;
   }
 
   // ── UNKNOWN QUERY LOG — track KB misses for weekly review ───────────────
