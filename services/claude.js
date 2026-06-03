@@ -316,6 +316,43 @@ const detectIntent = (messages) => {
   if (/sound|audio|speaker|headphone|\bmic\b|microphone|awaaz|awaaz nahi|volume|sunai nahi/.test(recentText))
     return { category: 'AUDIO', hint: 'AUDIO ISSUE. First ask: "Headphone laga hai? Taskbar pe speaker icon mein X toh nahi?" — check output device.' };
 
+  // MICROSOFT OFFICE — all variants including 365, xlsx, docx
+  if (/(ms\s*office|microsoft\s*office|office\s*365|office365|ms365|\bword\b|\bexcel\b|powerpoint|\bppt\b|xlsx|xls|docx|pptx|ms\s*word|ms\s*excel)/.test(recentText) &&
+      /(nahi|not|open|crash|hang|freeze|error|issue|kaam|chal|band|stuck|loading)/.test(recentText))
+    return { category: 'MICROSOFT_OFFICE', hint: 'MICROSOFT OFFICE ISSUE. Do NOT ask clarifying question. Give steps directly: 1) Force close from Task Manager → End Task → reopen. 2) Restart laptop. 3) If still fails → IT ticket for Office repair. WIOM uses Gmail NOT Outlook. For xlsx/docx file issues, same steps.' };
+
+  // TEAMS
+  if (/\bteams\b/.test(recentText) && /(nahi|not|crash|issue|open|chal|hang|error)/.test(recentText))
+    return { category: 'TEAMS', hint: 'TEAMS ISSUE. Steps: 1) Right-click Teams in taskbar → Quit → reopen. 2) Restart laptop. 3) Try teams.microsoft.com in Chrome. No %appdata% steps.' };
+
+  // ZOOM
+  if (/\bzoom\b/.test(recentText) && /(nahi|not|crash|issue|open|chal|hang|error)/.test(recentText))
+    return { category: 'ZOOM', hint: 'ZOOM ISSUE. Steps: 1) Close Zoom → reopen. 2) Try zoom.us in Chrome. 3) Restart laptop. If still failing → IT ticket.' };
+
+  // CHROME / BROWSER
+  if (/(chrome|chrmo|browser|edge|firefox)/.test(recentText) && /(nahi|not|crash|slow|hang|open|issue)/.test(recentText))
+    return { category: 'BROWSER', hint: 'BROWSER ISSUE. Steps: 1) Force close → reopen. 2) Clear cache Ctrl+Shift+Del. 3) Restart laptop. Do NOT suggest reinstall.' };
+
+  // PRINTER
+  if (/\bprinter\b/.test(recentText) && /(nahi|not|offline|issue|print|stuck|error)/.test(recentText))
+    return { category: 'PRINTER', hint: 'PRINTER ISSUE. Steps: 1) Restart printer. 2) Restart laptop. 3) IT ticket if still offline. No services.msc steps.' };
+
+  // VPN — WIOM has no VPN
+  if (/\bvpn\b/.test(recentText))
+    return { category: 'VPN', hint: 'VPN: WIOM mein VPN use nahi hota. Tell user directly: "WIOM mein VPN use nahi hota. Koi aur IT issue?"' };
+
+  // GMAIL / EMAIL
+  if (/(gmail|email|mail)/.test(recentText) && /(nahi|not|issue|open|login|password|send|receive|full)/.test(recentText))
+    return { category: 'GMAIL', hint: 'GMAIL ISSUE. WIOM uses Gmail NOT Outlook. Steps: 1) Open gmail.com in Chrome incognito. 2) Clear Chrome cache. 3) Try Edge browser. For password issues → IT ticket.' };
+
+  // GOOGLE DRIVE / ONEDRIVE
+  if (/(google\s*drive|gdrive|onedrive)/.test(recentText) && /(nahi|not|sync|upload|issue)/.test(recentText))
+    return { category: 'CLOUD_STORAGE', hint: 'CLOUD STORAGE ISSUE. Check internet → sign out/in → IT ticket.' };
+
+  // PDF
+  if (/\bpdf\b/.test(recentText) && /(nahi|not|open|issue|convert|print)/.test(recentText))
+    return { category: 'PDF', hint: 'PDF ISSUE. Open with Chrome/Edge drag-drop. For PDF to Word → Word open karo → File → Open → select PDF. No Adobe install needed.' };
+
   // SOFTWARE
   if (/teams|zoom|outlook|email|\bchrome\b|\boffice\b|\bword\b|\bexcel\b|onedrive|pdf|app nahi|software|install\s+\w+|\w+\s+install|crash|error aa raha|error aa rahi/.test(recentText))
     return { category: 'SOFTWARE', hint: 'SOFTWARE/APP ISSUE. First ask: "Kya exact error message aa raha hai? Screen pe kya likh raha hai?" — give app-specific fix only. If outlook mentioned: WIOM uses Gmail not Outlook — redirect to Gmail. NO %appdata% paths, NO CMD.' };
@@ -469,6 +506,20 @@ const getKBFallback = (problem) => {
 
   if (pn.includes('printer'))
     return `Printer issue. Yeh try karo:\n\n1. *Printer restart* → Printer band karo → 30 sec → on karo\n2. *Laptop restart* → Laptop restart karo → dobara print karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+
+  // MS OFFICE NOT WORKING / CRASHING — all variants including 365, xlsx, docx, pptx
+  if (
+    /\b(ms\s*office|microsoft\s*office|office\s*365|office365|ms365|word|excel|powerpoint|ppt|xlsx|xls|docx|doc\b|pptx|office\s*file|office\s*app|ms\s*word|ms\s*excel)\b/i.test(pn) &&
+    /\b(nahi\s*khul|not\s*open|open\s*nahi|nahi\s*chal|crash|hang|ha+g|freeze|freez|error|band\s*ho|kaam\s*nahi|loading|stuck|atak|response\s*nahi|start\s*nahi|nahi\s*start)\b/i.test(pn)
+  ) {
+    return `⚙️ *MS Office Issue* — yeh try karo:\n\n1. *Force close* → Ctrl+Shift+Esc → Task Manager → Microsoft Word/Excel dhundho → End Task → dobara open karo\n2. *Restart karo* → Laptop restart karo → dobara open karo\n\nAgar phir bhi nahi khul rha → type karo *ha* — IT ticket raise karta hoon (IT aake repair karega) 🎫`;
+  }
+
+  // Office 365 subscription/access issue
+  if (/\b(office\s*365|microsoft\s*365|ms\s*365|office365)\b/i.test(pn) &&
+      /\b(issue|problem|nahi|error|kaam\s*nahi|access\s*nahi|open\s*nahi|chal\s*nahi|activate|license)\b/i.test(pn)) {
+    return `⚙️ *Microsoft Office 365 Issue*\n\nYeh try karo:\n\n1. *Restart* → Laptop restart karo\n2. *Internet check karo* → Office 365 ke liye internet chahiye\n\nAgar phir bhi problem → type karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
 
   if (pn.includes('teams'))
     return `Microsoft Teams issue. Yeh try karo:\n\n1. *Quit & Reopen* → Taskbar pe Teams icon right-click → Quit → dobara open karo\n2. *Browser mein try karo* → teams.microsoft.com Chrome mein open karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
@@ -1759,18 +1810,23 @@ const getKBAnswer = (problem) => {
   }
 
   // ── 💻 MS OFFICE NOT ACTIVATED — separate from "not working" ────────────
-  // "MS Office activate nahi hai", "office activated nahi", "product key chahiye"
-  if (/\b(office|word|excel|powerpoint|ms\s*office)\b.*(activ|activat|license|product\s*key|register|genuine|unactivat|not\s*activ|nahi\s*activ|activation\s*error|unlicensed)/i.test(pn) ||
-      /activ.*(office|word|excel|ms\s*office)/i.test(pn)) {
+  // "MS Office activate nahi hai", "office 365 activate nahi ho rha", "product key chahiye"
+  if (/\b(office|office\s*365|office365|ms\s*365|word|excel|powerpoint|ms\s*office|microsoft\s*office)\b.*(activ|activat|license|product\s*key|register|genuine|unactivat|not\s*activ|nahi\s*activ|activation\s*error|unlicensed)/i.test(pn) ||
+      /activ.*(office|office\s*365|word|excel|ms\s*office)/i.test(pn)) {
     return `🔑 *MS Office Activation Issue*\n\nEmployees khud MS Office activate nahi kar sakte — admin rights aur valid license key IT ke paas hoti hai.\n\nIT aapke laptop pe aake activate kar denge.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
-  // ── ⚙️ MS OFFICE NOT WORKING / CRASHING ─────────────────────────────────
-  // "word nahi khul rha", "excel crash ho rha", "laptop hag ho jata hai excel se"
-  // hag/hagg = typo for hang; jab bhi + app + hang = app-specific freeze
-  if (/\b(word|excel|powerpoint|ms\s*office|microsoft\s*office)\b.*(nahi\s*khul|not\s*open|crash|band\s*ho|error|kaam\s*nahi|loading|atak|stuck|response\s*nahi|han+g|ha+g|freeze|freez)/i.test(pn) ||
-      /(nahi\s*khul|crash|error|han+g|ha+g|freeze).*(word|excel|powerpoint|office)/i.test(pn) ||
-      (/\b(excel|word|powerpoint|office)\b/i.test(pn) && /\b(han+g|ha+g|freeze|atak|stuck|slow|ruk)\b/i.test(pn))) {
+  // ── ⚙️ MS OFFICE NOT WORKING / CRASHING — all variants including 365, xlsx, docx ─
+  // "word nahi khul rha", "excel crash ho rha", "ms office 365 open nahi ho rha",
+  // "xlsx file open nahi", "docx nahi khul rha", "excel not opening", "office start nahi ho rha"
+  // hag/hagg = typo for hang; "not opening", "not working" = English patterns
+  if (/\b(ms\s*office|microsoft\s*office|office\s*365|office365|ms365|office|word|excel|powerpoint|ppt|xlsx|xls|docx|pptx|ms\s*word|ms\s*excel|office\s*file|office\s*app)\b/i.test(pn) &&
+      /\b(nahi\s*khul|not\s*open(ing)?|not\s*work(ing)?|open\s*nahi|nahi\s*chal|crash|band\s*ho|error|kaam\s*nahi|loading|atak|stuck|response\s*nahi|han+g|ha+g|freeze|freez|start\s*nahi|nahi\s*start|nahi\s*ho\s*rha|issue)\b/i.test(pn)) {
+    return `⚙️ *MS Office Issue* — yeh try karo:\n\n1. *Force close* → Ctrl+Shift+Esc → Task Manager → 'Microsoft Word' ya 'Microsoft Excel' dhundho → End Task karo → dobara open karo\n2. *Restart* → Laptop restart karo → dobara open karo\n\nAgar ab bhi nahi khul raha — type karo *ha* — IT ticket raise karta hoon (IT aake repair karega) 🎫`;
+  }
+  // ── ⚙️ MS OFFICE (secondary match — reversed word order / extra patterns) ────
+  if (/(nahi\s*khul|crash|error|han+g|ha+g|freeze|open\s*nahi|nahi\s*chal|not\s*work(ing)?|not\s*open(ing)?).*(word|excel|powerpoint|ppt|office|xlsx|docx)/i.test(pn) ||
+      (/\b(excel|word|powerpoint|ppt|office|xlsx|docx)\b/i.test(pn) && /\b(han+g|ha+g|freeze|atak|stuck|slow|ruk|band)\b/i.test(pn))) {
     return `⚙️ *MS Office Issue* — yeh try karo:\n\n1. *Force close* → Ctrl+Shift+Esc → Task Manager → 'Microsoft Word' ya 'Microsoft Excel' dhundho → End Task karo → dobara open karo\n2. *Restart* → Laptop restart karo → dobara open karo\n\nAgar ab bhi nahi khul raha — type karo *ha* — IT ticket raise karta hoon (IT aake repair karega) 🎫`;
   }
 

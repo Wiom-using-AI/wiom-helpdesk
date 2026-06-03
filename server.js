@@ -924,10 +924,10 @@ app.listen(PORT, async () => {
      },
      // Word / Excel / Office (crash/open issue, not fresh install)
      {
-       match: t => /\b(word|excel|powerpoint|ms\s*office|microsoft\s*office)\b/.test(t) &&
-                   /\b(nahi\s*khul|crash|issue|not\s*open|hang|freez)\b/.test(t) &&
+       match: t => /\b(word|excel|powerpoint|ppt|ms\s*office|microsoft\s*office|office\s*365|office365|xlsx|xls|docx|pptx|ms\s*word|ms\s*excel)\b/.test(t) &&
+                   /\b(nahi\s*khul|crash|issue|not\s*open|hang|ha+g|freeze|freez|kaam\s*nahi|open\s*nahi|start\s*nahi|loading|stuck|atak)\b/.test(t) &&
                    !/\b(install|insatl|insatal|instat|instll|intsall)\b/.test(t),
-       script: { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' }
+       script: { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: MS Office' }
      },
      // Chrome / Browser (issue)
      {
