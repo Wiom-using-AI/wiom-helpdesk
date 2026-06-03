@@ -407,7 +407,7 @@ const getKBFallback = (problem) => {
     .replace(/\bprinte\b|\bprintr\b|\bpirnt\b|\bprntr\b/g, 'printer')  // printer typos
     .replace(/\bmonitr\b|\bmoniter\b/g, 'monitor')                       // monitor typos
     .replace(/\bbluetoth\b|\bbluethooth\b/g, 'bluetooth')                // bluetooth typos
-    .replace(/\bsceern\b|\bscren\b|\bscrren\b|\bscrean\b/g, 'screen')   // screen typos
+    .replace(/\bsceern\b|\bscreeen\b|\bscren\b|\bscrren\b|\bscrean\b/g, 'screen')   // screen typos (screeen = 3 e's)
     .replace(/\bmicrofone\b|\bmicrophne\b|\bmicrphone\b/g, 'microphone') // microphone typos
     .replace(/\bspeakr\b|\bspeeker\b|\bspekar\b/g, 'speaker')           // speaker typos
     .replace(/\bheadfone\b|\bheadfoan\b|\bearfone\b/g, 'headphone')     // headphone typos
@@ -905,6 +905,7 @@ const getKBAnswer = (problem) => {
   // Normalize common typos for matching inside getKBAnswer
   // (pn is used for pattern matching; original p kept for physical-damage etc.)
   const pn = p
+    .replace(/\bnhi\b/g, 'nahi')           // nhi → nahi (common Hinglish shorthand)
     .replace(/\bwiffi\b/g, 'wifi')
     .replace(/\bwifi+\b/g, 'wifi')
     .replace(/\bl[ae]?p?to?[op]{1,2}\b|\blaotop\b|\blaptoop\b|\blaptp\b/g, 'laptop') // leptop, lptop, latop, laptoop, laotop, laptp
@@ -913,13 +914,14 @@ const getKBAnswer = (problem) => {
     .replace(/\bcamra\b/g, 'camera')                 // camra
     .replace(/\bkeybo?r?a?d\b|\bkeybord\b|\bkeyborad\b|\bkeybrd\b/g, 'keyboard')       // keyborad, keybord, keybrd
     .replace(/\bcharg(e|er|ing)?\b/g, 'charging')    // normalize charger/charging
+    .replace(/\bbatter[yi]?\b|\bbattry\b|\bbattey\b|\bbatr[yi]\b/g, 'battery')  // battry, battey, batri (battery typos)
     .replace(/\bply\b/g, 'play')                     // ply → play typo
     .replace(/\bvido\b|\bvedio\b|\bvidio\b/g, 'video') // video typos
     .replace(/\bkise\b|\bkese\b|\bkase\b|\bkaisay\b/g, 'kaise') // kaise typos unified
     .replace(/\bprinte\b|\bprintr\b|\bpirnt\b|\bprntr\b/g, 'printer')  // printer typos
     .replace(/\bmonitr\b|\bmoniter\b|\bmonitor\b/g, 'monitor')           // monitor typos
     .replace(/\bbluetoth\b|\bbluethooth\b|\bbluetoth\b/g, 'bluetooth')   // bluetooth typos
-    .replace(/\bsceern\b|\bscren\b|\bscrren\b|\bscrean\b/g, 'screen')   // screen typos
+    .replace(/\bsceern\b|\bscreeen\b|\bscren\b|\bscrren\b|\bscrean\b/g, 'screen')   // screen typos (screeen = 3 e's)
     .replace(/\bmicrofone\b|\bmicrophne\b|\bmicrphone\b/g, 'microphone') // microphone typos
     .replace(/\bspeakr\b|\bspeeker\b|\bspekar\b/g, 'speaker')           // speaker typos
     .replace(/\bheadfone\b|\bheadfoan\b|\bheadfon\b|\bearfone\b/g, 'headphone') // headphone typos
@@ -1450,6 +1452,26 @@ const getKBAnswer = (problem) => {
     return `📋 *Asset Return Process:*\n\nResignation, termination, ya transfer pe:\n1. *Sab accessories ke saath* return karo (charger, mouse, bag, cables)\n2. IT condition check karega\n3. Missing accessories → market rate pe charge hoga\n4. IT clearance ke baad HR exit formalities complete hongi\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
+  // ── 🚪 EXIT PROCESS — "exit pe kya karna hai" ─────────────────────────────
+  if (/\b(exit\s*pe|exit\s*mein|exit\s*process|company\s*chhod|resignation\s*pe|resign\s*karne\s*pe|exit.*kya\s*karna)\b/i.test(pn)) {
+    return `🚪 *Exit pe IT process kya hai?*\n\nCompany exit pe yeh karo:\n\n1. *Laptop aur sab accessories wapas karo* — charger, mouse, bag, cables sab\n2. *IT clearance lena hoga* — exit formalities ke liye\n3. *Koi bhi data personal device pe transfer mat karo* — policy violation hai\n4. *Accounts khud delete mat karo* — IT deactivate karega\n\nType karo *ha* — IT ticket raise karta hoon, IT exit checklist bhejega 🎫`;
+  }
+
+  // ── 🔄 LAPTOP RETURN ──────────────────────────────────────────────────────
+  if (/\b(laptop\s*return|return\s*karna\s*(hai|chahiye)|laptop\s*(jama|wapas)\s*(karna|karo|chahiye))\b/i.test(pn)) {
+    return `🔄 *Laptop return karna hai?*\n\nLaptop return ke liye:\n\n1. *Sab accessories saath mein do* — charger, mouse, bag, LAN cable\n2. *IT condition check karega* — damage toh nahi na?\n3. *Missing accessories* → market rate pe charge hoga\n4. *IT clearance milega* → HR exit process complete hogi\n\nType karo *ha* — IT ticket raise karta hoon, pickup ya drop-off arrange hoga 🎫`;
+  }
+
+  // ── 🔀 LAPTOP TRANSFER ────────────────────────────────────────────────────
+  if (/\b(laptop\s*transfer|transfer\s*(karna|karo|chahiye).*laptop|laptop.*transfer\s*(karna|karo|chahiye))\b/i.test(pn)) {
+    return `🔀 *Laptop transfer karna hai?*\n\nLaptop ek employee se doosre ko transfer karne ke liye:\n\n1. *Apne Manager ko email karo* — transfer reason aur dono employees ke naam likho\n2. *CC karo:* sajan.kumar@wiom.in\n3. *IT data wipe + reassign karega* — employee khud transfer nahi kar sakta\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🏷️ IT ASSET NUMBER / TAG ──────────────────────────────────────────────
+  if (/\b(it\s*asset\s*number|asset\s*number|asset\s*tag|it\s*asset\s*tag|asset\s*no|asset.*number|laptop.*asset.*number)\b/i.test(pn)) {
+    return `🏷️ *IT Asset Number kaise check karo?*\n\nLaptop palatao — neeche ek sticker hoga jisme:\n• *Asset Tag* ya *Asset No* likha hoga\n• Serial Number bhi wahan hoga\n\nAagar sticker nahi dikh rha ya peel ho gaya toh — type karo *ha*, IT record se dhundh dega 🎫`;
+  }
+
   if (/\b(unauthorized.*software|software.*install.*nahi|install.*allowed|policy.*software|software.*rule|software.*permission)\b/i.test(pn)) {
     return `⚠️ *Unauthorized Software Policy:*\n\nPolicy ke hisaab se company laptop pe *sirf approved software* install kar sakte ho.\nUnauthorized software install karna disciplinary action ka karan ban sakta hai.\n\nKoi software chahiye? Type karo *ha* — IT ticket raise karta hoon (IT approve karke install karega) 🎫`;
   }
@@ -1657,7 +1679,9 @@ const getKBAnswer = (problem) => {
     /^(wifi|wi-fi|network)\s*(password|pass|pwd)\s*\??$/i.test(pn.trim()) ||
     /^(pass|pwd|password)\s*\??$/i.test(pn.trim()) ||
     /network\s*ka\s*pass/i.test(pn) ||
-    /office\s*(wifi|network|wi-fi)\s*(password|pass)/i.test(pn);
+    /office\s*(wifi|network|wi-fi)\s*(password|pass)/i.test(pn) ||
+    /wiom\s*office\s*(ka|ke|ki)?\s*(password|pass|pwd)/i.test(pn) ||
+    /wiom\s*office\s*password/i.test(pn);
 
   if (isWifiPassword) {
     return `WiFi Password! 📶\n\n🔑 *Password:* \`spartans500\` — sabhi networks ke liye same\n\n*Networks:*\n• Wiom office 5g-Test — Ground floor\n• Wiom office Guest\n• Wiom office 3rd floor\n• Wiomnet — Saket office *(Password: \`Password@12345\`)*\n\nKoi aur IT issue ho toh batayein.`;
@@ -1703,7 +1727,7 @@ const getKBAnswer = (problem) => {
 
   // ── Overheating ──────────────────────────────────────────────────────────
   // "laptop bahut garam ho rha", "laptop heat ho rha", "laptop garm hai", "zyada heat"
-  if (/\blaptop\b.*(garm|garam|heat|hot\b)|garm.{0,10}laptop|(overheat|over\s*heat|bahut\s*garam|bahut\s*garm|zyada\s*heat|zyada\s*garm|laptop\s*garm)/.test(pn))
+  if (/\blaptop\b.*(garm|garam|heat|hot\b)|garm.{0,10}laptop|(overheat|over\s*heat|bahut\s*garam|bahut\s*garm|zyada\s*heat|zyada\s*garm|laptop\s*garm)|laptop.*(thanda\s*nahi|cool\s*nahi|thanda\s*nahi\s*ho\s*rha|thanda\s*nahi\s*ho\s*rhi)/.test(pn))
     return `Laptop overheating issue hai. Yeh try karo:\n\n1. *Table pe rakho* → Laptop ko table par rakho — bed/sofa pe mat rakho (hawa nahi aati)\n2. *Heavy apps band karo* → Ctrl+Shift+Esc → Task Manager → CPU column → heavy apps End Task karo\n3. *Restart* → Laptop restart karo — background processes band ho jaate hain\n\nAgar bahut zyada garam ho raha hai ya band ho raha hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
 
   // ── Screen black / blank / nothing visible ───────────────────────────────
@@ -1760,7 +1784,8 @@ const getKBAnswer = (problem) => {
   // Fan noise/sound (fan IS running but making noise — NOT an emergency)
   // This only runs if hasPositive check above did NOT return (i.e., user is NOT saying "fixed")
   if (/fan\s*(sound|awaaz|baj|noise|shor|loud|kar\s*rha|chal\s*rha|aa\s*rhi)/i.test(pn) ||
-      /\bfan\s+(kar|chal|baj|sound)/i.test(pn)) {
+      /\bfan\s+(kar|chal|baj|sound)/i.test(pn) ||
+      /fan.*(awaaz|noise|shor|loud|tez|bahut)/i.test(pn)) {
     return `Fan ki awaaz aa rahi hai — usually heavy apps se hota hai 🔊\nCtrl+Shift+Esc dabao → CPU column sort karo → koi heavy app End Task karo.\nLaptop table pe rakhho (bed/sofa pe nahi).\nThodi der mein band ho jaaye toh theek hai. Agar bahut tez awaaz ho ya nahi ruki — type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
@@ -1779,6 +1804,12 @@ const getKBAnswer = (problem) => {
   // ══════════════════════════════════════════════════════════════════════════
 
   // ── CATEGORY: HARDWARE (battery, keyboard, camera, audio, peripheral) ────────
+
+  // ── 🔋 BATTERY NOT WORKING (generic) ─────────────────────────────────────
+  // "battry nahi chal rhi", "battery kaam nahi", "battery nahi chal rha"
+  if (/\b(battery)\b.*(nahi\s*chal|kaam\s*nahi|work\s*nahi|chal\s*nahi|issue|problem|nahi\s*ho\s*rha|chal\s*nahi\s*rha)\b/i.test(pn)) {
+    return `🔋 *Battery issue hai?* — yeh try karo:\n\n1. *Charger dono taraf firmly lagao* → laptop side aur socket side dono\n2. *Alag socket try karo* → extension board nahi, seedha wall socket\n3. *Reset karo* → Laptop band karo → charger nikalo → power button 30 sec hold karo → charger lagao → on karo\n\nAgar battery 0% pe stuck hai ya charge hi nahi le rhi → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
 
   // ── 🔋 BATTERY BACKUP / DRAIN — "battery backup kam ho gaya" ────────────────
   if (/\b(battery\s*backup|backup\s*kam|battery\s*drain|battery\s*jaldi\s*khatam|battery\s*jaldi\s*kha|low\s*backup|backup\s*low|battery\s*bahut\s*kam|charge\s*jaldi|charge\s*bahut\s*jaldi)\b/i.test(pn) ||
@@ -1845,7 +1876,7 @@ const getKBAnswer = (problem) => {
   }
 
   // ── 🧊 SYSTEM FREEZE (generic, no save context) ──────────────────────────
-  if (/\b(system\s*freeze|laptop\s*freeze|freeze\s*ho|screen\s*freeze|atak\s*gaya|stuck\s*ho\s*gaya|kuch\s*nahi\s*ho\s*rha|cursor\s*bhi\s*nahi)\b/i.test(pn) ||
+  if (/\b(system\s*freeze|system\s*hang|laptop\s*freeze|freeze\s*ho|screen\s*freeze|atak\s*gaya|stuck\s*ho\s*gaya|kuch\s*nahi\s*ho\s*rha|cursor\s*bhi\s*nahi)\b/i.test(pn) ||
       (/\b(freez|hung|atak|stuck)\b/i.test(pn) && !/save|bachao/i.test(pn))) {
     return `🧊 *System freeze ho gaya?*\n\n1. *2-3 minute wait karo* → Kabhi kabhi system khud recover ho jaata hai\n2. *Ctrl+Alt+Del dabao* → Task Manager → heavy app End Task karo\n3. *Force restart* → Power button 10 sec hold karo → laptop band hoga → dobara on karo\n\nAgar baar baar freeze hota hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
@@ -1867,6 +1898,12 @@ const getKBAnswer = (problem) => {
   }
 
   // ── CATEGORY: SOFTWARE & APPS (Teams, Zoom, Slack, Office, Excel) ───────────
+
+  // ── 📧 OUTLOOK NOT WORKING — WIOM uses Gmail, not Outlook ────────────────
+  if (/\b(outlook)\b.*(nahi\s*chal|kaam\s*nahi|work\s*nahi|nahi\s*khul|crash|band|error|issue|problem|login|open)/i.test(pn) ||
+      /\boutlook\b.*(nahi|problem|issue)/i.test(pn)) {
+    return `ℹ️ *Outlook ke baare mein:*\n\nWIOM mein Outlook use nahi hota — *Gmail (Google Workspace)* use hoti hai.\n\nGmail se koi problem hai?\n• gmail.com Chrome mein open karo\n• Koi issue ho toh batao — main help karunga\n\nType karo *ha* agar Gmail ka bhi issue hai — IT ticket raise karta hoon 🎫`;
+  }
 
   // ── 💬 TEAMS NOT WORKING ──────────────────────────────────────────────────
   if (/\b(teams)\b.*(kaam\s*nahi|nahi\s*chal|work\s*nahi|nahi\s*khul|crash|band|error|nahi\s*ho\s*rha|issue|problem|slow)/i.test(pn) ||
@@ -1898,6 +1935,26 @@ const getKBAnswer = (problem) => {
   }
 
   // ── CATEGORY: NETWORK & INTERNET (WiFi, internet, disconnect, speed) ────────
+
+  // ── 📶 BROADBAND SLOW ─────────────────────────────────────────────────────
+  if (/\b(broadband\s*slow|broadband\s*nahi|broadband.*issue|broadband.*problem)\b/i.test(pn)) {
+    return `📶 *Broadband/Internet slow hai?* — yeh try karo:\n\n1. *Background apps* → Ctrl+Shift+Esc → Network column → bandwidth kha rahe apps End Task karo\n2. *WiFi toggle* → Taskbar WiFi → OFF → 10 sec → ON → "Wiom office" se connect karo\n3. *Restart karo* → Laptop restart karo\n\nAgar phir bhi slow hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📡 SIGNAL NAHI AA RHA ─────────────────────────────────────────────────
+  if (/\b(signal\s*nahi|no\s*signal|signal\s*nahi\s*aa|wifi\s*signal|signal\s*weak|signal\s*kam)\b/i.test(pn)) {
+    return `📡 *WiFi signal nahi aa rha / weak hai?* — yeh try karo:\n\n1. *WiFi toggle karo* → Taskbar WiFi → OFF → 10 sec → ON → dobara connect karo\n2. *Paas jao* → Access point ke paas jao — door se signal weak hota hai\n3. *Restart karo* → Laptop restart karo\n\nAgar signal bilkul nahi aa rha ya baar baar disconnect ho rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔁 PING NAHI HO RHA ───────────────────────────────────────────────────
+  if (/\b(ping\s*nahi|ping.*ho\s*nahi|ping.*fail|network\s*ping|ping\s*issue)\b/i.test(pn)) {
+    return `🔁 *Ping nahi ho rha — network issue hai.*\n\nYeh usually network connectivity ya firewall issue hota hai — laptop-side fix nahi hoga.\n\nType karo *ha* — IT ticket raise karta hoon, network team check karegi 🎫`;
+  }
+
+  // ── 🌐 NO INTERNET (CONNECTED) ────────────────────────────────────────────
+  if (/\b(no\s*internet|internet\s*nahi.*connect|connect.*nahi.*internet|connected.*internet\s*nahi|no\s*internet.*connect)\b/i.test(pn)) {
+    return `🌐 *WiFi connected hai par internet nahi chal rha?* — yeh try karo:\n\n1. *WiFi toggle karo* → Taskbar WiFi → OFF → 10 sec → ON → dobara connect karo\n2. *Chrome reopen karo* → Chrome band karo → dobara open karo → gmail.com try karo\n3. *Restart karo* → Laptop restart karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
 
   // ── 📡 WIFI NOT CONNECTING ────────────────────────────────────────────────
   if (/\b(wifi)\b.*(connect\s*nahi|nahi\s*connect|nahi\s*ho\s*rha|nahi\s*aa\s*rha|nahi\s*chal|nahi\s*jud|jud\s*nahi)/i.test(pn) ||
@@ -1946,6 +2003,56 @@ const getKBAnswer = (problem) => {
 
   // ── CATEGORY: ACCESS & PERMISSIONS ───────────────────────────────────────────
 
+  // ── 🗒️ NOTION ACCESS ──────────────────────────────────────────────────────
+  if (/\b(notion)\b/i.test(pn) && /\b(access|chahiye|permission|invite|add)\b/i.test(pn)) {
+    return `🗒️ *Notion access chahiye?*\n\nNotion access IT ticket ke zariye milta hai — pehle manager approval lena hoga.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📋 JIRA ACCESS ────────────────────────────────────────────────────────
+  if (/\b(jira)\b/i.test(pn) && /\b(access|chahiye|permission|invite|add)\b/i.test(pn)) {
+    return `📋 *Jira access chahiye?*\n\nJira access ke liye manager approval + IT ticket chahiye.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📚 CONFLUENCE ACCESS ──────────────────────────────────────────────────
+  if (/\b(confluence)\b/i.test(pn) && /\b(access|chahiye|permission|invite|add)\b/i.test(pn)) {
+    return `📚 *Confluence access chahiye?*\n\nConfluence access IT ticket ke zariye milta hai — manager se pehle approval lo.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🎨 FIGMA ACCESS ───────────────────────────────────────────────────────
+  if (/\b(figma)\b/i.test(pn) && /\b(access|chahiye|permission|invite|add)\b/i.test(pn)) {
+    return `🎨 *Figma access chahiye?*\n\nFigma access ke liye manager approval + IT ticket chahiye.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🌐 PORTAL ACCESS (generic) ────────────────────────────────────────────
+  if (/\b(portal)\b/i.test(pn) && /\b(access|chahiye|permission)\b/i.test(pn)) {
+    return `🌐 *Portal access chahiye?*\n\nKaunse portal ka access chahiye? Thoda batao — IT ticket ke zariye milega.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🗄️ DATABASE ACCESS ────────────────────────────────────────────────────
+  if (/\b(database|db)\b/i.test(pn) && /\b(access|chahiye|permission)\b/i.test(pn)) {
+    return `🗄️ *Database access chahiye?*\n\nDatabase access sensitive hota hai — manager approval mandatory hai.\n\n1. *Manager ko email karo* — kaunsa database aur kyun chahiye batao\n2. *IT ticket raise karo*\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🖥️ SERVER ACCESS ──────────────────────────────────────────────────────
+  if (/\b(server)\b/i.test(pn) && /\b(access|chahiye|permission)\b/i.test(pn)) {
+    return `🖥️ *Server access chahiye?*\n\nServer access ke liye manager approval + IT ticket chahiye — security policy hai.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔐 PERMISSION CHAHIYE (SYSTEM) ───────────────────────────────────────
+  if (/\b(permission\s*chahiye|system\s*(ki|ka|ke)\s*permission|permission.*system|system.*permission)\b/i.test(pn)) {
+    return `🔐 *System permission chahiye?*\n\nSystem permissions sirf IT deta hai — employees ko by-default restricted access hota hai.\n\nBatao kya karna hai — IT assess karega aur zarurat ke hisaab se permission dega.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 👑 ADMIN ROLE / ADMIN KA ROLE ─────────────────────────────────────────
+  if (/\b(role\s*chahiye|admin\s*ka\s*role|role\s*admin|admin\s*role)\b/i.test(pn)) {
+    return `👑 *Admin role chahiye?*\n\nAdmin role employees ko by default nahi milta — security policy hai.\n\nAagar specific kaam ke liye chahiye → batao kya karna hai, IT assess karega.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 👤 ACCOUNT BANANA / CREATE ACCOUNT / USER BANANA ────────────────────
+  if (/\b(account\s*banana\s*(hai|chahiye)|banana\s*hai.*account|create\s*account|account\s*create|user\s*banana\s*(hai|chahiye)|banana\s*hai.*user|new\s*user\s*create|system\s*mein.*user|user.*system\s*mein)\b/i.test(pn)) {
+    return `👤 *Account / User banana hai?*\n\nNew accounts aur users sirf IT create karta hai — HR approval ke baad.\n\nIT ko yeh info do:\n• Kaun sa account chahiye (app/system ka naam)\n• Kiske liye chahiye (employee name)\n• Access level kya hona chahiye\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
   // ── 🔒 ACCOUNT LOCKED ─────────────────────────────────────────────────────
   if (/\b(account\s*lock|locked\s*out|account\s*locked|account\s*block|locked\s*ho\s*gaya|lock\s*ho\s*gaya|account\s*band)\b/i.test(pn)) {
     return `🔒 *Account locked ho gaya?*\n\nAccount unlock sirf IT kar sakta hai — multiple wrong password attempts se account lock hota hai.\n\nType karo *ha* — IT ticket raise karta hoon, jaldi unlock ho jaayega 🎫`;
@@ -1986,6 +2093,21 @@ const getKBAnswer = (problem) => {
   }
 
   // ── CATEGORY: SECURITY (data leak, breach) ───────────────────────────────────
+
+  // ── 🚨 UNAUTHORIZED LOGIN ─────────────────────────────────────────────────
+  if (/\b(unauthorized\s*login|login\s*unauthorized|kisi\s*ne.*login|login\s*hua.*nahi\s*kiya|unknown.*login)\b/i.test(pn)) {
+    return `🚨 *Unauthorized login detect hua — URGENT!*\n\nYeh serious security issue hai — TURANT yeh karo:\n\n1. *Password turant change karo* → gmail.com → top-right account icon → Manage account → Security → Password change karo\n2. *Internet disconnect karo* → WiFi OFF karo agar aur suspicious activity lag rahi hai\n3. *IT ko batao* → Is session mein koi kaam mat karo\n\nType karo *ha* — URGENT IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔓 ACCOUNT HACKED ────────────────────────────────────────────────────
+  if (/\b(hacked|hack\s*ho|hack\s*gaya|account.*hack|hack.*account|koi.*aur.*use|someone.*use)\b/i.test(pn)) {
+    return `🚨 *Account hack ho gaya — CRITICAL!*\n\nTURNAT yeh karo:\n\n1. *Laptop se baaki sab accounts logout karo*\n2. *Internet disconnect karo* → WiFi band karo\n3. *Kuch bhi mat karo* — IT guidance ke bagair\n\nType karo *ha* — CRITICAL PRIORITY IT ticket raise karta hoon, abhi 🎫`;
+  }
+
+  // ── 💥 DATA BREACH ────────────────────────────────────────────────────────
+  if (/\b(breach\s*hua|breach\s*ho\s*gaya|data\s*breach|security\s*breach)\b/i.test(pn)) {
+    return `🚨 *Security Breach — CRITICAL EMERGENCY!*\n\nYeh bahut serious hai — TURANT yeh karo:\n\n1. *Laptop/device disconnect karo* → Network/WiFi abhi band karo\n2. *Kisi ko mat batao* — sirf IT aur management ko\n3. *Koi action mat lo* — IT ke bina kuch mat karo\n\nType karo *ha* — CRITICAL PRIORITY ticket raise karta hoon, management ko bhi inform karunga 🎫`;
+  }
 
   // ── 🔐 DATA LEAK ──────────────────────────────────────────────────────────
   if (/\b(data\s*leak|data\s*breach|data\s*exposed|confidential.*shared|sensitive.*data.*share|data.*outside|leak\s*ho\s*gaya)\b/i.test(pn)) {
