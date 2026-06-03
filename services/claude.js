@@ -1120,9 +1120,11 @@ const getKBAnswer = (problem) => {
     return `📡 *Hotspot connect nahi ho rha?* — yeh try karo:\n\n1. *Phone pe check karo* → Hotspot ON hai? Settings → Personal Hotspot → ON karo\n2. *Visible hai?* → Laptop WiFi mein hotspot ka naam dikh raha hai?\n3. *Forget & reconnect* → WiFi → hotspot pe right-click → Forget → dobara connect karo\n\nAgar phir bhi nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
-  // ── 🔌 LAN CABLE — "LAN lagaya par internet nahi" ────────────────────────────
-  if (/\b(lan\s*cable|ethernet|rj45|network\s*cable|cable.*internet|internet.*cable|wired.*connect)\b/i.test(pn)) {
-    return `🔌 *LAN cable lagaya par internet nahi chal rha?* — yeh try karo:\n\n1. *Cable dono ends check karo* — laptop aur wall socket dono mein firmly laga hai?\n2. *Alag port try karo* — doosra LAN socket try karo\n3. *Restart* → Laptop restart karo cable laga ke\n\nAgar phir bhi nahi chal rha — yeh network/firewall issue ho sakta hai.\nType karo *ha*, IT ticket raise karta hoon 🎫`;
+  // ── 🔌 LAN CABLE — request vs issue ────────────────────────────────────────
+  if (/\b(lan\s*cable|ethernet|rj45|network\s*cable|wired.*connect)\b/i.test(pn)) {
+    const isRequest = /\b(chahiye|need|ki\s*need|mangwana|de\s*do|milega|request|lana)\b/i.test(pn);
+    if (isRequest) return `🛒 *LAN Cable Request*\n\nNaya LAN cable lene ke liye:\n1. Reporting Manager ko email karo\n2. CC: sajan.kumar@wiom.in\n3. Kya chahiye likho\n\nApproval ke baad IT arrange kar dega.`;
+    return `🔌 *LAN cable issue?* — yeh try karo:\n\n1. *Cable dono ends check karo* — laptop aur wall socket dono mein firmly laga hai?\n2. *Alag port try karo* — doosra LAN socket try karo\n3. *Restart* → Laptop restart karo cable laga ke\n\nAgar phir bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
   // ── 💾 PEN DRIVE NOT DETECTED — "pen drive nahi dikh rhi" ────────────────────
@@ -1383,11 +1385,17 @@ const getKBAnswer = (problem) => {
     return `⚠️ *Unauthorized Software Policy:*\n\nPolicy ke hisaab se company laptop pe *sirf approved software* install kar sakte ho.\nUnauthorized software install karna disciplinary action ka karan ban sakta hai.\n\nKoi software chahiye? Type karo *ha* — IT ticket raise karta hoon (IT approve karke install karega) 🎫`;
   }
 
-  // ── 🔌 LAN PORT / ETHERNET PORT ISSUES ──────────────────────────────────
-  if (/\b(lan\s*port|ethernet\s*port|lan\s*cable|ethernet\s*cable|rj45|network\s*port|port\s*me\s*prob|lan\s*me\s*prob|lan\s*nahi\s*chal|lan\s*detect|lan\s*connect|wired\s*connect|cable\s*connect)\b/i.test(pn)) {
-    const isPhysical = /damage|toot|broken|bend|physical|kharab\s*ho\s*gaya|tod/i.test(pn);
-    if (isPhysical) return `🔌 *LAN Port physically damage hai*\n\nHardware repair ke liye IT ticket raise karo.\nType karo *ha* — HIGH PRIORITY IT ticket raise karta hoon 🎫`;
-    return `🔌 *LAN Port issue?* — yeh try karo:\n\n1. *Cable check karo* → Cable dono ends mein properly laga hai? Click sound aana chahiye\n2. *Cable badlo* → Alag LAN cable try karo — cable kharab ho sakti hai\n3. *Alag port try karo* → Switch/router ka dusra port try karo\n4. *Restart karo* → Laptop restart karo — port driver reload hota hai\n\nAgar phir bhi detect nahi ho rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  // ── 🔌 LAN CABLE / PORT ISSUES ───────────────────────────────────────────
+  if (/\b(lan|ethernet|rj45|network\s*cable|lan\s*cable|wired)\b/i.test(pn)) {
+    // REQUEST: "LAN cable chahiye / need hai / mangwana" = equipment request
+    const isRequest = /\b(chahiye|need|ki\s*need|mangwana|dedo|de\s*do|milega|request|lana|kharidna)\b/i.test(pn);
+    if (isRequest) return `🛒 *LAN Cable Request*\n\nNaya LAN cable lene ke liye:\n\n1. *Apne Reporting Manager ko email karo*\n2. *CC mein add karo:* sajan.kumar@wiom.in\n3. Email mein likho — kya equipment chahiye aur kyun\n\nManager approval ke baad IT arrange kar dega.`;
+
+    // ISSUE: cable/port not working
+    const isPhysical = /damage|toot|broken|kharab\s*ho\s*gaya/i.test(pn);
+    if (isPhysical) return `🔌 *LAN Port/Cable physically damage hai*\n\nType karo *ha* — HIGH PRIORITY IT ticket raise karta hoon 🎫`;
+
+    return `🔌 *LAN/Ethernet issue?* — yeh try karo:\n\n1. *Cable dono ends check karo* — click sound aana chahiye\n2. *Alag cable try karo* — cable kharab ho sakti hai\n3. *Alag port try karo* — switch/router ka dusra port\n4. *Restart karo* — cable laga ke laptop restart karo\n\nAgar phir bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
   // ── 💤 SLEEP MODE / SCREEN OFF / POWER SETTINGS ─────────────────────────
