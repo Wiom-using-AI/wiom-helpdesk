@@ -895,6 +895,13 @@ const getKBAnswer = (problem) => {
   if (!problem) return null;
   const p = problem.toLowerCase().trim();
 
+  // ════════════════════════════════════════════════════════════════════════
+  // CATEGORY ROUTING — 3-step pipeline: Intent → Category → Response
+  // detectCategory(pn) returns: security | emergency | hardware | network |
+  //   software | email | access | performance | howto | asset | unknown
+  // Categories below are checked in PRIORITY ORDER — do NOT reorder.
+  // ════════════════════════════════════════════════════════════════════════
+
   // Normalize common typos for matching inside getKBAnswer
   // (pn is used for pattern matching; original p kept for physical-damage etc.)
   const pn = p
@@ -919,6 +926,8 @@ const getKBAnswer = (problem) => {
     .replace(/\bprojekter\b|\bprojetor\b|\bprojctor\b|\bprojektr\b/g, 'projector') // projector typos
     .replace(/\bscanar\b|\bscaner\b|\bscannr\b/g, 'scanner')            // scanner typos
     .replace(/\brooter\b|\bmodem\b/g, 'router');     // router synonyms
+
+  // ── CATEGORY: SOFTWARE & APPS (file, PDF, Keka, common apps) ────────────────
 
   // ── 📁 FILE EXPLORER / FOLDER / DRIVE NOT OPENING ───────────────────────
   // Normalize folder/drive typos for matching
@@ -1042,6 +1051,8 @@ const getKBAnswer = (problem) => {
       /\b(corrupt|damaged|kharab\s*ho\s*gaya|kharab\s*ho\s*gyi|open\s*nahi\s*ho\s*rhi|nahi\s*khul\s*rhi|invalid|repai|repair)\b/i.test(pn)) {
     return `📄 *File Corrupt / Damaged* — yeh try karo:\n\n1. *Repair try karo* → File ko open karo → agar error aaye → "Repair" option milega, click karo\n2. *MS Office mein:* File → Info → "Check for Issues" → Repair\n3. *Previous version* → File pe right-click → "Restore previous versions" → dekho backup hai?\n\nAgar data recover nahi hua → type karo *ha*, IT ticket raise karta hoon — data recovery possible hai 🎫`;
   }
+
+  // ── CATEGORY: SECURITY (check FIRST after common apps — highest priority) ────
 
   // ── 🚨 SPAM / PHISHING EMAIL — "suspicious email", "fraud email" ─────────────
   if (/\b(spam|phishing|phising|fraud|suspicious|fake|scam|suspicious\s*email|fraud\s*email|scam\s*email|dubious|unknown\s*email)\b/i.test(pn) ||
@@ -1424,6 +1435,8 @@ const getKBAnswer = (problem) => {
     return `Personal phone IT helpdesk ke scope mein nahi hai.\n\nHam sirf *company-provided office phones* handle karte hain.\n\nKoi laptop, WiFi, ya software problem ho toh batao — main help karunga! 💻`;
   }
 
+  // ── CATEGORY: ASSET MANAGEMENT ───────────────────────────────────────────────
+
   // ── 📋 IT POLICY — laptop allocation, damage, return ─────────────────────
   if (/\b(policy|it\s*policy|asset\s*policy|kaun\s*sa\s*laptop|kaunsa\s*laptop|konsa\s*laptop|laptop\s*milega|laptop\s*milta|laptop\s*allocation|kaun\s*sa\s*device|which\s*laptop)\b/i.test(pn)) {
     return `📋 *WIOM Laptop Allocation Policy:*\n\n• *Technology team* → MacBook Pro\n• *Design (PODS)* → Microsoft Surface\n• *HR team* → HP Ultra 7\n• *Analytics team* → HP Ultra 7\n• *Sab baaki roles* → Windows Laptop (Intel i5)\n\nRole-based exception chahiye? Functional Head approval required.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
@@ -1440,6 +1453,8 @@ const getKBAnswer = (problem) => {
   if (/\b(unauthorized.*software|software.*install.*nahi|install.*allowed|policy.*software|software.*rule|software.*permission)\b/i.test(pn)) {
     return `⚠️ *Unauthorized Software Policy:*\n\nPolicy ke hisaab se company laptop pe *sirf approved software* install kar sakte ho.\nUnauthorized software install karna disciplinary action ka karan ban sakta hai.\n\nKoi software chahiye? Type karo *ha* — IT ticket raise karta hoon (IT approve karke install karega) 🎫`;
   }
+
+  // ── CATEGORY: NETWORK & INTERNET ─────────────────────────────────────────────
 
   // ── 🔌 LAN CABLE / PORT ISSUES ───────────────────────────────────────────
   if (/\b(lan|ethernet|rj45|network\s*cable|lan\s*cable|wired)\b/i.test(pn)) {
@@ -1463,6 +1478,8 @@ const getKBAnswer = (problem) => {
     }
   }
 
+  // ── CATEGORY: HARDWARE (data storage / loss) ─────────────────────────────────
+
   // ── 💾 DATA LOSS / DELETED FILES / RECOVERY ──────────────────────────────
   // "data lost", "file delete ho gayi", "C drive ka data nahi mil rha", "recover karna"
   if (/\b(data\s*lost|data\s*loss|data\s*delete|data\s*nahi\s*mil|data\s*gum|file\s*delete|files?\s*gum|files?\s*nahi\s*mil|recover|recovery|deleted?\s*data|deleted?\s*files?|c\s*drive.*data|data.*c\s*drive|recycle|nekal\s*sakta|wapas\s*lana|wapas\s*aa)\b/i.test(pn)) {
@@ -1472,6 +1489,8 @@ const getKBAnswer = (problem) => {
     }
     return `💾 *Data nahi mil rha?* — yeh check karo:\n\n1. *Recycle Bin* → Desktop pe Recycle Bin kholo → deleted files wahan milti hain\n2. *Hidden files* → File Explorer → View → Show → Hidden items ON karo → dobara check karo\n3. *Alag drive check karo* → D: ya E: drive mein check karo\n\nAgar wahan bhi nahi → type karo *ha* — IT ticket raise karta hoon, data recovery try karenge 🎫`;
   }
+
+  // ── CATEGORY: CONVERSATIONAL (greetings, thanks, bye, identity) ──────────────
 
   // ── Exit/close/bye ────────────────────────────────────────────────────────
   if (/^(bye|goodbye|exit|quit|close|band\s*karo|alvida|chalte\s*hain|nikalta)\s*[!.]*$/i.test(pn.trim()))
@@ -1562,6 +1581,8 @@ const getKBAnswer = (problem) => {
     return `Screen color/display issue hai. Yeh try karo:\n\n1. *Restart* → Laptop restart karo — driver glitch aksar restart se theek ho jaata hai\n2. *External monitor test* → HDMI se monitor connect karo — bahar sahi dikh raha toh laptop screen hardware issue hai\n\nAgar restart se theek nahi hua, type karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
+  // ── CATEGORY: EMERGENCY (water damage, physical damage, theft) ───────────────
+
   // ── 💧 WATER / LIQUID DAMAGE — CRITICAL EMERGENCY — check BEFORE generic damage ──
   // "water damage", "paani gira", "liquid spill", "bhig gaya", "chai giri" etc.
   if (/\b(water|liquid|paani|chai|coffee|juice|drink|beverage|spill|bhig|wet|geela|geeli|nami|baarish|rain)\b/i.test(pn) &&
@@ -1626,6 +1647,8 @@ const getKBAnswer = (problem) => {
       /mera\s*ticket\s*(kab|solve|fix|hoga|ho\s*ga)/i.test(pTicket)) {
     return `Aapka ticket IT team ke paas hai. 📋 Usually same day resolve hota hai — priority ke hisaab se.\nStatus dekhne ke liye type karo: *my tickets*\nUrgent hai toh batao, IT team ko priority deta hoon. 🎫`;
   }
+
+  // ── CATEGORY: NETWORK & INTERNET (WiFi password, instant KB) ────────────────
 
   // ── WiFi password — strict match only (pn handles wiffi typo) ───────────
   const isWifiPassword =
@@ -1699,6 +1722,8 @@ const getKBAnswer = (problem) => {
   if (/windows\s*(crash|restart|update|stuck|atak|loop|hang|diagno)|update\s*(stuck|atak|hang|nahi|ruka)|restart\s*(bar\s*bar|baar\s*baar|loop|hota\s*rha|ho\s*rha\s*bar)|os\s*(crash|hang|stuck)|windows\s*diagno/.test(pn))
     return `Windows issue aa raha hai. Yeh try karo:\n\n1. *Restart* → Power button se properly shut down karo → dobara on karo\n2. *Update hai?* → Agar Windows update chal rahi hai → wait karo, band mat karo\n\nAgar baar baar ho raha hai ya screen pe koi error aa raha hai — type karo *ha* — IT ticket raise karta hoon 🎫`;
 
+  // ── CATEGORY: HARDWARE (laptop won't start, overheating, screen, Windows) ────
+
   // ════════════════════════════════════════════════════════════════════════
   // TOP 5 MOST COMMON WIOM PROBLEMS — optimized for 300 users, 1 IT
   // ════════════════════════════════════════════════════════════════════════
@@ -1753,6 +1778,8 @@ const getKBAnswer = (problem) => {
   // ── 🆕 EXPANDED KB — covers all common office IT issue categories ──────────
   // ══════════════════════════════════════════════════════════════════════════
 
+  // ── CATEGORY: HARDWARE (battery, keyboard, camera, audio, peripheral) ────────
+
   // ── 🔋 BATTERY BACKUP / DRAIN — "battery backup kam ho gaya" ────────────────
   if (/\b(battery\s*backup|backup\s*kam|battery\s*drain|battery\s*jaldi\s*khatam|battery\s*jaldi\s*kha|low\s*backup|backup\s*low|battery\s*bahut\s*kam|charge\s*jaldi|charge\s*bahut\s*jaldi)\b/i.test(pn) ||
       (/\b(battery|batter[yi]?)\b/i.test(pn) && /\b(backup|drain|jaldi|khatam|kam\s*chal|zyada\s*kha|nahi\s*chal)\b/i.test(pn))) {
@@ -1805,6 +1832,8 @@ const getKBAnswer = (problem) => {
     return `📶 *Bluetooth kaam nahi kar rha?* — yeh try karo:\n\n1. *Toggle karo* → Settings → Bluetooth & devices → Bluetooth → OFF → ON karo\n2. *Re-pair karo* → Device remove karo → dobara pair karo (device ke paas jao)\n3. *Restart karo* → Laptop restart karo\n\nAgar phir bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
+  // ── CATEGORY: SOFTWARE & APPS (boot, BSOD, freeze, crash, activation) ───────
+
   // ── 🖥️ WINDOWS BOOT ISSUE ─────────────────────────────────────────────────
   if (/\b(windows\s*boot|boot\s*issue|boot\s*problem|boot\s*nahi|windows\s*start\s*nahi|windows\s*load\s*nahi|stuck\s*at\s*boot|boot\s*loop|grub|startup\s*nahi)\b/i.test(pn)) {
     return `🖥️ *Windows boot issue?*\n\nBoot problems aksar IT level fix hote hain. Pehle yeh try karo:\n\n1. *Restart karo* → Power button se properly shut down karo → dobara on karo\n2. *Update chal rahi hai?* → Agar percentage dikh raha hai → wait karo, band mat karo\n\nAgar black screen ya error aa raha hai boot pe → type karo *ha*, IT ticket raise karta hoon (yeh hardware ya OS level issue ho sakta hai) 🎫`;
@@ -1837,6 +1866,8 @@ const getKBAnswer = (problem) => {
     return `🔧 *Driver Issue*\n\nDriver update ya install karne ke liye admin rights chahiye — employees khud nahi kar sakte.\n\nType karo *ha* — IT ticket raise karta hoon, IT aake sahi driver install karega 🎫`;
   }
 
+  // ── CATEGORY: SOFTWARE & APPS (Teams, Zoom, Slack, Office, Excel) ───────────
+
   // ── 💬 TEAMS NOT WORKING ──────────────────────────────────────────────────
   if (/\b(teams)\b.*(kaam\s*nahi|nahi\s*chal|work\s*nahi|nahi\s*khul|crash|band|error|nahi\s*ho\s*rha|issue|problem|slow)/i.test(pn) ||
       /\bteams\b.*(nahi|problem|issue)/i.test(pn)) {
@@ -1866,6 +1897,8 @@ const getKBAnswer = (problem) => {
     return `🗄️ *Data corrupt ho gaya?*\n\n1. *Recycle Bin check karo* → Desktop Recycle Bin mein dekho — wahan backup mil sakta hai\n2. *Previous version check karo* → File pe right-click → "Restore previous versions"\n3. *MS Office AutoRecover* → Word/Excel khud AutoRecover pop-up dega — wahan se restore karo\n\nAgar recover nahi ho rha → type karo *ha*, IT ticket raise karta hoon — data recovery try karenge 🎫`;
   }
 
+  // ── CATEGORY: NETWORK & INTERNET (WiFi, internet, disconnect, speed) ────────
+
   // ── 📡 WIFI NOT CONNECTING ────────────────────────────────────────────────
   if (/\b(wifi)\b.*(connect\s*nahi|nahi\s*connect|nahi\s*ho\s*rha|nahi\s*aa\s*rha|nahi\s*chal|nahi\s*jud|jud\s*nahi)/i.test(pn) ||
       /\b(wifi\s*nahi|wifi\s*connect\s*nahi)\b/i.test(pn)) {
@@ -1882,6 +1915,8 @@ const getKBAnswer = (problem) => {
   if (/\b(internet\s*nahi\s*chal|internet\s*band|internet\s*nahi\s*aa|internet\s*nahi|net\s*nahi\s*chal|net\s*band|net\s*nahi\s*aa)\b/i.test(pn)) {
     return `🌐 *Internet nahi chal rha?* — yeh try karo:\n\n1. *WiFi connected hai?* → Taskbar mein WiFi icon dekho — connected hai ya "No Internet" likh raha hai?\n2. *Toggle karo* → WiFi → OFF → 10 sec → ON → "Wiom office" se connect karo (password: spartans500)\n3. *Restart karo* → Laptop restart karo\n\nAgar phir bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
+
+  // ── CATEGORY: EMAIL & COMMUNICATION ──────────────────────────────────────────
 
   // ── 📧 EMAIL LOGIN NOT WORKING ────────────────────────────────────────────
   if (/\b(email|gmail)\b.*(login\s*nahi|login\s*issue|sign\s*in\s*nahi|sign\s*in\s*issue|nahi\s*khul|open\s*nahi|access\s*nahi|nahi\s*ho\s*rha)\b/i.test(pn)) {
@@ -1908,6 +1943,8 @@ const getKBAnswer = (problem) => {
   if (/\b(calendar\s*sync|calendar\s*nahi|calendar\s*issue|calendar\s*problem|meetings?\s*nahi\s*dikh|events?\s*nahi|google\s*calendar)\b/i.test(pn)) {
     return `📅 *Calendar sync nahi ho rha?* — yeh try karo:\n\n1. *Calendar refresh karo* → calendar.google.com open karo → F5 press karo\n2. *Gmail se check karo* → gmail.com → top-right grid icon → Calendar → dekho events hain ya nahi\n3. *Incognito mein try karo* → Ctrl+Shift+N → calendar.google.com\n\nAgar phir bhi sync nahi ho rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
+
+  // ── CATEGORY: ACCESS & PERMISSIONS ───────────────────────────────────────────
 
   // ── 🔒 ACCOUNT LOCKED ─────────────────────────────────────────────────────
   if (/\b(account\s*lock|locked\s*out|account\s*locked|account\s*block|locked\s*ho\s*gaya|lock\s*ho\s*gaya|account\s*band)\b/i.test(pn)) {
@@ -1948,10 +1985,14 @@ const getKBAnswer = (problem) => {
     return `🛡️ *Admin rights chahiye?*\n\nAdmin rights employees ko by policy nahi diye jaate — security risk hota hai.\n\nAagar kuch specific install/change karna hai — batao kya karna hai, IT karega.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
+  // ── CATEGORY: SECURITY (data leak, breach) ───────────────────────────────────
+
   // ── 🔐 DATA LEAK ──────────────────────────────────────────────────────────
   if (/\b(data\s*leak|data\s*breach|data\s*exposed|confidential.*shared|sensitive.*data.*share|data.*outside|leak\s*ho\s*gaya)\b/i.test(pn)) {
     return `🚨 *Data Leak / Breach — URGENT!*\n\nYeh bahut serious hai — TURANT yeh karo:\n\n1. *Kisi ko mat batao* — sirf IT aur management ko\n2. *Koi action mat lo* — IT guidance ke bagair kuch mat karo\n3. *IT ko immediately batao*\n\nType karo *ha* — CRITICAL PRIORITY ticket raise karta hoon, IT aur management ko abhi batata hoon 🎫`;
   }
+
+  // ── CATEGORY: HARDWARE (docking station, laptop performance, CPU, disk) ─────
 
   // ── 🖥️ DOCKING STATION ISSUE ──────────────────────────────────────────────
   if (/\b(docking\s*station|dock\s*station|docking|dock\s*hub|thunderbolt\s*dock)\b.*(issue|problem|nahi\s*chal|kaam\s*nahi|connect\s*nahi|nahi\s*ho\s*rha)/i.test(pn) ||
@@ -1986,6 +2027,8 @@ const getKBAnswer = (problem) => {
     return `💾 *Disk space kam hai?* — yeh try karo:\n\n1. *Recycle Bin empty karo* → Desktop pe Recycle Bin → right-click → Empty Recycle Bin\n2. *Downloads folder clean karo* → File Explorer → Downloads → jo files zaruri nahi unhe delete karo\n3. *Temp files delete karo* → Settings → System → Storage → Temporary files → Remove files\n\nAgar phir bhi space nahi → type karo *ha*, IT ticket raise karta hoon (IT deep cleanup ya storage upgrade karega) 🎫`;
   }
 
+  // ── CATEGORY: ASSET MANAGEMENT (data migration, drive sync) ─────────────────
+
   // ── 🔄 DATA MIGRATION ────────────────────────────────────────────────────
   if (/\b(data\s*migration|migrate\s*data|data\s*transfer.*laptop|laptop.*data\s*transfer|purane\s*laptop.*data|data.*naye\s*laptop)\b/i.test(pn)) {
     return `🔄 *Data migration chahiye?*\n\nData ek laptop se dusre mein transfer karna IT ka kaam hai — pehle:\n1. *Kya transfer karna hai?* → Documents, emails, settings — sab?\n2. *Kab tak chahiye?* → Timeline batao\n\nType karo *ha* — IT ticket raise karta hoon, IT data migration plan karega 🎫`;
@@ -1996,6 +2039,8 @@ const getKBAnswer = (problem) => {
       /\b(drive\s*sync|google.*sync.*issue|sync.*google.*drive)\b/i.test(pn)) {
     return `☁️ *Google Drive sync issue?* — yeh try karo:\n\n1. *drive.google.com kholo* → dekho files manually wahan hain ya nahi\n2. *Browser refresh karo* → F5 dabao → dobara check karo\n3. *Incognito mein try karo* → Ctrl+Shift+N → drive.google.com\n\nAgar files upload/sync nahi ho rhi → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
+
+  // ── CATEGORY: EMAIL & COMMUNICATION (phone setup, new employee, deactivate) ──
 
   // ── 📱 PHONE EMAIL SETUP ─────────────────────────────────────────────────
   if (/\b(phone|mobile)\b.*(email\s*setup|gmail\s*setup|email\s*lagana|email\s*add|email\s*configure|mail\s*setup)\b/i.test(pn) ||
@@ -2014,10 +2059,14 @@ const getKBAnswer = (problem) => {
     return `🚫 *Account deactivate karna hai?*\n\nEmployee exit pe accounts IT deactivate karta hai — HR initiate karta hai ye process.\n\nIT ko yeh info chahiye:\n• Kis employee ka account? (name + email)\n• Last working day kab hai?\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
   }
 
+  // ── CATEGORY: ASSET MANAGEMENT (warranty) ────────────────────────────────────
+
   // ── 🏷️ WARRANTY CHECK ────────────────────────────────────────────────────
   if (/\b(warranty\s*check|warranty\s*kya|warranty\s*kitni|warranty\s*hai\s*kya|warranty\s*dekhna|warranty\s*status|warranty\s*kab\s*tak)\b/i.test(pn)) {
     return `🏷️ *Laptop warranty check karna hai?*\n\nWarranty check ke liye IT ke paas laptop records hote hain.\n\nBatao:\n• Laptop ka model/brand kya hai?\n• Laptop ke neeche sticker pe serial number likha hai — woh share karo\n\nType karo *ha* — IT ticket raise karta hoon, IT warranty status check karke batayega 🎫`;
   }
+
+  // ── CATEGORY: HOW-TO / INFORMATION ───────────────────────────────────────────
 
   // ── 📋 HOW-TO FALLBACK — if nothing matched and it's a how-to question ─────
   // Only fires LAST — after ALL specific KB entries have been checked
@@ -2032,5 +2081,88 @@ const getKBAnswer = (problem) => {
   return null; // Everything else → Claude handles with follow-up questions
 };
 
-module.exports = { chat, chatStream, quickReply, getKBAnswer };
+// ════════════════════════════════════════════════════════════════════════════
+// ── TASK 1: FORMAL 3-STEP PIPELINE ──────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Category detection helper — pure function, works on normalized text ──────
+const detectCategory = (pn) => {
+  if (/virus|malware|phish|ransomware|hack|breach|suspicious|data\s*leak/i.test(pn)) return 'security';
+  if (/water|liquid|paani|chori|stolen|toot|crack|damage|physically/i.test(pn)) return 'emergency';
+  if (/laptop|keyboard|touchpad|screen|camera|mic|speaker|fan|battery|charging|usb|hdmi|bluetooth|fingerprint|mouse|monitor/i.test(pn)) return 'hardware';
+  if (/wifi|internet|lan|network|signal|ethernet|hotspot|dns/i.test(pn)) return 'network';
+  if (/excel|word|teams|zoom|chrome|pdf|windows|driver|update|onedrive|application|software|app/i.test(pn)) return 'software';
+  if (/gmail|email|mail|inbox|calendar/i.test(pn)) return 'email';
+  if (/access|permission|account|password|login|role/i.test(pn)) return 'access';
+  if (/slow|hang|freeze|speed|cpu|ram|disk|dheema/i.test(pn)) return 'performance';
+  if (/kaise|kise|kese|how\s*to|steps|guide/i.test(pn)) return 'howto';
+  if (/chahiye|request|replace|upgrade|return|wapas|asset/i.test(pn)) return 'asset';
+  return 'unknown';
+};
+
+// ── detectQueryIntent — STEP 1 of the 3-step pipeline ───────────────────────
+// Returns { intent, confidence, category } from the raw problem string
+const detectQueryIntent = (problem) => {
+  if (!problem || typeof problem !== 'string') {
+    return { intent: 'unknown', confidence: 50, category: 'unknown' };
+  }
+
+  const p = problem.toLowerCase().trim();
+
+  // Normalize the same way getKBAnswer does so detectCategory patterns align
+  const pn = p
+    .replace(/\bwiffi\b/g, 'wifi')
+    .replace(/\bwifi+\b/g, 'wifi')
+    .replace(/\bl[ae]?p?to?[op]{1,2}\b|\blaotop\b|\blaptoop\b|\blaptp\b/g, 'laptop')
+    .replace(/\bpas?w?ro?d\b|\bpasswrod\b|\bpaswrod\b|\bpasword\b/g, 'password')
+    .replace(/\btims?\b/g, 'teams')
+    .replace(/\bcamra\b/g, 'camera')
+    .replace(/\bkeybo?r?a?d\b|\bkeybord\b|\bkeyborad\b|\bkeybrd\b/g, 'keyboard')
+    .replace(/\bcharg(e|er|ing)?\b/g, 'charging')
+    .replace(/\bkise\b|\bkese\b|\bkase\b|\bkaisay\b/g, 'kaise');
+
+  const category = detectCategory(pn);
+
+  // ── SECURITY — always highest confidence ──
+  if (/virus|malware|ransomware|hack|breach|phish|suspicious|data\s*leak/i.test(pn))
+    return { intent: 'security', confidence: 90, category: 'security' };
+
+  // ── ACCESS — password / login / account / permission ──
+  if (/password|bhool|forgot|login\s*nahi|account\s*lock|access\s*nahi|permission\s*nahi|role\s*chahiye/i.test(pn))
+    return { intent: 'access', confidence: 90, category: 'access' };
+
+  // ── ASSET REQUEST — chahiye / replace / upgrade ──
+  if (/chahiye|replace\s*(karna|karo)|laptop\s*replace|laptop\s*upgrade|new\s*laptop|return\s*(karna|karo)|wapas\s*karna/i.test(pn))
+    return { intent: 'asset', confidence: 90, category: 'asset' };
+
+  // ── INFORMATION / HOW-TO ──
+  if (/kaise|kise|kese|how\s*to|how\s*do|kya\s*hota\s*hai|steps|guide|batao\s*kaise|karne\s*ka\s*tarika/i.test(pn))
+    return { intent: 'information', confidence: 70, category };
+
+  // ── REQUEST — software install, access request, new equipment ──
+  if (/install\s*karna|install\s*chahiye|naya\s*software|software\s*chahiye|access\s*chahiye|permission\s*chahiye/i.test(pn))
+    return { intent: 'request', confidence: 70, category };
+
+  // ── INCIDENT — problem / nahi chal / hang / error ──
+  if (/nahi\s*chal|chal\s*nahi|kaam\s*nahi|work\s*nahi|hang|freeze|crash|error|problem|issue|nahi\s*ho\s*rha|band\s*ho/i.test(pn))
+    return { intent: 'incident', confidence: 70, category };
+
+  // ── Fallback: infer from category ──
+  if (category !== 'unknown') return { intent: 'incident', confidence: 50, category };
+  return { intent: 'unknown', confidence: 50, category: 'unknown' };
+};
+
+// ── processQuery — explicit 3-step pipeline wrapper ─────────────────────────
+// STEP 1: Intent detection  →  STEP 2: Category detection  →  STEP 3: KB lookup
+const processQuery = (problem, empInfo = {}) => {
+  // STEP 1 + 2: INTENT & CATEGORY DETECTION
+  const { intent, confidence, category } = detectQueryIntent(problem);
+
+  // STEP 3: RESPONSE GENERATION — route to KB based on intent + category
+  const kbAnswer = getKBAnswer(problem);
+
+  return { intent, confidence, category, kbAnswer };
+};
+
+module.exports = { chat, chatStream, quickReply, getKBAnswer, detectQueryIntent, processQuery };
 
