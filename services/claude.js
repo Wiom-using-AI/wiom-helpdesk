@@ -1974,6 +1974,10 @@ const getKBAnswer = (problem) => {
     return `🏷️ *Laptop warranty check karna hai?*\n\nWarranty check ke liye IT ke paas laptop records hote hain.\n\nBatao:\n• Laptop ka model/brand kya hai?\n• Laptop ke neeche sticker pe serial number likha hai — woh share karo\n\nType karo *ha* — IT ticket raise karta hoon, IT warranty status check karke batayega 🎫`;
   }
 
+  // ── UNKNOWN QUERY LOG — track KB misses for weekly review ───────────────
+  if (problem && problem.trim().length > 3) {
+    console.log(`📋 KB_MISS: "${problem.substring(0, 100)}" → AI`);
+  }
   return null; // Everything else → Claude handles with follow-up questions
 };
 

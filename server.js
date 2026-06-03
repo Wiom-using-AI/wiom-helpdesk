@@ -653,11 +653,32 @@ app.listen(PORT, async () => {
  'home_quick_43': { file: 'fix-website-blocked.bat', label: 'Website Fix' },
  };
 
+ // ── INTENT CLASSIFIER — classify before matching any script ─────────────────
+ // Returns: 'incident' | 'request' | 'information' | 'access' | 'asset'
+ // Auto-Fix scripts are ONLY shown for 'incident' intent
+ const classifyIntent = (text) => {
+   const t = text.toLowerCase();
+   // INFORMATION — how-to, info queries → never show Auto-Fix
+   if (/\b(kya\s*hai|kaise\s*karu|kaise\s*karte|kaise\s*hota|how\s*to|kaise\s*karein|batao|bataiye|password\s*kya|kya\s*hoga|samjhao|explain|tell\s*me)\b/i.test(t)) return 'information';
+   // REQUEST — chahiye / need / mangwana → never show Auto-Fix
+   if (/\b(chahiye|ki\s*need|mangwana|de\s*do|milega|kharidna|buy|new\s*\w+\s*chahiye|naya\s*\w+\s*chahiye|lena\s*hai|request|order\s*karna)\b/i.test(t)) return 'request';
+   // ACCESS — access/permission chahiye → never show Auto-Fix
+   if (/\b(access\s*chahiye|access\s*de|permission\s*chahiye|role\s*chahiye|account\s*bana|account\s*banana|create\s*account|user\s*banana)\b/i.test(t)) return 'access';
+   // ASSET — replace/return/upgrade asset → never show Auto-Fix
+   if (/\b(replace|upgrade|wapas\s*karna|wapas\s*do|return|asset\s*return|exit\s*me|transfer\s*karna|jama\s*karna)\b/i.test(t)) return 'asset';
+   // Default: incident — scripts allowed
+   return 'incident';
+ };
+
  // ── DM Script detector: maps free-text issue → script file + label ────
- // ORDER IS CRITICAL — specific entries FIRST, general ones LAST
+ // IMPORTANT: Auto-Fix only shown for 'incident' intent — never for requests/info
  const getScriptForText = (text) => {
    if (!text) return null;
    const t = text.toLowerCase();
+
+   // ── INTENT CHECK FIRST — if not an incident, no script ever ─────────────
+   const intent = classifyIntent(t);
+   if (intent !== 'incident') return null;
 
    // ── GUARD: Physical damage → NO Auto-Fix (script can't fix broken hardware) ──
    if (/\b(damage|damag|toot|tuti|tuta|phoot|foota|crack|cracked|broken|tod|toda|physically)\b/.test(t)) return null;
