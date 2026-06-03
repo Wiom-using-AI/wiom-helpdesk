@@ -889,7 +889,10 @@ const getKBAnswer = (problem) => {
     .replace(/\btims?\b/g, 'teams')                  // tims (Teams typo)
     .replace(/\bcamra\b/g, 'camera')                 // camra
     .replace(/\bkeybo?r?a?d\b/g, 'keyboard')         // keyborad, keybord
-    .replace(/\bcharg(e|er|ing)?\b/g, 'charging');   // normalize charger/charging
+    .replace(/\bcharg(e|er|ing)?\b/g, 'charging')    // normalize charger/charging
+    .replace(/\bply\b/g, 'play')                     // ply → play typo
+    .replace(/\bvido\b|\bvedio\b|\bvidio\b/g, 'video') // video typos
+    .replace(/\bkise\b|\bkese\b|\bkase\b|\bkaisay\b/g, 'kaise'); // kaise typos unified
 
   // ── 📁 FILE EXPLORER / FOLDER / DRIVE NOT OPENING ───────────────────────
   // Normalize folder/drive typos for matching
