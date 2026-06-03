@@ -660,8 +660,15 @@ app.listen(PORT, async () => {
    const t = text.toLowerCase();
    const words = t.trim().split(/\s+/).filter(Boolean);
 
-   // SECURITY — virus, malware, phishing, data leak, suspicious, unauthorized, hacked
-   if (/\b(virus|malware|phishing|phising|ransomware|data\s*leak|suspicious|unauthorized|hacked|hack\s*ho|hack\s*gaya|credential|breach)\b/i.test(t))
+   // SECURITY — virus, malware, phishing, spam email (receiving), fake/scam email, data theft, unauthorized, hacked
+   // Note: "email spam mein ja rha" = email going to spam folder (incident, not security)
+   if (/\b(virus|malware|phishing|phising|ransomware|data\s*leak|data\s*theft|suspicious|unauthorized|hacked|hack\s*ho|hack\s*gaya|credential|breach|fake\s*email|scam\s*email|someone\s*using|koi\s*aur.*use|account.*hack|hack.*account)\b/i.test(t))
+     return { intent: 'security', confidence: 90 };
+   // SECURITY — spam email received (not "email going to spam folder")
+   if (/\bspam\s*email\b|\bemail.*spam.*aa|\bspam.*aa\s*rh/i.test(t) && !/\b(ja\s*rh|jata\s*h|going|folder)\b/i.test(t))
+     return { intent: 'security', confidence: 90 };
+   // SECURITY — "urgent security" keyword combo
+   if (/\burgent\s+security\b|\bsecurity\s+urgent\b|\bsecurity\s+(issue|warning|alert)\b/i.test(t))
      return { intent: 'security', confidence: 90 };
 
    // ACCESS — check BEFORE request because "X access chahiye" is access, not generic request
@@ -674,12 +681,15 @@ app.listen(PORT, async () => {
    if (/\b(admin\s*rights|admin\s*access|rights\s*chahiye|rights\s*de)\b/i.test(t))
      return { intent: 'access', confidence: 90 };
 
-   // INFORMATION / HOW-TO — covers kaise/kise/kese/kase typos
-   if (/\b(kya\s*hai|kaise|kise|kese|kase|kaisey|kaise\s*karu|kaise\s*karte|kaise\s*hota|how\s*to|how\s*do|how\s*can|kaise\s*karein|batao|bataiye|password\s*kya|kya\s*hoga|samjhao|explain|tell\s*me|steps|process|guide)\b/i.test(t))
+   // INFORMATION / HOW-TO — covers kaise/kise/kese/kase typos + "banana hai" = how-to
+   if (/\b(kya\s*hai|kaise|kise|kese|kase|kaisey|kaise\s*karu|kaise\s*karte|kaise\s*hota|how\s*to|how\s*do|how\s*can|kaise\s*karein|batao|bataiye|password\s*kya|kya\s*hoga|samjhao|explain|tell\s*me|steps|process|guide|banana\s*hai|filter\s*banana)\b/i.test(t))
+     return { intent: 'information', confidence: 90 };
+   // INFORMATION — setup/scan karna hai for non-antivirus contexts (printer scan, vpn setup etc.)
+   if (/\b(setup\s*karna\s*hai|scan\s*karna\s*hai)\b/i.test(t) && !/\b(antivirus|virus|malware|windows\s*security)\b/i.test(t))
      return { intent: 'information', confidence: 90 };
 
-   // REQUEST — chahiye / need / mangwana → never show Auto-Fix
-   if (/\b(chahiye|ki\s*need|mangwana|de\s*do|milega|kharidna|buy|new\s*\w+\s*chahiye|naya\s*\w+\s*chahiye|lena\s*hai|request|order\s*karna|ki\s*zarurat)\b/i.test(t))
+   // REQUEST — chahiye / need / install karna hai → never show Auto-Fix
+   if (/\b(chahiye|ki\s*need|mangwana|de\s*do|milega|kharidna|buy|new\s*\w+\s*chahiye|naya\s*\w+\s*chahiye|lena\s*hai|request|order\s*karna|ki\s*zarurat|install\s*karna\s*hai|install\s*karo)\b/i.test(t))
      return { intent: 'request', confidence: 90 };
 
    // ASSET — replace/return/upgrade asset → never show Auto-Fix
@@ -688,14 +698,14 @@ app.listen(PORT, async () => {
 
    // UNKNOWN — single-word with no specific IT keyword → too vague
    // Also covers common typos for detection
-   const hasSpecificIT = /\b(wifi|wiffi|laptop|leptop|lptop|latop|laptoop|laotop|internet|bluetooth|bluetoth|bluethooth|keyboard|keybord|keyborad|keybrd|touchpad|mouse|screen|sceern|scren|scrren|display|camera|camra|mic|microfone|microphne|microphone|speaker|speakr|speeker|audio|printer|printe|printr|teams|tims|zoom|chrome|chrmo|chorme|crome|browser|password|passwrod|paswrod|windows|excel|word|onedrive|usb|battery|battry|battey|batr|charger|network|slow|hang|crash|virus|malware|headphone|headfone|projector|projekter|projetor|hdmi|monitor|monitr|moniter|fan|fingerprint|fingerpint)\b/i.test(t);
+   const hasSpecificIT = /\b(wifi|wiffi|laptop|leptop|lptop|latop|laptoop|laotop|internet|bluetooth|bluetoth|bluethooth|keyboard|keybord|keyborad|keybrd|touchpad|mouse|screen|sceern|scren|scrren|display|camera|camra|webcam|mic|microfone|microphne|microphone|speaker|speakr|speeker|audio|printer|printe|printr|teams|tims|zoom|chrome|chrmo|chorme|crome|browser|password|passwrod|paswrod|windows|excel|word|onedrive|usb|battery|battry|battey|batr|charger|network|slow|hang|crash|virus|malware|headphone|headfone|projector|projekter|projetor|hdmi|monitor|monitr|moniter|fan|fingerprint|fingerpint|num\s*lock|numlock|caps\s*lock|capslock|scroll\s*lock|blurry|pixelated|laggy|application|antivirus)\b/i.test(t);
    if (words.length <= 1 && !hasSpecificIT)
      return { intent: 'unknown', confidence: 50 };
    if (words.length <= 3 && !hasSpecificIT)
      return { intent: 'unknown', confidence: 70 };
 
    // INCIDENT — specific IT problem with clear symptoms
-   const hasSymptom = /\b(nahi\s*chal|nahi\s*khul|kaam\s*nahi|work\s*nahi|not\s*work|issue|problem|error|crash|slow|hang|band|kharab|nahi\s*ho|chal\s*nahi|boot\s*nahi|stuck|freeze|flickering|damage)\b/i.test(t);
+   const hasSymptom = /\b(nahi\s*chal|nahi\s*khul|kaam\s*nahi|work\s*nahi|not\s*work|not\s*respond|not\s*responding|issue|problem|error|crash|slow|hang|band|kharab|nahi\s*ho|chal\s*nahi|boot\s*nahi|stuck|freeze|flickering|damage|blurry|pixelated|laggy)\b/i.test(t);
    if (hasSpecificIT && hasSymptom)
      return { intent: 'incident', confidence: 90 };
    if (hasSpecificIT)

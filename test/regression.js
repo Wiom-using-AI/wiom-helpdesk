@@ -1,8 +1,8 @@
 /**
- * WIOM IT Helpdesk — Regression Test Suite (300 cases)
+ * WIOM IT Helpdesk — Regression Test Suite (300 + 160 = 460 cases)
  * Run before every deploy: node test/regression.js
  * Tests both getScriptForText() (Auto-Fix) and getKBAnswer() (KB responses)
- * Pass threshold: 93% (279/300)
+ * Pass threshold: 93% (428/460)
  */
 
 require('dotenv').config();
@@ -13,8 +13,14 @@ const classifyIntent = (text) => {
   const t = text.toLowerCase();
   const words = t.trim().split(/\s+/).filter(Boolean);
 
-  // SECURITY
-  if (/\b(virus|malware|phishing|phising|ransomware|data\s*leak|suspicious|unauthorized|hacked|hack\s*ho|hack\s*gaya|credential|breach)\b/i.test(t))
+  // SECURITY — virus, malware, phishing, fake/scam email, data theft, unauthorized, hacked
+  if (/\b(virus|malware|phishing|phising|ransomware|data\s*leak|data\s*theft|suspicious|unauthorized|hacked|hack\s*ho|hack\s*gaya|credential|breach|fake\s*email|scam\s*email|someone\s*using|koi\s*aur.*use|account.*hack|hack.*account)\b/i.test(t))
+    return { intent: 'security', confidence: 90 };
+  // SECURITY — spam email received (not "email going to spam folder")
+  if (/\bspam\s*email\b|\bemail.*spam.*aa|\bspam.*aa\s*rh/i.test(t) && !/\b(ja\s*rh|jata\s*h|going|folder)\b/i.test(t))
+    return { intent: 'security', confidence: 90 };
+  // SECURITY — "urgent security" keyword combo
+  if (/\burgent\s+security\b|\bsecurity\s+urgent\b|\bsecurity\s+(issue|warning|alert)\b/i.test(t))
     return { intent: 'security', confidence: 90 };
 
   // ACCESS — check BEFORE request (access X chahiye is access, not generic request)
@@ -25,12 +31,15 @@ const classifyIntent = (text) => {
   if (/\b(admin\s*rights|admin\s*access|rights\s*chahiye|rights\s*de)\b/i.test(t))
     return { intent: 'access', confidence: 90 };
 
-  // INFORMATION / HOW-TO
-  if (/\b(kya\s*hai|kaise|kise|kese|kase|kaisey|kaise\s*karu|kaise\s*karte|kaise\s*hota|how\s*to|how\s*do|how\s*can|kaise\s*karein|batao|bataiye|password\s*kya|kya\s*hoga|samjhao|explain|tell\s*me|steps|process|guide)\b/i.test(t))
+  // INFORMATION / HOW-TO — banana hai = how-to
+  if (/\b(kya\s*hai|kaise|kise|kese|kase|kaisey|kaise\s*karu|kaise\s*karte|kaise\s*hota|how\s*to|how\s*do|how\s*can|kaise\s*karein|batao|bataiye|password\s*kya|kya\s*hoga|samjhao|explain|tell\s*me|steps|process|guide|banana\s*hai|filter\s*banana)\b/i.test(t))
+    return { intent: 'information', confidence: 90 };
+  // INFORMATION — setup/scan karna hai for non-antivirus contexts
+  if (/\b(setup\s*karna\s*hai|scan\s*karna\s*hai)\b/i.test(t) && !/\b(antivirus|virus|malware|windows\s*security)\b/i.test(t))
     return { intent: 'information', confidence: 90 };
 
-  // REQUEST
-  if (/\b(chahiye|ki\s*need|mangwana|de\s*do|milega|kharidna|buy|new\s*\w+\s*chahiye|naya\s*\w+\s*chahiye|lena\s*hai|request|order\s*karna|ki\s*zarurat)\b/i.test(t))
+  // REQUEST — chahiye / need / install karna hai
+  if (/\b(chahiye|ki\s*need|mangwana|de\s*do|milega|kharidna|buy|new\s*\w+\s*chahiye|naya\s*\w+\s*chahiye|lena\s*hai|request|order\s*karna|ki\s*zarurat|install\s*karna\s*hai|install\s*karo)\b/i.test(t))
     return { intent: 'request', confidence: 90 };
 
   // ASSET
@@ -38,14 +47,14 @@ const classifyIntent = (text) => {
     return { intent: 'asset', confidence: 90 };
 
   // UNKNOWN — vague
-  const hasSpecificIT = /\b(wifi|wiffi|laptop|leptop|lptop|latop|laptoop|laotop|internet|bluetooth|bluetoth|bluethooth|keyboard|keybord|keyborad|keybrd|touchpad|mouse|screen|sceern|scren|scrren|display|camera|camra|mic|microfone|microphne|microphone|speaker|speakr|speeker|audio|printer|printe|printr|teams|tims|zoom|chrome|chrmo|chorme|crome|browser|password|passwrod|paswrod|windows|excel|word|onedrive|usb|battery|battry|battey|batr|charger|network|slow|hang|crash|virus|malware|headphone|headfone|projector|projekter|projetor|hdmi|monitor|monitr|moniter|fan|fingerprint|fingerpint)\b/i.test(t);
+  const hasSpecificIT = /\b(wifi|wiffi|laptop|leptop|lptop|latop|laptoop|laotop|internet|bluetooth|bluetoth|bluethooth|keyboard|keybord|keyborad|keybrd|touchpad|mouse|screen|sceern|scren|scrren|display|camera|camra|webcam|mic|microfone|microphne|microphone|speaker|speakr|speeker|audio|printer|printe|printr|teams|tims|zoom|chrome|chrmo|chorme|crome|browser|password|passwrod|paswrod|windows|excel|word|onedrive|usb|battery|battry|battey|batr|charger|network|slow|hang|crash|virus|malware|headphone|headfone|projector|projekter|projetor|hdmi|monitor|monitr|moniter|fan|fingerprint|fingerpint|num\s*lock|numlock|caps\s*lock|capslock|scroll\s*lock|blurry|pixelated|laggy|application|antivirus)\b/i.test(t);
   if (words.length <= 1 && !hasSpecificIT)
     return { intent: 'unknown', confidence: 50 };
   if (words.length <= 3 && !hasSpecificIT)
     return { intent: 'unknown', confidence: 70 };
 
   // INCIDENT
-  const hasSymptom = /\b(nahi\s*chal|nahi\s*khul|kaam\s*nahi|work\s*nahi|not\s*work|issue|problem|error|crash|slow|hang|band|kharab|nahi\s*ho|chal\s*nahi|boot\s*nahi|stuck|freeze|flickering|damage)\b/i.test(t);
+  const hasSymptom = /\b(nahi\s*chal|nahi\s*khul|kaam\s*nahi|work\s*nahi|not\s*work|not\s*respond|not\s*responding|issue|problem|error|crash|slow|hang|band|kharab|nahi\s*ho|chal\s*nahi|boot\s*nahi|stuck|freeze|flickering|damage|blurry|pixelated|laggy)\b/i.test(t);
   if (hasSpecificIT && hasSymptom) return { intent: 'incident', confidence: 90 };
   if (hasSpecificIT) return { intent: 'incident', confidence: 70 };
   return { intent: 'incident', confidence: 70 };
@@ -131,7 +140,7 @@ const tests = [
   { query: 'antivirus alert aa rha', expectKB: true, expectIntent: 'incident' },
   { query: 'virus aa gaya', expectKB: true, expectIntent: 'security' },
   { query: 'application crash ho rhi hai', expectKB: true, expectIntent: 'incident' },
-  { query: 'software install karna hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'software install karna hai', expectKB: true, expectIntent: 'request' },
   { query: 'onedrive sync nahi ho rha', expectKB: true, expectIntent: 'incident' },
   { query: 'gmail nahi khul rha', expectKB: true, expectIntent: 'incident' },
   { query: 'copy paste nahi ho rha', expectKB: true, expectIntent: 'incident' },
@@ -308,7 +317,7 @@ const tests = [
   { query: 'data leak ho gaya', expectKB: false, expectIntent: 'security' },
   { query: 'unauthorized login hua', expectKB: true, expectIntent: 'security' },
   { query: 'hacked ho gaya account', expectKB: true, expectIntent: 'security' },
-  { query: 'spam email aa rha hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'spam email aa rha hai', expectKB: true, expectIntent: 'security' },
   { query: 'fraud email mila', expectKB: true, expectIntent: 'unknown' },
   { query: 'scam link aaya hai', expectKB: true, expectIntent: 'incident' },
   { query: 'windows defender warning', expectKB: true, expectIntent: 'incident' },
@@ -390,9 +399,9 @@ const tests = [
   { query: 'files delete ho gayi', expectKB: true, expectIntent: 'incident', noScript: true },
   { query: 'data recover karna hai', expectKB: true, expectIntent: 'incident', noScript: true },
   // Install request → no script (IT does it)
-  { query: 'teams install karna hai', expectKB: true, expectIntent: 'incident', noScript: true },
+  { query: 'teams install karna hai', expectKB: true, expectIntent: 'request', noScript: true },
   { query: 'zoom install kaise karu', expectKB: true, expectIntent: 'information', noScript: true },
-  { query: 'chrome install karna hai', expectKB: true, expectIntent: 'incident', noScript: true },
+  { query: 'chrome install karna hai', expectKB: true, expectIntent: 'request', noScript: true },
   // Out of scope
   { query: 'ac nahi chal rha', expectKB: true, expectIntent: 'incident' },
   { query: 'pantry mein khaana nahi hai', expectKB: true, expectIntent: 'incident' },
@@ -411,6 +420,220 @@ const tests = [
   // VPN → out of scope
   { query: 'vpn nahi chal rha', expectKB: true, expectIntent: 'incident' },
   { query: 'vpn access chahiye', expectKB: false, expectIntent: 'access', noScript: true },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // HARDWARE — ADDITIONAL (25 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'mera lpatop on nahi ho rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'screen pe horizontal lines hain', expectKB: true, expectIntent: 'incident' },
+  { query: 'battery drain fast ho rhi hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'laptop getting hot very fast', expectKB: true, expectIntent: 'incident' },
+  { query: 'headphone plug kiya par awaaz nahi', expectKB: true, expectIntent: 'incident' },
+  { query: 'wireless mouse connect nahi ho rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'keyboard backspace kaam nahi kar rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'fingerprint scanner nahi recognise kar rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'laptop crash ho gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'caps lock stuck hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'screen rotate ho gyi', expectKB: true, expectIntent: 'incident' },
+  { query: 'mouse speed bahut fast hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'mic pick up nahi kar rha teams mein', expectKB: true, expectIntent: 'incident' },
+  { query: 'webcam blurry hai', expectKB: false, expectIntent: 'incident' },
+  { query: 'laptop ki hinge toot gayi', expectKB: true, expectIntent: 'incident', noScript: true },
+  { query: 'display upside down ho gya', expectKB: true, expectIntent: 'incident' },
+  { query: 'screen zoom in ho gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'touchscreen kaam nahi kar rha', expectKB: false, expectIntent: 'incident' },
+  { query: 'laptop ka speaker bahut low hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'usb hub se devices detect nahi ho rhe', expectKB: true, expectIntent: 'incident' },
+  { query: 'num lock issue', expectKB: true, expectIntent: 'incident' },
+  { query: 'scroll nahi ho rha', expectKB: false, expectIntent: 'incident' },
+  { query: 'bsod error aa gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'laptop dheere chal rha hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'touchpad cursor ajeeb behave kar rha hai', expectKB: true, expectIntent: 'incident' },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SOFTWARE — ADDITIONAL (25 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'excel freeze ho gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'word document save nahi ho rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'powerpoint crash ho gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'onedrive not syncing', expectKB: true, expectIntent: 'incident' },
+  { query: 'google drive upload fail ho rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'teams video call mein camera nahi aa rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'zoom audio nahi aa rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'slack notifications nahi aa rhi', expectKB: true, expectIntent: 'incident' },
+  { query: 'application not responding', expectKB: true, expectIntent: 'incident' },
+  { query: 'task manager nahi khul rha', expectKB: false, expectIntent: 'incident' },
+  { query: 'startup slow hai bahut', expectKB: true, expectIntent: 'incident' },
+  { query: 'disk usage 100% hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'cpu 100% usage hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'recycle bin se recover karna hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'file corrupt ho gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'zip file open nahi ho rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'pdf print nahi ho rha chrome se', expectKB: true, expectIntent: 'incident' },
+  { query: 'windows explorer crash ho gaya', expectKB: false, expectIntent: 'incident' },
+  { query: 'software nahi chal rha', expectKB: false, expectIntent: 'incident' },
+  { query: 'app install nahi ho rhi', expectKB: true, expectIntent: 'incident' },
+  { query: 'driver update chahiye', expectKB: true, expectIntent: 'request' },
+  { query: 'antivirus scan karna hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'windows update stuck hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'chrome extension nahi chal rhi', expectKB: false, expectIntent: 'incident' },
+  { query: 'browser slow hai', expectKB: true, expectIntent: 'incident' },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // NETWORK — ADDITIONAL (20 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'wifi connected hai par google nahi khul rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'internet bahut slow hai aaj', expectKB: true, expectIntent: 'incident' },
+  { query: 'network drive disconnect ho gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'dns error aa rha hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'hotspot se laptop connect nahi ho rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'wifi password galat hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'wifi forget ho gaya', expectKB: false, expectIntent: 'incident' },
+  { query: 'ip address conflict hai', expectKB: false, expectIntent: 'incident' },
+  { query: 'website certificate error aa rha', expectKB: false, expectIntent: 'incident' },
+  { query: 'download speed bahut slow hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'video call mein internet issue hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'broadband band ho gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'no wifi networks dikh rhe', expectKB: true, expectIntent: 'incident' },
+  { query: 'wifi router issue', expectKB: false, expectIntent: 'incident' },
+  { query: '5ghz network nahi dikh rha', expectKB: false, expectIntent: 'incident' },
+  { query: 'network adapter issue', expectKB: false, expectIntent: 'incident' },
+  { query: 'internet bich bich mein cut ho rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'zoom call drop ho rha hai net se', expectKB: true, expectIntent: 'incident' },
+  { query: 'website blocked hai company se', expectKB: true, expectIntent: 'incident' },
+  { query: 'office wifi nahi chal rha', expectKB: true, expectIntent: 'incident' },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // EMAIL/GMAIL (15 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'gmail account locked ho gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'email spam mein ja rhi hai', expectKB: false, expectIntent: 'incident' },
+  { query: 'gmail storage 90% full', expectKB: true, expectIntent: 'incident' },
+  { query: 'google calendar sync nahi ho rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'email attachment download nahi ho rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'gmail nahi khul rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'email bhej nahi pa rha hoon', expectKB: true, expectIntent: 'incident' },
+  { query: 'gmail app nahi chal rhi phone pe', expectKB: true, expectIntent: 'incident' },
+  { query: 'gmail password change karna hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'spam email aa rha hai bahut', expectKB: true, expectIntent: 'security' },
+  { query: 'google meet nahi chal rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'calendar mein meeting nahi dikh rhi', expectKB: false, expectIntent: 'incident' },
+  { query: 'email signature kaise set kare', expectKB: false, expectIntent: 'information' },
+  { query: 'gmail filter banana hai', expectKB: false, expectIntent: 'information' },
+  { query: 'email forward kaise kare', expectKB: false, expectIntent: 'information' },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // VPN (10 cases — all should return KB saying WIOM has no VPN)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'vpn kaise connect karu', expectKB: true, expectIntent: 'information' },
+  { query: 'vpn nahi chal rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'vpn access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'vpn setup karna hai', expectKB: true, expectIntent: 'information' },
+  { query: 'vpn slow hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'vpn error aa rha hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'remote access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'vpn password bhool gaya', expectKB: true, expectIntent: 'incident' },
+  { query: 'vpn install karna hai', expectKB: true, expectIntent: 'request' },
+  { query: 'vpn disconnect ho rha hai', expectKB: true, expectIntent: 'incident' },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PRINTER — ADDITIONAL (10 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'printer paper jam hai', expectKB: false, expectIntent: 'incident' },
+  { query: 'printer network pe nahi dikh rha', expectKB: true, expectIntent: 'incident' },
+  { query: 'color print nahi ho rha sirf black white', expectKB: false, expectIntent: 'incident' },
+  { query: 'print job cancel nahi ho rha', expectKB: false, expectIntent: 'incident' },
+  { query: 'printer add karna hai', expectKB: true, expectIntent: 'incident' },
+  { query: 'double sided print kaise kare', expectKB: false, expectIntent: 'information' },
+  { query: 'printer ka toner khatam hai', expectKB: false, expectIntent: 'incident' },
+  { query: 'print preview galat dikh rha', expectKB: false, expectIntent: 'incident' },
+  { query: 'printer driver install karna hai', expectKB: false, expectIntent: 'request' },
+  { query: 'printer se scan karna hai', expectKB: false, expectIntent: 'information' },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SECURITY — ADDITIONAL (10 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'ransomware attack hua', expectKB: true, expectIntent: 'security', noScript: true },
+  { query: 'password change karna hai urgent security', expectKB: true, expectIntent: 'security' },
+  { query: 'someone using my account', expectKB: true, expectIntent: 'security', noScript: true },
+  { query: 'fake email aaya hai', expectKB: true, expectIntent: 'security', noScript: true },
+  { query: 'data theft hua hai', expectKB: true, expectIntent: 'security', noScript: true },
+  { query: 'suspicious software install ho gaya', expectKB: true, expectIntent: 'security' },
+  { query: 'two factor authentication issue', expectKB: false, expectIntent: 'incident' },
+  { query: 'security warning aa rha hai laptop mein', expectKB: true, expectIntent: 'security' },
+  { query: 'credential phishing attempt', expectKB: true, expectIntent: 'security', noScript: true },
+  { query: 'account hack ho sakta hai', expectKB: true, expectIntent: 'security', noScript: true },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ACCESS — ADDITIONAL (15 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'crm access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'erp access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'miro access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'trello access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'asana access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'hubspot access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'salesforce access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'tally access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'quickbooks access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'new software access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'read only access chahiye shared drive', expectKB: true, expectIntent: 'access' },
+  { query: 'admin panel access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'monday.com access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'notion access chahiye', expectKB: true, expectIntent: 'access' },
+  { query: 'confluence access chahiye', expectKB: true, expectIntent: 'access' },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ASSET REQUESTS — ADDITIONAL (10 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'new charger chahiye', expectKB: true, expectIntent: 'request', noScript: true },
+  { query: 'replacement mouse chahiye', expectKB: true, expectIntent: 'request', noScript: true },
+  { query: 'second monitor chahiye', expectKB: true, expectIntent: 'request', noScript: true },
+  { query: 'docking station chahiye', expectKB: true, expectIntent: 'request', noScript: true },
+  { query: 'laptop bag chahiye', expectKB: true, expectIntent: 'request', noScript: true },
+  { query: 'wireless keyboard chahiye', expectKB: true, expectIntent: 'request', noScript: true },
+  { query: 'usb hub chahiye', expectKB: true, expectIntent: 'request', noScript: true },
+  { query: 'webcam chahiye better quality', expectKB: true, expectIntent: 'request', noScript: true },
+  { query: 'external hard disk chahiye', expectKB: true, expectIntent: 'request', noScript: true },
+  { query: 'pendrive chahiye', expectKB: true, expectIntent: 'request', noScript: true },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // HOW-TO — ADDITIONAL (20 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'google drive mein file share kaise kare', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'teams meeting record kaise kare', expectKB: false, expectIntent: 'information', noScript: true },
+  { query: 'zoom background kaise change kare', expectKB: false, expectIntent: 'information', noScript: true },
+  { query: 'excel filter kaise lagaye', expectKB: false, expectIntent: 'information', noScript: true },
+  { query: 'screen record kaise kare', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'file compress kaise kare', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'zip file kaise banaye', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'two screens extend kaise kare', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'dark mode kaise lagaye', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'pdf se word banana hai', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'pdf merge kaise kare', expectKB: false, expectIntent: 'information', noScript: true },
+  { query: 'laptop ka serial number kaise dekhun', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'ram kitni hai kaise dekhun', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'default browser kaise change karu', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'split screen kaise kare', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'file rename shortcut kya hai', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'new folder kaise banate hain', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'date time kaise change kare laptop ka', expectKB: true, expectIntent: 'information', noScript: true },
+  { query: 'task manager kaise kholte hain', expectKB: false, expectIntent: 'information', noScript: true },
+  { query: 'wifi password kaise change kare', expectKB: false, expectIntent: 'information', noScript: true },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // UNKNOWN/CONVERSATIONAL (10 cases)
+  // ══════════════════════════════════════════════════════════════════════════
+  { query: 'ajeeb', expectKB: false, expectIntent: 'unknown' },
+  { query: 'help', expectKB: false, expectIntent: 'unknown' },
+  { query: '123', expectKB: false, expectIntent: 'unknown' },
+  { query: 'nahi', expectKB: false, expectIntent: 'unknown' },
+  { query: 'ok', expectKB: true, expectIntent: 'unknown' },
+  { query: 'bye', expectKB: true, expectIntent: 'unknown' },
+  { query: 'done', expectKB: false, expectIntent: 'unknown' },
+  { query: 'haan', expectKB: false, expectIntent: 'unknown' },
+  { query: 'theek hai', expectKB: true, expectIntent: 'unknown' },
+  { query: 'thanks', expectKB: true, expectIntent: 'unknown' },
 
 ];
 

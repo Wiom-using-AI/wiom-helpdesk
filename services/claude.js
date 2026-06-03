@@ -1206,7 +1206,7 @@ const getKBAnswer = (problem) => {
   }
 
   // ── 🔄 DISPLAY ROTATE — "display rotate ho gayi", "screen teri ho gayi" ──────
-  if (/\b(display|screen)\b.*(rotate|ulta|seedha\s*nahi|90\s*degree|sideways|tedi|teri|palta)\b|\b(rotate|ulta|teda|teri)\b.*(display|screen)\b/i.test(pn)) {
+  if (/\b(display|screen)\b.*(rotate|ulta|upside\s*down|seedha\s*nahi|90\s*degree|sideways|tedi|teri|palta)\b|\b(rotate|ulta|upside\s*down|teda|teri)\b.*(display|screen)\b/i.test(pn)) {
     return `🔄 *Screen/Display rotate ho gayi?*\n\n*Shortcut se theek karo:*\n• Normal (seedha): *Ctrl+Alt+Up Arrow*\n• Left rotate: Ctrl+Alt+Left Arrow\n• Right rotate: Ctrl+Alt+Right Arrow\n\nYa: Desktop pe right-click → Display settings → Orientation → *"Landscape"* select karo\n\nKoi aur IT issue ho toh batayein!`;
   }
 
@@ -1282,7 +1282,7 @@ const getKBAnswer = (problem) => {
   }
 
   // ── 📧 GMAIL STORAGE FULL — "Gmail storage full hai" ────────────────────────
-  if (/\b(gmail|google)\b.*(storage\s*full|storage\s*khatam|space\s*nahi|storage\s*nahi|no\s*storage|quota|space\s*full)\b|\b(storage\s*full|storage\s*khatam)\b.*(gmail|google|email|drive)\b/i.test(pn)) {
+  if (/\b(gmail|google)\b.*(storage\s*(full|khatam|nahi|low|\d+\s*%)|space\s*(nahi|full|low)|no\s*storage|quota|space\s*full)\b|\b(storage\s*full|storage\s*khatam)\b.*(gmail|google|email|drive)\b|\bgmail\b.*\bstorage\b.*(\d+\s*%|full|low|nahi|khatam)/i.test(pn)) {
     return `📧 *Gmail/Google storage full hai?*\n\n1. *Attachment wale emails delete karo* → Gmail mein search karo: "has:attachment" → bade attachment wale emails delete karo\n2. *Trash empty karo* → Gmail left sidebar → "Trash" → "Empty Trash now"\n3. *Google Drive check karo* → drive.google.com → badi files delete karo\n\nAgar company account ka storage full hai — type karo *ha*, IT ticket raise karta hoon (IT Google Workspace storage badha sakta hai) 🎫`;
   }
 
@@ -1968,6 +1968,29 @@ const getKBAnswer = (problem) => {
     return `📡 *WiFi baar baar disconnect ho rha hai?* — yeh try karo:\n\n1. *WiFi toggle karo* → Taskbar WiFi → OFF → 10 sec → ON → dobara connect karo\n2. *Forget & Reconnect* → WiFi → "Wiom office" Forget → password spartans500 se reconnect karo\n3. *Restart karo* → Laptop restart karo\n\nAgar phir bhi bar bar disconnect ho rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
+  // ── 📡 NO WIFI NETWORKS VISIBLE ──────────────────────────────────────────
+  if (/\b(no\s*wifi|wifi\s*nahi\s*dikh|no\s*networks|no\s*wifi\s*network|wifi\s*list\s*nahi|wifi.*network.*nahi\s*dikh|networks\s*dikh\s*nahi|wifi\s*icon\s*nahi)\b/i.test(pn)) {
+    return `📡 *WiFi networks nahi dikh rhe?* — yeh try karo:\n\n1. *Airplane mode check karo* → Taskbar mein airplane mode icon → OFF karo\n2. *WiFi toggle karo* → Taskbar WiFi icon → OFF → 10 sec → ON karo\n3. *Restart karo* → Laptop restart karo — WiFi adapter khud refresh ho jaata hai\n\nAgar phir bhi koi network nahi dikh rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔌 INTERNET INTERMITTENT / CUTTING OUT ─────────────────────────────
+  if (/\b(bich\s*bich\s*mein|bich\s*beech|bar\s*bar\s*cut|cut\s*ho\s*rha|drop\s*ho\s*rha|drop\s*(ho\s*rha|hota)|intermittent|disconnect.*ho\s*rha|ho\s*rha\s*disconnect)\b/i.test(pn) &&
+      /\b(internet|wifi|net|network)\b/i.test(pn)) {
+    return `📡 *Internet bich bich mein cut ho rha hai?* — yeh try karo:\n\n1. *WiFi forget & reconnect* → WiFi settings → "Wiom office" pe right-click → Forget → dobara connect karo (password: spartans500)\n2. *WiFi toggle karo* → Taskbar WiFi → OFF → 10 sec → ON → dobara connect karo\n3. *Restart karo* → Laptop restart karo\n\nAgar phir bhi disconnect ho rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📹 VIDEO CALL INTERNET ISSUE ─────────────────────────────────────────
+  if (/\b(video\s*call|call)\b.*(internet|network|net|wifi).*(issue|problem|nahi\s*chal|drop|cut)/i.test(pn) ||
+      /\b(internet|network|net|wifi)\b.*(video\s*call|call).*(issue|problem|nahi\s*chal|drop)/i.test(pn) ||
+      (/\b(zoom|teams|meet)\b/i.test(pn) && /\b(drop|cut|internet|net|network)\b/i.test(pn))) {
+    return `📡 *Video call mein internet issue hai?* — yeh try karo:\n\n1. *WiFi toggle karo* → Taskbar WiFi → OFF → 10 sec → ON → dobara connect karo\n2. *Background bandwidth wale apps band karo* → Ctrl+Shift+Esc → Task Manager → Network column → heavy apps band karo\n3. *Paas jao WiFi router ke* → door se call mein drop hota hai\n4. *Restart karo* → Laptop restart karo → phir call join karo\n\nAgar phir bhi drop ho rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📡 BROADBAND DOWN / NO INTERNET ─────────────────────────────────────
+  if (/\b(broadband\s*band|broadband\s*nahi\s*chal|broadband\s*down|broadband\s*aa\s*nahi|broadband\s*nahi\s*aa)\b/i.test(pn)) {
+    return `📡 *Broadband/Internet band ho gaya?* — yeh try karo:\n\n1. *WiFi toggle karo* → Taskbar WiFi → OFF → 10 sec → ON → "Wiom office" se connect karo\n2. *Sirf aapka hai ya sab ka?* → Colleagues se puchho — sab ka down hai toh floor level issue hai\n3. *Restart karo* → Laptop restart karo\n\nAgar sab ka down hai ya restart ke baad bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
   // ── 🌐 INTERNET NOT WORKING ───────────────────────────────────────────────
   if (/\b(internet\s*nahi\s*chal|internet\s*band|internet\s*nahi\s*aa|internet\s*nahi|net\s*nahi\s*chal|net\s*band|net\s*nahi\s*aa)\b/i.test(pn)) {
     return `🌐 *Internet nahi chal rha?* — yeh try karo:\n\n1. *WiFi connected hai?* → Taskbar mein WiFi icon dekho — connected hai ya "No Internet" likh raha hai?\n2. *Toggle karo* → WiFi → OFF → 10 sec → ON → "Wiom office" se connect karo (password: spartans500)\n3. *Restart karo* → Laptop restart karo\n\nAgar phir bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
@@ -2123,8 +2146,8 @@ const getKBAnswer = (problem) => {
   }
 
   // ── 💻 LAPTOP SLOW (generic — missed by slow+laptop regex above) ───────────
-  if (/\blaptop\b.*(slow|hang|dheema|dheemi|lagg|bahut\s*dheema|bahut\s*slow|speed\s*nahi|fast\s*nahi|responsive\s*nahi)/i.test(pn) ||
-      /\b(slow|hang|dheema)\b.*\blaptop\b/i.test(pn)) {
+  if (/\blaptop\b.*(slow|hang|dheema|dheemi|dheere|lagg|bahut\s*dheema|bahut\s*slow|speed\s*nahi|fast\s*nahi|responsive\s*nahi)/i.test(pn) ||
+      /\b(slow|hang|dheema|dheere)\b.*\blaptop\b/i.test(pn)) {
     return `💻 *Laptop slow / hang ho rha hai?* — yeh try karo:\n\n1. *Task Manager* → Ctrl+Shift+Esc → CPU/Memory column → heavy apps End Task karo\n2. *Browser tabs band karo* → Extra Chrome/Edge tabs band karo\n3. *Restart karo* → Laptop properly shut down karo → dobara on karo (sleep nahi)\n\nAgar in steps se theek nahi hua → type karo *ha*, IT ticket raise karta hoon (RAM ya SSD check hogi) 🎫`;
   }
 
@@ -2194,6 +2217,139 @@ const getKBAnswer = (problem) => {
   // Only fires LAST — after ALL specific KB entries have been checked
   if (/\b(kaise|kise|kese|kase|kaisey|how\s*to|how\s*do|how\s*can)\b/i.test(pn)) {
     return `Batao kya karna hai — main step-by-step guide karunga!\n\nApni problem thoda detail mein likho, main seedha bataunga.`;
+  }
+
+  // ── CONVERSATIONAL SHORT REPLIES — ok, thanks, bye, theek hai ───────────
+  if (/^(ok|okay|theek\s*hai|accha|achha|haan\s*theek|kal\s*bataunga|dekh\s*leta)\s*[!.]*$/i.test(pn.trim())) {
+    return 'Theek hai. Koi aur IT issue ho toh batayein.';
+  }
+  if (/^(thanks|thank\s*you|shukriya|dhanyawad|thnx|ty)\s*[!.]*$/i.test(pn.trim())) {
+    return 'You are welcome. Feel free to reach out if anything else comes up.';
+  }
+
+  // ── CATEGORY: MISSING KB ENTRIES — hardware/software/network/security ───────
+
+  // ── 💥 LAPTOP CRASH / SYSTEM HANG (generic) ──────────────────────────────
+  // "laptop crash ho gaya", "system hang ho gaya" — if not caught by specific handlers above
+  if (/\b(laptop|system|pc)\b.*(crash|hang|atak|stuck|respond\s*nahi|not\s*respond)/i.test(pn) ||
+      /\b(crash|hang)\b.*(laptop|system|pc)/i.test(pn)) {
+    return `💥 *Laptop/System crash ho gaya?* — yeh try karo:\n\n1. *Ctrl+Alt+Del dabao* → Task Manager → heavy app End Task karo → wait karo\n2. *Restart karo* → Power button se properly shut down karo → dobara on karo\n\nAgar baar baar crash ho rha hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔊 SPEAKER VOLUME LOW ────────────────────────────────────────────────
+  // "laptop ka speaker bahut low hai", "sound bahut low hai"
+  if (/\b(speaker|sound|audio|awaaz)\b.*(low|bahut\s*low|bahut\s*kam|sunai\s*nahi|soft|dheema|slow)\b/i.test(pn) ||
+      /\b(low|soft|dheema)\b.*(speaker|sound|audio|awaaz)\b/i.test(pn)) {
+    return `🔊 *Sound/Speaker bahut low hai?* — yeh try karo:\n\n1. *Volume check karo* → Taskbar speaker icon → volume 100% karo\n2. *System volume + app volume dono check karo* → taskbar speaker AND app ke andar bhi volume check karo\n3. *Speaker settings* → Speaker icon → right-click → Sound settings → Speaker properties → Levels tab → 100% set karo\n4. *Restart karo* → Laptop restart karo\n\nAgar phir bhi low hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📡 WIFI CONNECTED BUT SITE NOT OPENING ────────────────────────────────
+  // "wifi connected hai par google nahi khul rha" — more specific than generic no internet
+  if (/wifi.*(connected|chal\s*rha|on\s*hai).*(nahi\s*khul|nahi\s*open|nahi\s*chal|open\s*nahi)/i.test(pn) ||
+      /connected.*(google|website|site|page).*(nahi\s*khul|nahi\s*chal|nahi\s*open)/i.test(pn) ||
+      (/\b(google|gmail|site|website|page)\b/i.test(pn) && /nahi\s*khul/i.test(pn) && /\b(wifi|connected|chal\s*rha)\b/i.test(pn))) {
+    return `🌐 *WiFi connected hai par site nahi khul rhi?* — yeh try karo:\n\n1. *WiFi toggle karo* → Taskbar WiFi → OFF → 10 sec → ON → dobara connect karo\n2. *Chrome reopen karo* → Chrome band karo → dobara open karo → gmail.com try karo\n3. *Restart karo* → Laptop restart karo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🌐 DNS ERROR ──────────────────────────────────────────────────────────
+  // "dns error aa rha hai", "dns_probe_failed"
+  if (/\b(dns|dns\s*error|dns\s*fail|dns\s*probe|name\s*not\s*resolv|domain\s*error)\b/i.test(pn)) {
+    return `🌐 *DNS Error aa rha hai?* — yeh try karo:\n\n1. *WiFi toggle karo* → Taskbar WiFi → OFF → 10 sec → ON → dobara connect karo\n2. *Restart karo* → Laptop restart karo\n3. *Alag browser mein try karo* → Chrome mein nahi? Edge mein try karo\n\nAgar phir bhi DNS error aa rha hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📧 EMAIL SEND NAHI HO RHA ────────────────────────────────────────────
+  // "email bhej nahi pa rha hoon"
+  if (/\b(email|gmail|mail)\b.*(bhej\s*nahi|send\s*nahi|bhejne\s*mein|send\s*fail|nahi\s*bhej|bhejta\s*nahi|pa\s*rha\s*nahi)/i.test(pn) ||
+      /bhej\s*nahi.*(email|mail|gmail)/i.test(pn)) {
+    return `📧 *Email/Gmail send nahi ho rha?* — yeh try karo:\n\n1. *Internet check karo* → WiFi connected hai?\n2. *Drafts check karo* → Gmail → Drafts folder → draft wahan stuck toh nahi?\n3. *Incognito mein try karo* → Ctrl+Shift+N → gmail.com → dobara send karo\n4. *Attachment check karo* → file size 25MB se zyada? → Drive link bhejo\n\nAgar phir bhi nahi bheja → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📱 GMAIL APP ON PHONE ────────────────────────────────────────────────
+  // "gmail app nahi chal rhi phone pe" — personal phone is out of scope but give basic info
+  if ((/\b(gmail|email)\b/i.test(pn) && /\b(app)\b/i.test(pn) && /\b(phone|mobile)\b/i.test(pn)) ||
+      (/\b(phone|mobile)\b/i.test(pn) && /\b(gmail|email)\b/i.test(pn) && /\b(nahi|issue|problem)\b/i.test(pn))) {
+    return `📧 *Gmail app phone pe issue?*\n\nCompany laptop ke Gmail ke liye: Type karo *ha* — IT ticket raise karta hoon.\n\nPersonal phone ke liye:\n1. *App update karo* → Play Store / App Store → Gmail → Update\n2. *App force stop karo* → Phone Settings → Apps → Gmail → Force Stop → reopen\n3. *Cache clear karo* → Phone Settings → Apps → Gmail → Storage → Clear Cache\n\nAgar company Gmail laptop pe issue hai → type karo *ha* 🎫`;
+  }
+
+  // ── 🔒 SECURITY WARNING / SUSPICIOUS SOFTWARE ────────────────────────────
+  // "security warning aa rha hai laptop mein", "suspicious software install ho gaya"
+  if (/\b(security\s*warning|suspicious\s*software|suspicious\s*activity|security\s*alert)\b/i.test(pn) ||
+      (/\b(someone|koi|kisi\s*ne|kisi)\b/i.test(pn) && /\b(use|using|use\s*kar\s*rha|account|login)\b/i.test(pn))) {
+    return `🚨 *Security Warning / Suspicious Activity — URGENT!*\n\nYeh security issue hai — TURANT yeh karo:\n\n1. *Kuch mat karo* — suspicious activity mein koi bhi action galat ho sakta hai\n2. *Internet band karo* → WiFi OFF karo agar suspicious activity lag rahi hai\n3. *IT ko batao* — is issue ko ignore mat karo\n\nType karo *ha* — URGENT IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📊 DISK USAGE 100% / HIGH DISK ───────────────────────────────────────
+  // "disk usage 100% hai", "disk 100% chal rha hai"
+  if (/\b(disk\s*usage\s*100|disk\s*100|100\s*%.*disk|disk.*100\s*%|high\s*disk|disk\s*full\s*ho\s*rha)\b/i.test(pn)) {
+    return `💾 *Disk usage 100% hai?* — yeh try karo:\n\n1. *Temp files delete karo* → Settings → System → Storage → Temporary files → Remove files\n2. *Recycle Bin empty karo* → Desktop Recycle Bin → right-click → Empty Recycle Bin\n3. *Downloads clean karo* → File Explorer → Downloads → jo zaruri nahi delete karo\n4. *Task Manager check karo* → Ctrl+Shift+Esc → Disk column → koi process 100% use kar rha? End Task karo\n\nAgar phir bhi 100% hai → type karo *ha*, IT ticket raise karta hoon (SSD issue ho sakta hai) 🎫`;
+  }
+
+  // ── 🦠 ANTIVIRUS SCAN KARNA HAI ──────────────────────────────────────────
+  // "antivirus scan karna hai"
+  if (/\b(antivirus\s*scan|virus\s*scan|security\s*scan|windows\s*scan)\b/i.test(pn) ||
+      (/\bscan\s*karna\s*hai\b/i.test(pn) && /\b(antivirus|virus|windows\s*security|malware)\b/i.test(pn))) {
+    return `🦠 *Antivirus Scan kaise karo:*\n\n1. *Start mein "Windows Security" search karo* → open karo\n2. *"Virus & threat protection"* → "Quick scan" button dabao\n3. *Scan complete hone do* → suspicious files milein toh "Remove" karo\n\nAgar kuch suspicious mila → type karo *ha*, IT ticket raise karta hoon — serious ho sakta hai 🎫`;
+  }
+
+  // ── 💡 APPLICATION NOT RESPONDING ────────────────────────────────────────
+  // "application not responding"
+  if (/\b(application|app|software|program)\b.*(not\s*respond|not\s*responding|respond\s*nahi|response\s*nahi\s*de\s*rha)\b/i.test(pn) ||
+      /not\s*respond/i.test(pn)) {
+    return `💥 *Application not responding?* — yeh try karo:\n\n1. *Wait karo* → 1-2 minute wait karo — kabhi kabhi heavy processing pe temporary hang hota hai\n2. *Task Manager* → Ctrl+Alt+Del → Task Manager → app dhundho → "End Task" karo → dobara open karo\n3. *Restart karo* → Laptop restart karo\n\nAgar specific app baar baar not responding hota hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📄 WORD DOCUMENT SAVE NAHI HO RHA ────────────────────────────────────
+  // "word document save nahi ho rha"
+  if (/\b(word|document|doc|excel|sheet)\b.*(save\s*nahi|save\s*nahi\s*ho|nahi\s*save|saving\s*nahi|save\s*error|save\s*fail)\b/i.test(pn) ||
+      /save\s*nahi.*(word|excel|document|doc)\b/i.test(pn)) {
+    return `📄 *Word/Excel file save nahi ho rha?* — yeh try karo:\n\n1. *Ctrl+S try karo* → Keyboard pe Ctrl+S dabao\n2. *"Save As" try karo* → File → Save As → Desktop pe save karo → naya naam do\n3. *Disk space check karo* → C drive full toh nahi? → Settings → System → Storage\n4. *Word restart karo* → Word band karo → Ctrl+Shift+Esc → Task Manager → Microsoft Word End Task → dobara open karo\n\nAgar phir bhi save nahi ho rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🌐 TOUCHPAD CURSOR AJEEB BEHAVE KAR RHA HAI ────────────────────────
+  // "touchpad cursor ajeeb behave kar rha hai", "cursor random move ho rha"
+  if (/\b(touchpad|cursor|pointer)\b.*(ajeeb|random|khud\s*move|khud\s*chal|chal\s*rha|kud|jump|idhar\s*udhar|idhar|udhar|behave|ghumna)/i.test(pn) ||
+      /\b(cursor)\b.*(ajeeb|random|khud\s*(chal|move|ghumna)|jump)/i.test(pn)) {
+    return `🖱️ *Touchpad cursor ajeeb behave kar rha hai?* — yeh try karo:\n\n1. *Touchpad clean karo* → Touchpad surface pe chhoti si mitti ya oil hogi — dry cloth se saaf karo\n2. *Palm check karo* → Type karte waqt haath touchpad se lagna toh nahi? → Settings → Touchpad → "Palm rejection" ON karo\n3. *Sensitivity adjust karo* → Settings → Bluetooth & devices → Touchpad → sensitivity kam karo\n4. *Restart karo* → Laptop restart karo\n\nAgar phir bhi ajeeb chal rha hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🖱️ SCROLL NAHI HO RHA ────────────────────────────────────────────────
+  if (/\bscroll\b.*(nahi|work\s*nahi|kaam\s*nahi|nahi\s*chal|nahi\s*ho\s*rha)\b/i.test(pn) ||
+      /\b(scroll\s*nahi|scrolling\s*nahi)\b/i.test(pn)) {
+    return `🖱️ *Scroll nahi ho rha?* — yeh try karo:\n\n1. *Two-finger scroll* → Touchpad pe 2 fingers se scroll karo (upar/neeche)\n2. *Touchpad settings* → Settings → Bluetooth & devices → Touchpad → "Scrolling direction" check karo → "Scroll direction: Down motion scrolls down" select karo\n3. *Restart karo* → Laptop restart karo\n\nAgar phir bhi nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔒 REMOTE ACCESS / VPN / REMOTE WORK ────────────────────────────────
+  // "remote access chahiye" — WIOM mein VPN nahi hota
+  if (/\b(remote\s*access\s*chahiye|remote\s*work|work\s*from\s*home\s*access|wfh\s*access)\b/i.test(pn)) {
+    return `ℹ️ *Remote Access ke baare mein:*\n\nWIOM mein VPN use nahi hota.\n\nRemote access ke liye IT ticket raise karo — IT assess karega kya option available hai.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔐 DATA THEFT / SECURITY INCIDENT ────────────────────────────────────
+  // "data theft hua hai", "kisi ne data chura liya"
+  if (/\b(data\s*theft|data\s*chori|data\s*chura|credential\s*chori|account\s*compromise|account\s*hack)\b/i.test(pn)) {
+    return `🚨 *Data Theft / Security Incident — CRITICAL!*\n\nYeh bahut serious security issue hai — TURANT yeh karo:\n\n1. *Kuch mat karo* — koi bhi action galat ho sakta hai\n2. *Internet band karo* → WiFi OFF karo\n3. *IT ko immediately batao*\n\nType karo *ha* — CRITICAL PRIORITY IT ticket raise karta hoon, management ko bhi inform karunga 🎫`;
+  }
+
+  // ── 🏢 GENERIC TOOL/SOFTWARE ACCESS REQUEST ──────────────────────────────
+  // CRM, ERP, Miro, Trello, Asana, HubSpot, Salesforce, Tally, QuickBooks, Monday.com etc.
+  // Also: "new software access", "admin panel access", "read only access"
+  if (/\b(crm|erp|miro|trello|asana|hubspot|salesforce|tally|quickbooks|monday\.com|monday\s*com|zoho|freshdesk|zendesk|servicenow|bitbucket|gitlab|linear|clickup|basecamp|airtable|toggl|harvest|intercom|pipedrive|typeform|calendly|loom|descript)\b/i.test(pn) &&
+      /\b(access|chahiye|permission|invite|add)\b/i.test(pn)) {
+    const toolMatch = pn.match(/\b(crm|erp|miro|trello|asana|hubspot|salesforce|tally|quickbooks|monday\.com|monday\s*com|zoho|freshdesk|zendesk|servicenow|bitbucket|gitlab|linear|clickup|basecamp|airtable|toggl|harvest|intercom|pipedrive|typeform|calendly|loom|descript)\b/i);
+    const tool = toolMatch ? toolMatch[0].charAt(0).toUpperCase() + toolMatch[0].slice(1) : 'Software';
+    return `🔑 *${tool} access chahiye?*\n\nSoftware access IT ticket ke zariye milta hai — pehle manager approval lena hoga.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── Generic access request (new software, admin panel, read-only, shared drive) ──
+  if (/\b(new\s*software\s*access|admin\s*panel\s*access|read\s*only\s*access|shared\s*(drive|folder)\s*access|system\s*access)\b/i.test(pn)) {
+    return `🔑 *Access Request*\n\nAccess ke liye manager approval + IT ticket chahiye.\n\nBatao kaunse system/software ka access chahiye — IT assess karega.\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── MIC LOW / NOT PICKING UP (teams/zoom context) ─────────────────────────
+  // "mic pick up nahi kar rha teams mein"
+  if (/\b(mic|microphone)\b.*(pick\s*up\s*nahi|pickup\s*nahi|sun\s*nahi|sunai\s*nahi|team|zoom|call|meeting)\b/i.test(pn) ||
+      /\b(teams|zoom|call|meeting)\b.*(mic|microphone).*(nahi|issue|problem)\b/i.test(pn)) {
+    return `🎙️ *Mic Teams/Zoom mein nahi chal rha?* — yeh try karo:\n\n1. *Privacy check karo* → Settings → Privacy & Security → Microphone → Teams/Zoom ke liye ON karo\n2. *App settings check karo* → Teams/Zoom → Settings → Devices → correct mic select karo\n3. *Test karo* → Teams → Settings → Devices → "Make a test call" → check karo sunai deta hai ya nahi\n\nAgar phir bhi nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
   // ── UNKNOWN QUERY LOG — track KB misses for weekly review ───────────────
