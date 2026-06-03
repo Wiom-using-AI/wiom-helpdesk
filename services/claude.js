@@ -629,7 +629,12 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
 
   // ── INTENT DETECTION — tell AI exactly what category this is ──────────
   const intent = detectIntent(messages);
-  const intentContext = `\n\n⚡ DETECTED ISSUE CATEGORY: ${intent.category}\n🎯 INSTRUCTION: ${intent.hint}`;
+  const lastUserQ = messages.filter(m => m.role === 'user').pop()?.content || '';
+
+  // ── QUESTION READING INSTRUCTION — force AI to understand before answering ──
+  const readFirst = `\n\n🔍 EMPLOYEE KA SAWAAL: "${lastUserQ}"\n\nPEHLE YEH SAMJHO:\n- Kya employee kuch MANGWA raha hai? (chahiye/need/request) → equipment/purchase process batao\n- Kya kuch TROUBLESHOOT karna hai? (nahi chal rha/problem) → steps do\n- Kya HOW-TO poochh raha hai? (kaise/how) → seedha batao\n- Kya policy/rule poochh raha hai? → policy se jawab do\nGalat category mein jawab mat do. Sawaal poora padho, phir jawab do.`;
+
+  const intentContext = `\n\n⚡ DETECTED CATEGORY: ${intent.category}\n🎯 INSTRUCTION: ${intent.hint}` + readFirst;
 
   const systemPrompt = SYSTEM_PROMPT
     + `\n\nUSER CONTEXT: ${userContext}`
