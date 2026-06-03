@@ -717,120 +717,282 @@ app.listen(PORT, async () => {
 
  // ── DM Script detector: maps free-text issue → script file + label ────
  // IMPORTANT: Auto-Fix only shown for 'incident' intent — never for requests/info
+ // REFACTORED: 4-step intent-first pipeline (replaces fragile keyword matching)
  const getScriptForText = (text) => {
    if (!text) return null;
    const t = text.toLowerCase();
 
-   // ── INTENT CHECK FIRST — if not an incident with enough confidence, no script ever ─────────────
+   // ── STEP 1: INTENT GATE — hard block on non-incident intents ──────────
    const { intent, confidence } = classifyIntent(t);
-   if (intent !== 'incident' || confidence < 60) return null;
+   const SCRIPT_BLOCKED_INTENTS = ['request', 'information', 'access', 'asset', 'security', 'unknown'];
+   if (SCRIPT_BLOCKED_INTENTS.includes(intent)) return null;
+   if (confidence < 60) return null;
 
-   // ── GUARD: Physical damage → NO Auto-Fix (script can't fix broken hardware) ──
-   if (/\b(damage|damag|toot|tuti|tuta|phoot|foota|crack|cracked|broken|tod|toda|physically)\b/.test(t)) return null;
+   // ── STEP 2: PHYSICAL / EMERGENCY GUARD ────────────────────────────────
+   // Physical damage, liquid damage, theft → script can't fix broken hardware
+   if (/damage|toot|crack|chori|stolen|water|liquid|paani/.test(t)) return null;
 
-   // ── GUARD: Non-laptop devices / out-of-scope → NO Auto-Fix ever ────────
-   const isPhone    = /\b(phone|mobile|samsung|iphone|android|charger\s*nahi|mobile\s*charg)\b/.test(t);
+   // ── STEP 3: REQUEST / HOW-TO GUARDS ───────────────────────────────────
+
+   // GUARD: Equipment requests — never show script
+   const EQUIPMENT_WORDS = ['headphone', 'mouse', 'keyboard', 'monitor', 'charger', 'cable', 'webcam', 'hub', 'pendrive', 'printer', 'laptop', 'screen'];
+   const REQUEST_WORDS = ['chahiye', 'need', 'ki need', 'mangwana', 'lena hai', 'request', 'buy', 'kharidna', 'naya', 'replace', 'upgrade', 'wapas'];
+   const isEquipmentRequest = EQUIPMENT_WORDS.some(e => t.includes(e)) && REQUEST_WORDS.some(r => t.includes(r));
+   if (isEquipmentRequest) return null;
+
+   // GUARD: Information queries — never show script
+   const INFO_WORDS = ['kaise', 'kise', 'kese', 'how to', 'how do', 'steps', 'guide', 'batao', 'bataiye', 'kya hai', 'what is'];
+   const isInfoQuery = INFO_WORDS.some(w => t.includes(w));
+   if (isInfoQuery) return null;
+
+   // GUARD: Access requests — never show script
+   const isAccessRequest = /\b\w+\s+(access|permission)\s*(chahiye|de|do|milega|nahi|nahi\s*hai)\b/i.test(t);
+   if (isAccessRequest) return null;
+
+   // GUARD: Non-laptop devices / out-of-scope → NO Auto-Fix ever
+   const isPhone    = /\b(phone|mobile|samsung|iphone|android|mobile\s*charg)\b/.test(t);
    const isOfficeEq = /\b(conference\s*room|meeting\s*room|projector\s*room|reception|hall)\b/.test(t) &&
                       !/\b(laptop|my\s*laptop|mera\s*laptop)\b/.test(t);
    if (isPhone || isOfficeEq) return null;
 
-   // ── Fan — laptop fan or fan + awaaz (IT context = device fan) ────────────
-   // "laptop fan", "fan noise laptop", "fan ki awaaz" — NOT "office fan band"
-   // FIX-27: "fan ki awaaz aa rhi hai" has no "laptop" word but is clearly device fan noise
-   if (/\bfan\b/.test(t) && (/laptop|pc|computer/.test(t) || /awaaz|noise|sound|nahi\s*band/.test(t))) return { file: 'fix-fan-noise.bat', label: '🌬️ Auto-Fix: Fan Noise' };
+   // ── STEP 4: SCRIPT TABLE — clean, specific, ordered ───────────────────
+   const SCRIPT_TABLE = [
+     // Fan noise — laptop/pc fan or "fan ki awaaz" (IT device context)
+     {
+       match: t => /\bfan\b/.test(t) && (/\b(laptop|pc|computer)\b/.test(t) || /\b(awaaz|noise|nahi\s*band)\b/.test(t)),
+       script: { file: 'fix-fan-noise.bat', label: '🌬️ Auto-Fix: Fan Noise' }
+     },
+     // Blue screen / BSOD
+     {
+       match: t => /\b(blue\s*screen|bsod|bluescreen)\b/.test(t),
+       script: { file: 'fix-bluescreen.bat', label: '💙 Auto-Fix: Blue Screen' }
+     },
+     // Black screen / no display
+     {
+       match: t => /\b(black\s*screen|no\s*display|blank\s*screen)\b/.test(t),
+       script: { file: 'fix-black-screen.bat', label: '🖥️ Auto-Fix: Black Screen' }
+     },
+     // Screen flicker
+     {
+       match: t => /\b(screen|display)\b/.test(t) && /\b(flicker|blink|jhal|kaamp)\b/.test(t),
+       script: { file: 'fix-screen-flicker.bat', label: '🖥️ Auto-Fix: Screen Flicker' }
+     },
+     // Overheating
+     {
+       match: t => /\b(overheat|garam|hot\b|heat)\b/.test(t) && /\b(laptop|pc|computer)\b/.test(t),
+       script: { file: 'fix-overheating.bat', label: '🌡️ Auto-Fix: Overheating' }
+     },
+     // Camera (issue only, not phone camera)
+     {
+       match: t => /\b(camera|webcam|camra)\b/.test(t) &&
+                   /\b(nahi\s*chal|not\s*work|issue|black\s*screen|detect\s*nahi|kaam\s*nahi)\b/.test(t) &&
+                   !/\b(phone|mobile)\b/.test(t),
+       script: { file: 'fix-camera.bat', label: '📷 Auto-Fix: Camera' }
+     },
+     // Microphone
+     {
+       match: t => /\b(mic|microphone|microfone|microphne)\b/.test(t) &&
+                   /\b(nahi\s*chal|not\s*work|issue|kaam\s*nahi|pick\s*up\s*nahi)\b/.test(t),
+       script: { file: 'fix-mic.bat', label: '🎤 Auto-Fix: Microphone' }
+     },
+     // Headphone (issue only, not request)
+     {
+       match: t => /\b(headphone|earphone|earbuds)\b/.test(t) &&
+                   /\b(nahi\s*chal|not\s*work|issue|connect\s*nahi|sound\s*nahi)\b/.test(t),
+       script: { file: 'fix-headphone.bat', label: '🎧 Auto-Fix: Headphone' }
+     },
+     // Projector — laptop-to-projector connection issues only
+     {
+       match: t => /\bprojector\b/.test(t) &&
+                   /\b(connect|nahi\s*dikh|screen\s*share|laptop)\b/.test(t),
+       script: { file: 'fix-projector.bat', label: '📽️ Auto-Fix: Projector' }
+     },
+     // HDMI / External monitor
+     {
+       match: t => /\b(hdmi|external\s*monitor|external\s*screen)\b/.test(t),
+       script: { file: 'fix-hdmi.bat', label: '🖥️ Auto-Fix: HDMI/Monitor' }
+     },
+     // Resolution
+     {
+       match: t => /\b(resolution|display\s*sett)\b/.test(t),
+       script: { file: 'fix-resolution.bat', label: '🖥️ Auto-Fix: Resolution' }
+     },
+     // Sound / Speaker (laptop only, not phone/conference room)
+     {
+       match: t => /\b(sound|audio|speaker|awaaz|speakr|speeker)\b/.test(t) &&
+                   /\b(nahi\s*aa|not\s*work|issue|band|kaam\s*nahi)\b/.test(t) &&
+                   !/\b(phone|mobile|room|conference|meeting|hall|reception)\b/.test(t) &&
+                   !/\bfan\b/.test(t),
+       script: { file: 'fix-sound.bat', label: '🔊 Auto-Fix: Sound' }
+     },
+     // Keyboard (issue, not request)
+     {
+       match: t => /\b(keyboard|keybord|keyborad|keybrd)\b/.test(t) &&
+                   /\b(nahi\s*chal|not\s*work|issue|kaam\s*nahi|stuck|type\s*nahi)\b/.test(t),
+       script: { file: 'fix-keyboard.bat', label: '⌨️ Auto-Fix: Keyboard' }
+     },
+     // Touchpad / Mouse (issue, not request)
+     {
+       match: t => /\b(touchpad|trackpad|mouse)\b/.test(t) &&
+                   /\b(nahi\s*chal|not\s*work|stuck|cursor|issue|kaam\s*nahi)\b/.test(t),
+       script: { file: 'fix-touchpad.bat', label: '🖱️ Auto-Fix: Touchpad' }
+     },
+     // Touchscreen
+     {
+       match: t => /\btouchscreen\b/.test(t) &&
+                   /\b(nahi\s*chal|not\s*work|issue|kaam\s*nahi)\b/.test(t),
+       script: { file: 'fix-touchscreen.bat', label: '🖱️ Auto-Fix: Touchscreen' }
+     },
+     // Bluetooth (issue)
+     {
+       match: t => /\b(bluetooth|bluetoth|bluethooth|\bbt\b)\b/.test(t) &&
+                   /\b(nahi\s*chal|not\s*work|connect\s*nahi|issue|pair\s*nahi)\b/.test(t),
+       script: { file: 'fix-bluetooth.bat', label: '🔵 Auto-Fix: Bluetooth' }
+     },
+     // USB / Pendrive (issue)
+     {
+       match: t => /\b(usb|pendrive|pen\s*drive|flash\s*drive)\b/.test(t) &&
+                   /\b(nahi\s*chal|not\s*detect|issue|kaam\s*nahi)\b/.test(t),
+       script: { file: 'fix-usb.bat', label: '🔌 Auto-Fix: USB' }
+     },
+     // SD Card
+     {
+       match: t => /\b(sd\s*card|sdcard|memory\s*card)\b/.test(t),
+       script: { file: 'fix-sdcard.bat', label: '💳 Auto-Fix: SD Card' }
+     },
+     // Fingerprint
+     {
+       match: t => /\b(fingerprint|finger\s*print)\b/.test(t),
+       script: { file: 'fix-fingerprint.bat', label: '👆 Auto-Fix: Fingerprint' }
+     },
+     // Battery / Charging — laptop only, not phone charging
+     {
+       match: t => /\b(batter[yi]?|battry|battey|batr|charging)\b/.test(t) &&
+                   /\b(nahi\s*ho\s*rhi|not\s*charg|issue|drain|low|khatam|stuck)\b/.test(t) &&
+                   !/\b(phone|mobile)\b/.test(t),
+       script: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' }
+     },
+     // Charging (with laptop context)
+     {
+       match: t => /\bcharg\b/.test(t) && /\b(laptop|pc|computer|plug)\b/.test(t) && !/\b(phone|mobile)\b/.test(t),
+       script: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' }
+     },
+     // Sleep / Wake
+     {
+       match: t => /\b(sleep|wake|hibernate|suspend)\b/.test(t),
+       script: { file: 'fix-sleep-wake.bat', label: '💤 Auto-Fix: Sleep/Wake' }
+     },
+     // Sudden shutdown
+     {
+       match: t => /\b(sudden\s*shutdown|shut\s*down|band\s*ho\s*jata)\b/.test(t),
+       script: { file: 'fix-sudden-shutdown.bat', label: '⚡ Auto-Fix: Sudden Shutdown' }
+     },
+     // Teams (issue, not request)
+     {
+       match: t => /\bteams\b/.test(t) && /\b(nahi\s*chal|not\s*work|crash|issue|open\s*nahi|dropping)\b/.test(t),
+       script: { file: 'fix-teams.bat', label: '📹 Auto-Fix: Teams' }
+     },
+     // Zoom (issue, not request)
+     {
+       match: t => /\bzoom\b/.test(t) && /\b(nahi\s*chal|not\s*work|crash|issue|open\s*nahi|join\s*nahi)\b/.test(t),
+       script: { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' }
+     },
+     // Outlook (redirect to browser fix — WIOM uses Gmail)
+     {
+       match: t => /\boutlook\b/.test(t) && /\b(nahi\s*chal|crash|issue|not\s*work)\b/.test(t),
+       script: { file: 'fix-browser.bat', label: '📧 Auto-Fix: Gmail (Browser)' }
+     },
+     // WiFi / Network (issue, not password query)
+     {
+       match: t => /\b(wifi|wi-fi|internet|wired|ethernet|lan|\bnet\b|hotspot|broadband|ping)\b/.test(t) &&
+                   /\b(nahi\s*chal|not\s*work|issue|problem|connect\s*nahi|disconnect|slow)\b/.test(t) &&
+                   !/\b(password|pass|pwd)\b/.test(t),
+       script: { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' }
+     },
+     // OneDrive sync issue
+     {
+       match: t => /\b(onedrive|one\s*drive)\b/.test(t) &&
+                   /\b(sync\s*nahi|not\s*sync|issue|stuck|full)\b/.test(t),
+       script: { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' }
+     },
+     // PDF (open issue, not conversion)
+     {
+       match: t => /\bpdf\b/.test(t) &&
+                   /\b(nahi\s*khul|not\s*open|issue)\b/.test(t) &&
+                   !/\b(to\s*word|to\s*excel|convert|kaise|karu|banana|change\s*karna)\b/.test(t),
+       script: { file: 'fix-pdf.bat', label: '📄 Auto-Fix: PDF' }
+     },
+     // Word / Excel / Office (crash/open issue, not fresh install)
+     {
+       match: t => /\b(word|excel|powerpoint|ms\s*office|microsoft\s*office)\b/.test(t) &&
+                   /\b(nahi\s*khul|crash|issue|not\s*open|hang|freez)\b/.test(t) &&
+                   !/\b(install|insatl|insatal|instat|instll|intsall)\b/.test(t),
+       script: { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' }
+     },
+     // Chrome / Browser (issue)
+     {
+       match: t => /\b(chrome|browser|firefox|edge|safari|chrmo|chorme|crome)\b/.test(t) &&
+                   /\b(nahi\s*khul|not\s*open|crash|slow|issue|not\s*work)\b/.test(t),
+       script: { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser' }
+     },
+     // Printer (issue only, not request)
+     {
+       match: t => /\bprinter\b/.test(t) &&
+                   /\b(nahi\s*chal|offline|not\s*work|issue|stuck|print\s*nahi)\b/.test(t),
+       script: { file: 'fix-printer.bat', label: '🖨️ Auto-Fix: Printer' }
+     },
+     // Windows Update (stuck/failing)
+     {
+       match: t => /\b(windows\s*update|win\s*update)\b/.test(t) &&
+                   /\b(stuck|atak|fail|nahi\s*ho|issue)\b/.test(t),
+       script: { file: 'fix-windows-update.bat', label: '🔄 Auto-Fix: Windows Update' }
+     },
+     // Copy-Paste / Clipboard
+     {
+       match: t => /\b(copy\s*paste|ctrl\s*c|ctrl\s*v|clipboard)\b/.test(t) &&
+                   /\b(nahi\s*ho|not\s*work|issue|kaam\s*nahi)\b/.test(t),
+       script: { file: 'fix-clipboard.bat', label: '📋 Auto-Fix: Copy-Paste' }
+     },
+     // Date / Time
+     {
+       match: t => /\b(date|time|clock|galat\s*time|wrong\s*time)\b/.test(t) &&
+                   /\b(galat|wrong|issue|nahi|set)\b/.test(t),
+       script: { file: 'fix-datetime.bat', label: '🕐 Auto-Fix: Date/Time' }
+     },
+     // Caps Lock stuck
+     {
+       match: t => /\b(caps\s*lock|capslock)\b/.test(t),
+       script: { file: 'fix-capslock.bat', label: '🔡 Auto-Fix: Caps Lock' }
+     },
+     // Website blocked
+     {
+       match: t => /\b(website\s*block|site\s*block|open\s*nahi\s*ho\s*raha)\b/.test(t),
+       script: { file: 'fix-website-blocked.bat', label: '🌐 Auto-Fix: Website' }
+     },
+     // Virus scan (incident — allowed by intent gate for 'incident')
+     {
+       match: t => /\b(virus|malware)\b/.test(t) && /\b(scan|check|remove|aa\s*gaya)\b/.test(t),
+       script: { file: 'fix-virus-scan.bat', label: '🦠 Auto-Fix: Virus Scan' }
+     },
+     // Storage full / Disk cleanup
+     {
+       match: t => /\b(storage|disk|space|jagah)\b/.test(t) &&
+                   /\b(full|khatam|kam|low|nahi\s*hai|jagah\s*nahi)\b/.test(t),
+       script: { file: 'fix-storage.bat', label: '💾 Auto-Fix: Storage Cleanup' }
+     },
+     // Laptop slow / performance — LAST (most generic)
+     {
+       match: t => /\b(laptop|pc|computer)\b/.test(t) &&
+                   /\b(slow|dheema|hang|freeze|lagg|atak|speed)\b/.test(t) &&
+                   !/\b(change|upgrade|naya|replace|badal|chahiye|need|request)\b/.test(t),
+       script: { file: 'fix-slow-laptop.bat', label: '⚡ Auto-Fix: Slow Laptop' }
+     },
+   ];
 
-   // ── Blue/Black screen before general screen ───────────────────────────
-   if (/blue.?screen|bsod|bluescreen/.test(t)) return { file: 'fix-bluescreen.bat', label: '💙 Auto-Fix: Blue Screen' };
-   if (/black.?screen|no display|blank screen/.test(t)) return { file: 'fix-black-screen.bat', label: '🖥️ Auto-Fix: Black Screen' };
-   if (/screen flicker|flicker|blink/.test(t)) return { file: 'fix-screen-flicker.bat', label: '📺 Auto-Fix: Screen Flicker' };
-
-   // ── Overheating before slow (both can say "garam") ────────────────────
-   if (/overheat|garam|hot laptop|laptop garm/.test(t)) return { file: 'fix-overheating.bat', label: '🌡️ Auto-Fix: Overheating' };
-
-   // ── Camera — laptop/webcam only, not phone camera ─────────────────────
-   // FIX-39: added \bcamera\b so "camera nahi chal rha" is caught (previously only laptop.*camera etc matched)
-   if (/webcam|laptop.*camera|camera.*laptop|video\s*call.*camera|camera.*video\s*call|camra|cam\s*nahi|\bcamera\b/.test(t)) return { file: 'fix-camera.bat', label: '📷 Auto-Fix: Camera' };
-
-   // ── Mic/Audio — laptop only (not phone/conference room speaker) ────────
-   if (/mic|microphone/.test(t)) return { file: 'fix-mic.bat', label: '🎤 Auto-Fix: Microphone' };
-   // FIX-6: "headphone chahiye" = equipment request → null; only show fix if clearly broken
-   if (/headphone|earphone|earbuds/.test(t) && !/\b(chahiye|need|request|naya|buy|khareed|lena\s*hai)\b/.test(t)) return { file: 'fix-headphone.bat', label: '🎧 Auto-Fix: Headphone' };
-
-   // ── Projector — only laptop-to-projector connection issues ───────────
-   if (/projector/.test(t) && /connect|nahi\s*dikh|screen\s*share|laptop/.test(t)) return { file: 'fix-projector.bat', label: '📽️ Auto-Fix: Projector' };
-
-   if (/hdmi|external monitor|external screen/.test(t)) return { file: 'fix-hdmi.bat', label: '🖥️ Auto-Fix: HDMI/Monitor' };
-   if (/resolution|display sett/.test(t)) return { file: 'fix-resolution.bat', label: '🖥️ Auto-Fix: Resolution' };
-
-   // ── Sound — laptop audio only, not phone/room speaker ─────────────────
-   // Exclude: "phone mein awaaz", "room mein speaker", "conference speaker"
-   // FIX-27: also exclude when fan is present — "fan ki awaaz" is fan noise, already handled above
-   if (/sound|audio|speaker|awaaz/.test(t) &&
-       !/\b(phone|mobile|room|conference|meeting|hall|reception)\b/.test(t) &&
-       !/\bfan\b/.test(t)) {
-     return { file: 'fix-sound.bat', label: '🔊 Auto-Fix: Sound' };
+   // Execute against table — first match wins
+   for (const entry of SCRIPT_TABLE) {
+     if (entry.match(t)) return entry.script;
    }
-
-   if (/keyboard|keys|typing|type nahi/.test(t)) return { file: 'fix-keyboard.bat', label: '⌨️ Auto-Fix: Keyboard' };
-   if (/touchpad|trackpad|cursor/.test(t)) return { file: 'fix-touchpad.bat', label: '🖱️ Auto-Fix: Touchpad' };
-   if (/touchscreen/.test(t)) return { file: 'fix-touchscreen.bat', label: '🖱️ Auto-Fix: Touchscreen' };
-   if (/bluetooth|\bbt\b/.test(t)) return { file: 'fix-bluetooth.bat', label: '🔵 Auto-Fix: Bluetooth' };
-   if (/usb|pendrive|pen drive|flash drive/.test(t)) return { file: 'fix-usb.bat', label: '🔌 Auto-Fix: USB' };
-   if (/sd card|sdcard|memory card/.test(t)) return { file: 'fix-sdcard.bat', label: '💳 Auto-Fix: SD Card' };
-   if (/fingerprint|finger print/.test(t)) return { file: 'fix-fingerprint.bat', label: '👆 Auto-Fix: Fingerprint' };
-
-   // ── Battery/Charging — laptop only, not phone charging ────────────────
-   if (/batter[yi]?|battry|battey|batr[yi]|\bbatt\b/.test(t)) return { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' };
-   // "charge" only if laptop context present
-   if (/charg/.test(t) && /laptop|pc|computer|plug/.test(t)) return { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' };
-
-   if (/sleep|wake|hibernate|suspend/.test(t)) return { file: 'fix-sleep-wake.bat', label: '💤 Auto-Fix: Sleep/Wake' };
-   // BUG-08 fix: "won't turn on" removed — laptop must be ON to run a script
-   if (/sudden shutdown|shut.?down|band ho|band ho jata/.test(t)) return { file: 'fix-sudden-shutdown.bat', label: '⚡ Auto-Fix: Sudden Shutdown' };
-
-   // ── Software apps BEFORE network — "teams not connecting" ≠ wifi ─────
-   if (/\bteams\b/.test(t)) return { file: 'fix-teams.bat', label: '📹 Auto-Fix: Teams' };
-   if (/\bzoom\b/.test(t)) return { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' };
-   if (/outlook/.test(t)) return { file: 'fix-browser.bat', label: '📧 Auto-Fix: Gmail (Browser)' };
-
-   // ── Network ───────────────────────────────────────────────────────────
-   // FIX-10: "wifi password kya hai" = info query → null (IT team provides password, no script)
-   if (/wifi|wi-fi|internet|\bnet\b|network|hotspot|broadband|ping/.test(t) &&
-       !/\b(password|pass|pwd)\b/.test(t)) return { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' };
-   if (/wifi|wi-fi|internet|\bnet\b|network|hotspot|broadband|ping/.test(t) &&
-       /\b(password|pass|pwd)\b/.test(t)) return null;
-   if (/onedrive|one drive/.test(t)) return { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' };
-   // FIX-13: "pdf to word kaise karu" = conversion question → null (no script fixes a conversion task)
-   if (/\bpdf\b/.test(t) && /\b(to\s*word|to\s*excel|convert|kaise|karu|banana|change\s*karna)\b/.test(t)) return null;
-   if (/\bpdf\b/.test(t)) return { file: 'fix-pdf.bat', label: '📄 Auto-Fix: PDF' };
-
-   // ── Office apps — fix scripts only for already-installed Office (not fresh installs) ──
-   // "install karo/kaise install/insatll" = fresh installation → IT required → NO script
-   // Catches: install, insatll, insatall, intsall, instll and all common install typos
-   const isInstallRequest = /install|insatl|insatal|instat|instll|intsall|kaise.*instal|instal.*karo|instal.*karu|naya.*softw|softw.*install/.test(t);
-   if (!isInstallRequest && (/\bword\b|\bexcel\b|\bpowerpoint\b/.test(t))) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };
-   if (!isInstallRequest && (/\bms\s*office\b|\bmicrosoft\s*office\b/.test(t))) return { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: Word/Excel' };
-
-   // FIX-50: added common Chrome typos — chrmo, chorme, crome, googl chrom
-   if (/chrome|browser|firefox|edge|safari|chrmo|chorme|\bcrome\b|google\s*chr/.test(t)) return { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser' };
-   // "printout chahiye / need printout" = request, not fix — no script
-   if (/\b(printout|print\s*out)\b/.test(t) && /need|chahiye|karo|dena|lena|nikalna/i.test(t)) return null;
-   // FIX-8: "printer chahiye" = equipment request → null (IT procures hardware, no script)
-   if (/\bprinter\b/.test(t) && /\b(chahiye|need|naya|request|khareed|buy|lena\s*hai)\b/.test(t)) return null;
-   if (/printer|print/.test(t)) return { file: 'fix-printer.bat', label: '🖨️ Auto-Fix: Printer' };
-   if (/windows update|win update/.test(t)) return { file: 'fix-windows-update.bat', label: '🔄 Auto-Fix: Windows Update' };
-   if (/copy.?paste|clipboard|ctrl.?c|ctrl.?v/.test(t)) return { file: 'fix-clipboard.bat', label: '📋 Auto-Fix: Copy-Paste' };
-   if (/date|time|clock|galat time|wrong time/.test(t)) return { file: 'fix-datetime.bat', label: '🕐 Auto-Fix: Date/Time' };
-   if (/caps.?lock|capslock/.test(t)) return { file: 'fix-capslock.bat', label: '🔡 Auto-Fix: Caps Lock' };
-   if (/crash|app crash|app band/.test(t)) return { file: 'fix-app-crash.bat', label: '💥 Auto-Fix: App Crash' };
-   if (/website block|site block|open nahi ho raha/.test(t)) return { file: 'fix-website-blocked.bat', label: '🌐 Auto-Fix: Website' };
-   if (/virus|malware|ransomware|hack/.test(t)) return { file: 'fix-virus-scan.bat', label: '🦠 Auto-Fix: Virus Scan' };
-   if (/storage|disk full|space|jagah nahi/.test(t)) return { file: 'fix-storage.bat', label: '💾 Auto-Fix: Storage Cleanup' };
-
-   // ── General laptop slow — LAST (most generic catch) ───────────────────
-   // GUARD: laptop change/upgrade/new request — never show slow fix for these
-   const isChangeRequest = /change|upgrade|naya|replace|badal|new\s*laptop|laptop\s*change|laptop\s*upgrade|chahiye|need|request/i.test(t);
-   if (!isChangeRequest && /slow|hang|lagg|freez|stuck|fast karo|speed|chalta nahi/.test(t)) return { file: 'fix-slow-laptop.bat', label: '⚡ Auto-Fix: Slow Laptop' };
    return null;
  };
 
