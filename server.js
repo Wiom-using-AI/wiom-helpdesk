@@ -1185,21 +1185,20 @@ app.listen(PORT, async () => {
          blocks.push({ type: 'divider' });
 
          // ── MY TICKETS ─────────────────────────────────────────────────────────
+         // Only show Open/In Progress/Waiting tickets \u2014 resolved/closed auto-hide
          if (myTickets.length > 0) {
-           const ticketHeader = openCnt > 0 ? '\u2014 \u{1f534} *' + openCnt + ' Open*' : '\u2014 \u2705 All Resolved';
-           blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '\u{1f3ab} *My Recent Tickets* ' + ticketHeader } });
+           blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '\ud83c\udfab *My Open Tickets* \u2014 \ud83d\udd34 *' + myTickets.length + ' Open*' } });
            for (const t of myTickets.slice(0, 3)) {
              const hrs = Math.floor((Date.now() - new Date(t.createdAt)) / 3600000);
              const timeStr = hrs < 24 ? hrs + 'h ago' : Math.floor(hrs/24) + 'd ago';
              const desc = (t.description||'').substring(0,60) + ((t.description||'').length>60?'...':'');
              blocks.push({
                type: 'section',
-               text: { type: 'mrkdwn', text: (statEmoji[t.status]||'\u{1f535}') + ' `' + t.ticketId + '` \u2014 *' + t.status + '* ' + (priEmoji2[t.priority]||'\u{1f7e1}') + ' ' + t.priority + '\n_' + desc + '_\n\u{1f4c5} ' + timeStr + ' \u00b7 ' + (t.category||'Other') }
+               text: { type: 'mrkdwn', text: (statEmoji[t.status]||'\ud83d\udd35') + ' `' + t.ticketId + '` \u2014 *' + t.status + '* ' + (priEmoji2[t.priority]||'\ud83d\udfe1') + ' ' + t.priority + '\n_' + desc + '_\n\ud83d\udcc5 ' + timeStr + ' \u00b7 ' + (t.category||'Other') }
              });
            }
-         } else {
-           blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '\u{1f3ab} *My Tickets* \u2014 \u2705 No tickets yet!' } });
          }
+         // No section shown when no open tickets \u2014 clean home page
 
          blocks.push({ type: 'divider' });
          blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '\u{1f4c2}  *Select a Category*\n_Apni problem select karo \u2014 Zivon help karega!_ \u{1f447}' } });
@@ -2098,7 +2097,7 @@ app.listen(PORT, async () => {
  const emp = await Employee.findOne({ $or: [{ slackUserId: userId }, { empId: userId }] });
  let myTickets = [];
  if (emp?.empId) {
- myTickets = await Ticket.find({ empId: emp.empId }).sort({ createdAt: -1 }).limit(3).lean();
+ myTickets = await Ticket.find({ empId: emp.empId, status: { $in: ['Open', 'In Progress', 'Waiting'] } }).sort({ createdAt: -1 }).limit(3).lean();
  }
  const expandedSet = expandedHomeMap.get(userId) || new Set();
  const blocks = buildHomeBlocks(emp, myTickets, expandedSet);
@@ -2134,7 +2133,7 @@ app.listen(PORT, async () => {
  try {
  const emp = await Employee.findOne({ $or: [{ slackUserId: userId }, { empId: userId }] });
  let myTickets = [];
- if (emp?.empId) myTickets = await Ticket.find({ empId: emp.empId }).sort({ createdAt: -1 }).limit(3).lean();
+ if (emp?.empId) myTickets = await Ticket.find({ empId: emp.empId, status: { $in: ['Open', 'In Progress', 'Waiting'] } }).sort({ createdAt: -1 }).limit(3).lean();
  const blocks = buildHomeBlocks(emp, myTickets, userExpanded);
  await client.views.publish({ user_id: userId, view: { type: 'home', blocks } });
  } catch (err) {
