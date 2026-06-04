@@ -3513,14 +3513,12 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
      const existing = await LearningQueue.findOne({ normalizedQuery: normalizedQ });
 
      if (existing) {
-       // Increment occurrence count
        await LearningQueue.findByIdAndUpdate(existing._id, {
          $inc: { occurrences: 1 },
          $addToSet: { empIds: emp.empId }
        });
      } else if (lqConf < 80) {
-       // Only save to learning queue if confidence is not high (high confidence = likely correct)
-       await LearningQueue.create({
+       const newEntry = await LearningQueue.create({
          query: text,
          normalizedQuery: normalizedQ,
          aiAnswer: reply,
@@ -3531,6 +3529,27 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
          occurrences: 1,
          status: 'pending'
        });
+
+       // ── NOTIFY ADMIN ON SLACK with Approve/Reject buttons ──────────────
+       const adminSlackId = process.env.ADMIN_EMAIL_SLACK_ID || process.env.SAJAN_SLACK_ID;
+       if (adminSlackId && adminSlackId !== 'FILL_KARO' && slackClient) {
+         const shortAnswer = reply.substring(0, 300) + (reply.length > 300 ? '...' : '');
+         slackClient.chat.postMessage({
+           channel: adminSlackId,
+           text: '🧠 New Learning Queue item — review needed',
+           blocks: [
+             { type: 'header', text: { type: 'plain_text', text: '🧠 Learning Queue — Review Needed', emoji: true }},
+             { type: 'section', text: { type: 'mrkdwn', text: `*Employee query:*\n_"${text.substring(0, 150)}"_\n\n*AI Answer:*\n${formatForSlack(shortAnswer)}` }},
+             { type: 'context', elements: [{ type: 'mrkdwn', text: `Category: ${lqCat} | Confidence: ${lqConf}% | Asked by: ${emp.empName || emp.empId}` }]},
+             { type: 'actions', elements: [
+               { type: 'button', text: { type: 'plain_text', text: '✅ Approve', emoji: true },
+                 style: 'primary', action_id: 'lq_approve', value: String(newEntry._id) },
+               { type: 'button', text: { type: 'plain_text', text: '❌ Reject', emoji: true },
+                 style: 'danger', action_id: 'lq_reject', value: String(newEntry._id) }
+             ]}
+           ]
+         }).catch(() => {});
+       }
      }
    } catch(e) { /* never crash bot */ }
  }
@@ -3774,6 +3793,61 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
    } catch (err) {
      console.error('wrong_answer_btn error:', err.message);
    }
+ });
+
+ // ── 🧠 Learning Queue — Approve from Slack ───────────────────────────────────
+ slackApp.action('lq_approve', async ({ body, ack, client }) => {
+   await ack();
+   const lqId = body.actions?.[0]?.value;
+   const channelId = body.channel?.id || body.container?.channel_id;
+   const messageTs = body.message?.ts;
+   try {
+     const LearningQueue = require('./models/LearningQueue');
+     await LearningQueue.findByIdAndUpdate(lqId, {
+       status: 'approved',
+       reviewedBy: body.user?.name || 'admin',
+       reviewedAt: new Date(),
+       reviewNote: 'Approved via Slack'
+     });
+     // Update the Slack message to show approved
+     if (messageTs) {
+       await client.chat.update({
+         channel: channelId, ts: messageTs,
+         text: '✅ Learning Queue item approved',
+         blocks: [
+           { type: 'section', text: { type: 'mrkdwn', text: `✅ *Approved!* Answer saved for KB reference.\n_Reviewed by ${body.user?.real_name || body.user?.name}_` }}
+         ]
+       });
+     }
+     console.log(`✅ LQ approved: ${lqId} by ${body.user?.name}`);
+   } catch(err) { console.error('lq_approve error:', err.message); }
+ });
+
+ // ── 🧠 Learning Queue — Reject from Slack ────────────────────────────────────
+ slackApp.action('lq_reject', async ({ body, ack, client }) => {
+   await ack();
+   const lqId = body.actions?.[0]?.value;
+   const channelId = body.channel?.id || body.container?.channel_id;
+   const messageTs = body.message?.ts;
+   try {
+     const LearningQueue = require('./models/LearningQueue');
+     await LearningQueue.findByIdAndUpdate(lqId, {
+       status: 'rejected',
+       reviewedBy: body.user?.name || 'admin',
+       reviewedAt: new Date(),
+       reviewNote: 'Rejected via Slack'
+     });
+     if (messageTs) {
+       await client.chat.update({
+         channel: channelId, ts: messageTs,
+         text: '❌ Learning Queue item rejected',
+         blocks: [
+           { type: 'section', text: { type: 'mrkdwn', text: `❌ *Rejected.* Answer discarded.\n_Reviewed by ${body.user?.real_name || body.user?.name}_` }}
+         ]
+       });
+     }
+     console.log(`❌ LQ rejected: ${lqId} by ${body.user?.name}`);
+   } catch(err) { console.error('lq_reject error:', err.message); }
  });
 
  // ── ❌ Not resolved — give next steps, escalate on 2nd failure ───────────────
