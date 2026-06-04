@@ -48,12 +48,12 @@ app.use(helmet({
  contentSecurityPolicy: {
  directives: {
  defaultSrc : ["'self'"],
- scriptSrc : ["'self'", "'unsafe-inline'"],
+ scriptSrc : ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
  scriptSrcAttr : ["'unsafe-inline'"],
- styleSrc : ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+ styleSrc : ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
  fontSrc : ["'self'", "https://fonts.gstatic.com"],
  imgSrc : ["'self'", "data:", "https:"],
- connectSrc : ["'self'", "https://wiom-helpdesk-production.up.railway.app"]
+ connectSrc : ["'self'", "https://wiom-helpdesk-production.up.railway.app", "https://web-production-ef6c1.up.railway.app"]
  }
  }
 }));
