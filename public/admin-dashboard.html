@@ -236,6 +236,7 @@
     <div class="nav-item" onclick="showTab('team')"><span class="icon">🛡️</span> IT Team</div>
     <div class="nav-item" onclick="showTab('kb')"><span class="icon">📚</span> Knowledge Base</div>
     <div class="nav-item" onclick="showTab('import')"><span class="icon">📥</span> Bulk Import</div>
+    <div class="nav-item" onclick="showTab('learning')"><span class="icon">🧠</span> Learning Queue</div>
   </div>
 
   <!-- Main Content -->
@@ -582,6 +583,37 @@
       </div>
     </div>
 
+    <div id="tab-learning" class="tab-content">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><h3>🧠 Learning Queue</h3></div>
+        <div class="card-body" style="padding:20px;">
+          <p style="color:var(--muted);margin-bottom:16px;">AI-generated answers waiting for admin review. Approve to save for KB reference, reject to discard.</p>
+
+          <!-- Stats bar -->
+          <div style="margin-bottom:20px;display:flex;gap:16px;flex-wrap:wrap;">
+            <div style="padding:12px 20px;background:rgba(232,25,125,0.08);border:1px solid rgba(232,25,125,0.2);border-radius:10px;font-size:14px;">
+              ⏳ Pending: <strong id="lqPending" style="color:var(--pink);">-</strong>
+            </div>
+            <div style="padding:12px 20px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;font-size:14px;">
+              ✅ Approved: <strong id="lqApproved" style="color:#22c55e;">-</strong>
+            </div>
+            <div style="padding:12px 20px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;font-size:14px;">
+              ❌ Rejected: <strong id="lqRejected" style="color:#ef4444;">-</strong>
+            </div>
+          </div>
+
+          <!-- Filter tabs -->
+          <div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="lqTabPending" onclick="loadLearningQueue('pending')" style="padding:8px 16px;background:var(--pink);border:none;border-radius:8px;color:#fff;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;font-weight:600;">⏳ Pending</button>
+            <button id="lqTabApproved" onclick="loadLearningQueue('approved')" style="padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;">✅ Approved</button>
+            <button id="lqTabRejected" onclick="loadLearningQueue('rejected')" style="padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;">❌ Rejected</button>
+          </div>
+
+          <div id="learningList" style="font-size:14px;color:var(--muted);">Select a tab to load items.</div>
+        </div>
+      </div>
+    </div><!-- /tab-learning -->
+
   </div><!-- /main-content -->
 </div><!-- /mainPage -->
 
@@ -781,13 +813,14 @@ function showTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   event.currentTarget.classList.add('active');
-  const titles = { dashboard:'Dashboard', tickets:'All Tickets', open:'Open Tickets', employees:'Employees', report:'Today Report', analytics:'Analytics', broadcast:'Broadcast', team:'IT Team', kb:'Knowledge Base', import:'Bulk Import' };
+  const titles = { dashboard:'Dashboard', tickets:'All Tickets', open:'Open Tickets', employees:'Employees', report:'Today Report', analytics:'Analytics', broadcast:'Broadcast', team:'IT Team', kb:'Knowledge Base', import:'Bulk Import', learning:'Learning Queue' };
   document.getElementById('pageTitle').textContent = titles[tab] || tab;
   if (tab === 'report')    loadReport();
   if (tab === 'open')      loadOpenTickets();
   if (tab === 'analytics') loadAnalytics();
   if (tab === 'team')      loadTeam();
   if (tab === 'kb')        loadKB();
+  if (tab === 'learning')  { loadLearningStats(); loadLearningQueue('pending'); }
 }
 
 function refreshData() {
@@ -1593,6 +1626,106 @@ async function kekaSync() {
       loadEmployees();
     } else { res.innerHTML = `<span style="color:#f87171;">❌ ${d.error}</span>`; }
   } catch(e) { res.innerHTML = `<span style="color:#f87171;">❌ ${e.message}</span>`; }
+}
+
+// ── LEARNING QUEUE ──────────────────────────────────────────────────────────
+async function apiFetch(path, method = 'GET', body = undefined) {
+  const opts = { method, headers: { 'Authorization': `Bearer ${token}` } };
+  if (body !== undefined) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(`${API}${path}`, opts);
+  if (res.status === 401) { doLogout(); throw new Error('Session expired'); }
+  return res.json();
+}
+
+async function loadLearningStats() {
+  try {
+    const d = await apiFetch('/api/learning/stats');
+    document.getElementById('lqPending').textContent = d.pending || 0;
+    document.getElementById('lqApproved').textContent = d.approved || 0;
+    document.getElementById('lqRejected').textContent = d.rejected || 0;
+  } catch(e) {}
+}
+
+async function loadLearningQueue(status = 'pending') {
+  // Update active tab button styles
+  ['pending','approved','rejected'].forEach(s => {
+    const btn = document.getElementById('lqTab' + s.charAt(0).toUpperCase() + s.slice(1));
+    if (btn) {
+      btn.style.background = s === status ? 'var(--pink)' : 'transparent';
+      btn.style.color = s === status ? '#fff' : 'var(--muted)';
+      btn.style.border = s === status ? 'none' : '1px solid var(--border)';
+      btn.style.fontWeight = s === status ? '600' : 'normal';
+    }
+  });
+
+  const list = document.getElementById('learningList');
+  list.innerHTML = '<p style="color:var(--muted);">Loading...</p>';
+  try {
+    const d = await apiFetch('/api/learning?status=' + status);
+    if (!d.items || !d.items.length) {
+      list.innerHTML = '<p style="color:var(--muted);padding:16px 0;">No ' + status + ' items.</p>';
+      return;
+    }
+
+    list.innerHTML = d.items.map(item => {
+      const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN') : '-';
+      const reviewDate = item.reviewedAt ? new Date(item.reviewedAt).toLocaleDateString('en-IN') : '-';
+      const answerHtml = (item.editedAnswer || item.aiAnswer || '').replace(/\n/g, '<br>');
+      const safeAnswer = (item.aiAnswer || '').replace(/\\/g, '\\\\').replace(/`/g, "'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+      return `
+        <div style="margin-bottom:16px;padding:16px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid var(--border);">
+          <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+            <div><strong>❓ Query:</strong> <span style="color:var(--pink);">${item.query || ''}</span></div>
+            <div style="font-size:11px;color:var(--muted);text-align:right;">
+              Asked ${item.occurrences || 1}x &nbsp;|&nbsp; ${item.category || '-'} &nbsp;|&nbsp; Confidence: ${item.confidence || 0}% &nbsp;|&nbsp; ${dateStr}
+            </div>
+          </div>
+          <div style="margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.2);border-radius:8px;font-size:13px;line-height:1.6;">
+            <strong>🤖 AI Answer:</strong><br>${answerHtml}
+          </div>
+          ${item.status === 'pending' ? `
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button onclick="approveLQ('${item._id}', false)" style="padding:7px 14px;background:#22c55e;border:none;border-radius:8px;color:#fff;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;font-weight:600;">✅ Approve</button>
+              <button onclick="editAndApproveLQ('${item._id}', '${safeAnswer}')" style="padding:7px 14px;background:rgba(232,25,125,0.15);border:1px solid rgba(232,25,125,0.3);border-radius:8px;color:var(--pink);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;">✏️ Edit & Approve</button>
+              <button onclick="rejectLQ('${item._id}')" style="padding:7px 14px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.2);border-radius:8px;color:#ef4444;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;">❌ Reject</button>
+            </div>
+          ` : `
+            <div style="color:var(--muted);font-size:12px;">
+              Status: <strong>${item.status}</strong> &nbsp;|&nbsp; Reviewed: ${reviewDate} &nbsp;|&nbsp; Note: ${item.reviewNote || '-'}
+            </div>
+          `}
+        </div>
+      `;
+    }).join('');
+  } catch(e) { list.innerHTML = '<p style="color:#ef4444;">Error loading items: ' + e.message + '</p>'; }
+}
+
+async function approveLQ(id, withEdit, editedAnswer) {
+  try {
+    await apiFetch('/api/learning/' + id + '/approve', 'PATCH', { editedAnswer, reviewNote: 'Approved by admin' });
+    await loadLearningQueue('pending');
+    await loadLearningStats();
+    alert('✅ Approved! Answer saved for KB reference.');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function editAndApproveLQ(id, currentAnswer) {
+  const edited = prompt('Edit the answer before approving:\n(Make it concise, Hinglish, max 3-4 steps)', currentAnswer);
+  if (edited === null) return; // cancelled
+  await approveLQ(id, true, edited);
+}
+
+async function rejectLQ(id) {
+  const note = prompt('Reason for rejection (optional):');
+  if (note === null) return;
+  try {
+    await apiFetch('/api/learning/' + id + '/reject', 'PATCH', { reviewNote: note || 'Rejected by admin' });
+    await loadLearningQueue('pending');
+    await loadLearningStats();
+  } catch(e) { alert('Error: ' + e.message); }
 }
 </script>
 </body>

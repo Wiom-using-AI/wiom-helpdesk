@@ -13,6 +13,7 @@ const employeeRoutes = require('./routes/employees');
 const adminRoutes = require('./routes/admin');
 const kbRoutes = require('./routes/kb');
 const agentRoutes = require('./routes/agent');
+const learningRoutes = require('./routes/learning');
 const slaService = require('./services/sla');
 const Ticket = require('./models/Ticket');
 const Conversation = require('./models/Conversation');
@@ -94,6 +95,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/kb', kbRoutes);
 app.use('/api/agent', agentRoutes);
+app.use('/api/learning', learningRoutes);
 
 // ── WhatsApp Webhook (Twilio) ──────────────────────────────────────────────────
 app.post('/api/whatsapp/incoming', async (req, res) => {
@@ -3500,6 +3502,39 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
  conv.messages.push({ role: 'assistant', content: reply });
  await conv.save();
 
+ // ── LEARNING QUEUE: Save AI answer for admin review (never auto-approve) ──
+ if (!kbReply && reply && reply.length > 20) {
+   try {
+     const LearningQueue = require('./models/LearningQueue');
+     const { intent: lqIntent, confidence: lqConf, category: lqCat } =
+       claudeSvc.detectQueryIntent ? claudeSvc.detectQueryIntent(text) : { intent: 'unknown', confidence: 50, category: 'unknown' };
+
+     const normalizedQ = text.toLowerCase().trim().substring(0, 150);
+     const existing = await LearningQueue.findOne({ normalizedQuery: normalizedQ });
+
+     if (existing) {
+       // Increment occurrence count
+       await LearningQueue.findByIdAndUpdate(existing._id, {
+         $inc: { occurrences: 1 },
+         $addToSet: { empIds: emp.empId }
+       });
+     } else if (lqConf < 80) {
+       // Only save to learning queue if confidence is not high (high confidence = likely correct)
+       await LearningQueue.create({
+         query: text,
+         normalizedQuery: normalizedQ,
+         aiAnswer: reply,
+         category: lqCat || 'unknown',
+         intent: lqIntent || 'unknown',
+         confidence: lqConf || 50,
+         empIds: [emp.empId],
+         occurrences: 1,
+         status: 'pending'
+       });
+     }
+   } catch(e) { /* never crash bot */ }
+ }
+
  // ── LOG UNKNOWN QUERIES to MongoDB for weekly review ──────────────────────
  try {
    const { intent: qi, confidence: qc, category: qcat } = claudeSvc.detectQueryIntent
@@ -4002,25 +4037,35 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
      if (!adminId || adminId === 'FILL_KARO' || !slackClient) return;
 
      const UnknownQuery = require('./models/UnknownQuery');
+     const LearningQueue = require('./models/LearningQueue');
      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 3600000);
 
-     // Top 20 unknown queries this week
-     const topUnknown = await UnknownQuery.find({
-       createdAt: { $gte: oneWeekAgo },
-       resolved: false
-     })
-     .sort({ attempts: -1 })
-     .limit(20)
-     .lean();
+     // Top 20 unknown queries this week + Learning Queue stats in parallel
+     const [topUnknown, pendingReview, approvedThisWeek] = await Promise.all([
+       UnknownQuery.find({
+         createdAt: { $gte: oneWeekAgo },
+         resolved: false
+       })
+       .sort({ attempts: -1 })
+       .limit(20)
+       .lean(),
+       LearningQueue.countDocuments({ status: 'pending' }),
+       LearningQueue.countDocuments({
+         status: { $in: ['approved', 'edited_approved'] },
+         reviewedAt: { $gte: oneWeekAgo }
+       })
+     ]);
 
-     if (topUnknown.length === 0) {
+     if (topUnknown.length === 0 && pendingReview === 0) {
        console.log('Weekly report: no unknown queries this week');
        return;
      }
 
-     const listText = topUnknown
-       .map((q, i) => `${i+1}. \`${q.query.substring(0, 60)}\` — ${q.attempts} baar poochha gaya`)
-       .join('\n');
+     const listText = topUnknown.length
+       ? topUnknown
+           .map((q, i) => `${i+1}. \`${q.query.substring(0, 60)}\` — ${q.attempts} baar poochha gaya`)
+           .join('\n')
+       : '_Is hafte koi unknown query nahi aayi!_';
 
      await slackClient.chat.postMessage({
        channel: adminId,
@@ -4028,6 +4073,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
        blocks: [
          { type: 'header', text: { type: 'plain_text', text: '📊 Weekly Unknown Queries Report', emoji: true }},
          { type: 'section', text: { type: 'mrkdwn', text: `*Top ${topUnknown.length} queries bot answer nahi de paya:*\n\n${listText}` }},
+         { type: 'section', text: { type: 'mrkdwn', text: `*📋 Learning Queue:* ${pendingReview} answers waiting for review | ${approvedThisWeek} approved this week\n_Admin Dashboard → Learning Queue tab se review karein_` }},
          { type: 'section', text: { type: 'mrkdwn', text: '_In queries ke liye KB articles banao → bot automatically improve hoga._' }},
          { type: 'context', elements: [{ type: 'mrkdwn', text: `_Total this week: ${topUnknown.length} unique unknown queries_` }]}
        ]
