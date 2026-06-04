@@ -1136,77 +1136,58 @@ app.listen(PORT, async () => {
    printer:     { icon: '🩵 🖨️', label: 'Printer & Peripheral',    desc: 'Mouse · Keyboard · USB devices' },
  };
 
- // ── Build Home Tab blocks — CLEAN 8-category layout ──────────────────────────
+ // ── Build Home Tab blocks — FINAL Phase 1 design ────────────────────────────────────────
          const buildHomeBlocks = (emp, myTickets, expandedSet) => {
-         const name = (emp?.empName || emp?.name || 'there').split(' ')[0];
-         const openCnt = myTickets ? myTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length : 0;
-         const statEmoji = { 'Open': '🔴', 'In Progress': '🟡', 'Resolved': '✅', 'Closed': '⚫' };
-         const priEmoji2 = { 'Critical': '🔴', 'High': '🟠', 'Medium': '🟡', 'Low': '🟢' };
+           const name = (emp?.empName || emp?.name || 'there').split(' ')[0];
+           const blocks = [];
 
-         const blocks = [];
-
-         // ── HEADER ─────────────────────────────────────────────────────────────
-         blocks.push({
-           type: 'section',
-           text: { type: 'mrkdwn', text: '*🛠 WIOM IT Helpdesk*\nHow can I help you today, *' + name + '*?' },
-           accessory: { type: 'image', image_url: 'https://wiom-helpdesk-production.up.railway.app/wiom-logo.webp', alt_text: 'WIOM Logo' }
-         });
-
-         // ── QUICK ACTIONS ──────────────────────────────────────────────────────
-         blocks.push({ type: 'divider' });
-         blocks.push({
-           type: 'actions',
-           elements: [
-             { type: 'button', text: { type: 'plain_text', text: '📶 WiFi Password', emoji: true }, value: 'wifi password kya hai', action_id: 'home_quick_wifi_pwd_quick', style: 'primary' },
-             { type: 'button', text: { type: 'plain_text', text: '🔑 Password Reset', emoji: true }, value: 'Windows ya Gmail ka password bhool gaya', action_id: 'home_quick_55b' },
-             { type: 'button', text: { type: 'plain_text', text: '🎫 Raise Ticket', emoji: true }, value: 'create ticket', action_id: 'vague_pick_create_ticket', style: 'danger' }
-           ]
-         });
-         blocks.push({ type: 'divider' });
-
-         // ── 8 CATEGORY BUTTONS ────────────────────────────────────────────────
-         blocks.push({
-           type: 'actions',
-           elements: [
-             { type: 'button', text: { type: 'plain_text', text: '💻 Laptop & Hardware', emoji: true }, action_id: 'cat_laptop', value: 'laptop hardware issue' },
-             { type: 'button', text: { type: 'plain_text', text: '🌐 Network & Internet', emoji: true }, action_id: 'cat_network', value: 'wifi internet issue' },
-             { type: 'button', text: { type: 'plain_text', text: '📊 Microsoft Office', emoji: true }, action_id: 'cat_msoffice', value: 'microsoft office issue' }
-           ]
-         });
-         blocks.push({
-           type: 'actions',
-           elements: [
-             { type: 'button', text: { type: 'plain_text', text: '🌍 Browser & Apps', emoji: true }, action_id: 'cat_browser', value: 'browser app issue' },
-             { type: 'button', text: { type: 'plain_text', text: '📧 Email & Communication', emoji: true }, action_id: 'cat_email', value: 'gmail email issue' },
-             { type: 'button', text: { type: 'plain_text', text: '🔐 Access & Password', emoji: true }, action_id: 'cat_access', value: 'password access issue' }
-           ]
-         });
-         blocks.push({
-           type: 'actions',
-           elements: [
-             { type: 'button', text: { type: 'plain_text', text: '📦 Asset Requests', emoji: true }, action_id: 'cat_asset', value: 'new equipment asset request' }
-           ]
-         });
-         blocks.push({ type: 'divider' });
-
-         // ── MY OPEN TICKETS (only if any exist) ───────────────────────────────
-         if (myTickets && myTickets.length > 0) {
-           blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '🎫 *My Open Tickets* — 🔴 *' + myTickets.length + ' Open*' } });
-           for (const t of myTickets.slice(0, 3)) {
-             const hrs = Math.floor((Date.now() - new Date(t.createdAt)) / 3600000);
-             const timeStr = hrs < 24 ? hrs + 'h ago' : Math.floor(hrs/24) + 'd ago';
-             const desc = (t.description||'').substring(0,60) + ((t.description||'').length>60?'...':'');
-             blocks.push({
-               type: 'section',
-               text: { type: 'mrkdwn', text: (statEmoji[t.status]||'🔵') + ' `' + t.ticketId + '` — *' + t.status + '* ' + (priEmoji2[t.priority]||'🟡') + ' ' + t.priority + '\n_' + desc + '_\n📅 ' + timeStr + ' · ' + (t.category||'Other') }
-             });
-           }
+           // Header
+           blocks.push({
+             type: 'section',
+             text: { type: 'mrkdwn', text: '🛠 *WIOM IT Helpdesk*\n_How can I help you today, ' + name + '?_' },
+             accessory: { type: 'image', image_url: 'https://wiom-helpdesk-production.up.railway.app/wiom-logo.webp', alt_text: 'WIOM' }
+           });
            blocks.push({ type: 'divider' });
-         }
 
-         blocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: '_Made with ❤️ by WIOM IT Team  |  Powered by Zivon AI_' }] });
+           // 7 Categories in rows of 3
+           blocks.push({ type: 'actions', elements: [
+             { type: 'button', text: { type: 'plain_text', text: '💻 Laptop & Hardware', emoji: true }, action_id: 'cat_laptop', value: 'laptop' },
+             { type: 'button', text: { type: 'plain_text', text: '🌐 Network & Internet', emoji: true }, action_id: 'cat_network', value: 'network' },
+             { type: 'button', text: { type: 'plain_text', text: '📊 Microsoft Office', emoji: true }, action_id: 'cat_msoffice', value: 'office' },
+           ]});
+           blocks.push({ type: 'actions', elements: [
+             { type: 'button', text: { type: 'plain_text', text: '🌍 Browser & Apps', emoji: true }, action_id: 'cat_browser', value: 'browser' },
+             { type: 'button', text: { type: 'plain_text', text: '📧 Email & Communication', emoji: true }, action_id: 'cat_email', value: 'email' },
+             { type: 'button', text: { type: 'plain_text', text: '🔐 Access & Password', emoji: true }, action_id: 'cat_access', value: 'access' },
+           ]});
+           blocks.push({ type: 'actions', elements: [
+             { type: 'button', text: { type: 'plain_text', text: '📦 Asset Requests', emoji: true }, action_id: 'cat_asset', value: 'asset' },
+           ]});
 
-         return blocks;
+           blocks.push({ type: 'divider' });
+
+           // My Open Tickets (only if open)
+           const statEmoji = { 'Open': '🔴', 'In Progress': '🟡', 'Waiting': '🟠' };
+           const priEmoji2 = { 'Critical': '🔴', 'High': '🟠', 'Medium': '🟡', 'Low': '🟢' };
+           const openTickets = myTickets ? myTickets.filter(t => ['Open', 'In Progress', 'Waiting'].includes(t.status)) : [];
+           if (openTickets.length > 0) {
+             blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '🎫 *My Open Tickets* — 🔴 *' + openTickets.length + ' Open*' }});
+             for (const t of openTickets.slice(0, 3)) {
+               const hrs = Math.floor((Date.now() - new Date(t.createdAt)) / 3600000);
+               const timeStr = hrs < 24 ? hrs + 'h ago' : Math.floor(hrs/24) + 'd ago';
+               blocks.push({ type: 'section', text: { type: 'mrkdwn', text: (statEmoji[t.status]||'🔵') + ' `' + t.ticketId + '` — *' + t.status + '* ' + (priEmoji2[t.priority]||'🟡') + ' ' + t.priority + '\n_' + (t.description||'').substring(0,55) + '..._\n📅 ' + timeStr }});
+             }
+             blocks.push({ type: 'divider' });
+           }
+
+           // Bottom actions
+           blocks.push({ type: 'actions', elements: [
+             { type: 'button', text: { type: 'plain_text', text: '🎫 Create Ticket', emoji: true }, action_id: 'vague_pick_create_ticket', value: 'create ticket', style: 'danger' },
+             { type: 'button', text: { type: 'plain_text', text: '📶 WiFi Password', emoji: true }, action_id: 'home_quick_wifi_pwd_quick', value: 'wifi password', style: 'primary' },
+             { type: 'button', text: { type: 'plain_text', text: '🔑 Password Reset', emoji: true }, action_id: 'home_quick_55b', value: 'password reset' },
+           ]});
+
+           return blocks;
          };
 
          // ── FEATURE 5: Office hours check (IST = UTC+5:30) ────────────────────
@@ -1859,84 +1840,102 @@ app.listen(PORT, async () => {
        label: '💻 Laptop & Hardware',
        desc: 'Select your specific issue:',
        issues: [
-         { text: '🐢 Laptop Slow', val: 'laptop_slow' },
-         { text: '💀 Won\'t Turn On', val: 'wont_turn_on' },
-         { text: '💙 Blue Screen', val: 'blue_screen' },
-         { text: '🌡️ Overheating', val: 'overheat' },
-         { text: '🔋 Battery Issue', val: 'battery_issue' },
-         { text: '⌨️ Keyboard Issue', val: 'keys_not_working' },
-         { text: '🖱️ Touchpad Issue', val: 'touchpad_issue' },
-         { text: '📷 Camera Issue', val: 'camera_issue' },
-         { text: '🔊 Audio Issue', val: 'sound_none' },
-         { text: '🖥️ Screen Issue', val: 'screen_black' },
-         { text: '🔌 Charger Issue', val: 'battery_not_charging' },
+         { text: '🐢 Laptop Slow',              val: 'laptop_slow' },
+         { text: '❌ Laptop Not Starting',         val: 'wont_turn_on' },
+         { text: '💙 Blue Screen',               val: 'blue_screen' },
+         { text: '🌡️ Overheating',           val: 'overheat' },
+         { text: '🔋 Battery Issue',              val: 'battery_issue' },
+         { text: '🔌 Charger Issue',              val: 'battery_not_charging' },
+         { text: '⌨️ Keyboard Issue',           val: 'keys_not_working' },
+         { text: '🖱️ Touchpad Issue',       val: 'touchpad_issue' },
+         { text: '📷 Camera Issue',               val: 'camera_issue' },
+         { text: '🎤 Microphone Issue',           val: 'mic_issue' },
+         { text: '🔊 Speaker / Audio Issue',      val: 'sound_none' },
+         { text: '🖥️ Screen Issue',         val: 'screen_black' },
+         { text: '🖵 External Monitor Issue',     val: 'external_monitor' },
+         { text: '🖨️ Printer Issue',        val: 'printer_issue' },
+         { text: '🖨️ Scanner Issue',        val: 'scanner_issue' },
        ]
      },
      cat_network: {
        label: '🌐 Network & Internet',
        desc: 'Select your specific issue:',
        issues: [
-         { text: '📵 WiFi Not Working', val: 'wifi_not_connect' },
-         { text: '🐌 Slow Internet', val: 'internet_slow' },
-         { text: '🔄 WiFi Disconnecting', val: 'wifi_drop' },
-         { text: '🔒 Website Blocked', val: 'website_blocked' },
-         { text: '🔌 LAN Cable Issue', val: 'lan_issue' },
+         { text: '📵 WiFi Not Working',    val: 'wifi_not_connect' },
+         { text: '🌐 No Internet',         val: 'wifi_not_connect' },
+         { text: '🐌 Slow Internet',       val: 'internet_slow' },
+         { text: '🔒 VPN Issue',           val: 'vpn_issue' },
+         { text: '🔌 LAN Issue',           val: 'lan_issue' },
+         { text: '🔍 DNS Issue',           val: 'dns_issue' },
+         { text: '💾 Network Drive Issue', val: 'network_drive' },
        ]
      },
      cat_msoffice: {
        label: '📊 Microsoft Office',
        desc: 'Select your specific issue:',
        issues: [
-         { text: '📊 Excel Issue', val: 'excel_issue' },
-         { text: '📝 Word Issue', val: 'word_issue' },
-         { text: '📊 PowerPoint Issue', val: 'ppt_issue' },
-         { text: '🔑 Office Activation', val: 'office_activation' },
-         { text: '📁 File Corrupted', val: 'file_corrupted' },
+         { text: '📊 Excel Not Opening',        val: 'excel_issue' },
+         { text: '📝 Word Not Opening',          val: 'word_issue' },
+         { text: '📊 PowerPoint Not Opening',    val: 'ppt_issue' },
+         { text: '📧 Outlook Not Opening',       val: 'outlook_issue' },
+         { text: '🔑 Office Activation Issue',   val: 'office_activation' },
+         { text: '📁 File Not Opening',          val: 'file_corrupted' },
+         { text: '📊 Excel Slow',                val: 'laptop_slow' },
+         { text: '🔄 Outlook Sync Issue',        val: 'outlook_sync' },
        ]
      },
      cat_browser: {
        label: '🌍 Browser & Apps',
        desc: 'Select your specific issue:',
        issues: [
-         { text: '🌐 Chrome Not Opening', val: 'chrome_issue' },
-         { text: '🐌 Browser Slow', val: 'browser_slow' },
-         { text: '❌ Website Not Loading', val: 'website_blocked' },
-         { text: '📹 Teams Issue', val: 'teams_issue' },
-         { text: '🎥 Zoom Issue', val: 'zoom_issue' },
+         { text: '🌐 Chrome Not Opening',         val: 'chrome_issue' },
+         { text: '🌐 Edge Not Opening',           val: 'edge_issue' },
+         { text: '🐌 Browser Slow',               val: 'browser_slow' },
+         { text: '❌ Website Not Loading',          val: 'website_blocked' },
+         { text: '📹 Teams Issue',                val: 'teams_issue' },
+         { text: '🎥 Zoom Issue',                 val: 'zoom_issue' },
+         { text: '📄 Adobe PDF Issue',            val: 'pdf_issue' },
+         { text: '❌ Application Not Opening',      val: 'app_crash' },
        ]
      },
      cat_email: {
        label: '📧 Email & Communication',
        desc: 'Select your specific issue:',
        issues: [
-         { text: '📧 Gmail Issue', val: 'gmail_issue' },
-         { text: '🔑 Email Password', val: 'email_password' },
-         { text: '📅 Calendar Sync', val: 'calendar_sync' },
-         { text: '📤 Can\'t Send Email', val: 'email_not_sending' },
+         { text: '📧 Gmail Issue',          val: 'gmail_issue' },
+         { text: '📧 Outlook Email Issue',  val: 'outlook_email' },
+         { text: '💬 Slack Issue',          val: 'slack_issue' },
+         { text: '📹 Teams Meeting Issue',  val: 'teams_issue' },
+         { text: '📤 Email Not Sending',    val: 'email_not_sending' },
+         { text: '📥 Email Not Receiving',  val: 'email_not_receiving' },
+         { text: '📅 Calendar Issue',       val: 'calendar_sync' },
        ]
      },
      cat_access: {
        label: '🔐 Access & Password',
        desc: 'Select your specific issue:',
        issues: [
-         { text: '🔑 Password Reset', val: 'password_reset' },
-         { text: '🔒 Account Locked', val: 'account_locked' },
-         { text: '📁 Shared Folder Access', val: 'shared_folder' },
-         { text: '💾 Software Access', val: 'software_access' },
+         { text: '🔑 Password Reset',        val: 'password_reset' },
+         { text: '🔒 Account Locked',        val: 'account_locked' },
+         { text: '📁 Shared Folder Access',  val: 'shared_folder' },
+         { text: '🔒 VPN Access',            val: 'vpn_access' },
+         { text: '📧 Email Access',          val: 'email_access' },
+         { text: '💾 Application Access',    val: 'software_access' },
        ]
      },
      cat_asset: {
        label: '📦 Asset Requests',
        desc: 'What do you need?',
        issues: [
-         { text: '💻 New Laptop', val: 'new_laptop' },
-         { text: '🔌 New Charger', val: 'new_charger' },
-         { text: '🖱️ New Mouse', val: 'new_mouse' },
-         { text: '⌨️ New Keyboard', val: 'new_keyboard' },
-         { text: '🎧 Headphone Request', val: 'new_headphone' },
+         { text: '💻 New Laptop Request',   val: 'new_laptop' },
+         { text: '🔌 Charger Request',      val: 'new_charger' },
+         { text: '🖱️ Mouse Request',  val: 'new_mouse' },
+         { text: '⌨️ Keyboard Request',   val: 'new_keyboard' },
+         { text: '🎧 Headphone Request',    val: 'new_headphone' },
+         { text: '🖵 Monitor Request',      val: 'new_monitor' },
        ]
      },
-   };
+   }
 
    const menu = categoryMenus[actionId];
    if (!menu) return;
@@ -1969,7 +1968,7 @@ app.listen(PORT, async () => {
      type: 'actions',
      elements: [
        { type: 'button', text: { type: 'plain_text', text: '🏠 Home', emoji: true }, action_id: 'go_home_btn', value: 'home' },
-       { type: 'button', text: { type: 'plain_text', text: '🎫 Raise Ticket', emoji: true }, action_id: 'vague_pick_create_ticket', value: 'create ticket', style: 'danger' },
+       { type: 'button', text: { type: 'plain_text', text: '🎫 Create Ticket', emoji: true }, action_id: 'vague_pick_create_ticket', value: 'create ticket', style: 'danger' },
      ]
    });
 
@@ -1982,7 +1981,7 @@ app.listen(PORT, async () => {
          view: {
            type: 'modal',
            title: { type: 'plain_text', text: menu.label, emoji: true },
-           close: { type: 'plain_text', text: '🏠 Home', emoji: true },
+           close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true },
            blocks
          }
        });
@@ -2582,7 +2581,7 @@ app.listen(PORT, async () => {
  };
 
  // ── Quick Action buttons from Home tab ────────────────────────────────
- const homeQuickActions = ['home_quick_wifi_pwd_quick','home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_7b','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_quick_38','home_quick_39','home_quick_40','home_quick_41','home_quick_42','home_quick_43','home_quick_44','home_quick_45','home_quick_46','home_quick_47','home_quick_48','home_quick_49','home_quick_50','home_quick_51','home_quick_52','home_quick_53','home_quick_54','home_quick_55','home_quick_55b','home_quick_56','home_quick_57','home_quick_58','home_quick_59','home_quick_60','home_quick_61','home_quick_62','home_quick_63','home_quick_63b','home_quick_64','home_quick_65','home_quick_66','home_quick_67','home_quick_68','home_quick_69','home_quick_70','home_quick_71','home_quick_72','home_quick_73','home_quick_74','home_quick_75','home_quick_76','home_quick_77','home_sos','home_new_01','home_new_02','home_new_03','home_new_04','home_new_05','home_new_06','home_new_07','home_new_08','home_new_09','home_new_10','home_new_11','home_new_12','home_new_13','home_new_14','home_new_15','cat_laptop','cat_network','cat_msoffice','cat_browser','cat_email','cat_access','cat_asset','go_home_btn'];
+ const homeQuickActions = ['home_quick_wifi_pwd_quick','home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_7b','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_quick_38','home_quick_39','home_quick_40','home_quick_41','home_quick_42','home_quick_43','home_quick_44','home_quick_45','home_quick_46','home_quick_47','home_quick_48','home_quick_49','home_quick_50','home_quick_51','home_quick_52','home_quick_53','home_quick_54','home_quick_55','home_quick_55b','home_quick_56','home_quick_57','home_quick_58','home_quick_59','home_quick_60','home_quick_61','home_quick_62','home_quick_63','home_quick_63b','home_quick_64','home_quick_65','home_quick_66','home_quick_67','home_quick_68','home_quick_69','home_quick_70','home_quick_71','home_quick_72','home_quick_73','home_quick_74','home_quick_75','home_quick_76','home_quick_77','home_sos','home_new_01','home_new_02','home_new_03','home_new_04','home_new_05','home_new_06','home_new_07','home_new_08','home_new_09','home_new_10','home_new_11','home_new_12','home_new_13','home_new_14','home_new_15','cat_laptop','cat_network','cat_msoffice','cat_browser','cat_email','cat_access','cat_asset','go_home_btn','vague_pick_camera_issue','vague_pick_external_monitor','vague_pick_printer_issue','vague_pick_scanner_issue','vague_pick_vpn_issue','vague_pick_lan_issue','vague_pick_dns_issue','vague_pick_network_drive','vague_pick_outlook_sync','vague_pick_edge_issue','vague_pick_browser_slow','vague_pick_pdf_issue','vague_pick_outlook_email','vague_pick_slack_issue','vague_pick_vpn_access','vague_pick_email_access','vague_pick_new_monitor','vague_pick_outlook_issue','vague_pick_excel_issue','vague_pick_word_issue','vague_pick_ppt_issue','vague_pick_office_activation','vague_pick_file_corrupted','vague_pick_gmail_issue','vague_pick_calendar_sync','vague_pick_email_not_sending','vague_pick_email_not_receiving','vague_pick_password_reset','vague_pick_account_locked','vague_pick_shared_folder','vague_pick_software_access','vague_pick_new_laptop','vague_pick_new_charger','vague_pick_new_mouse','vague_pick_new_keyboard','vague_pick_new_headphone'];
  homeQuickActions.forEach(actionId => {
  slackApp.action(actionId, async ({ body, ack, client }) => {
  await ack();
@@ -3523,6 +3522,24 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
      browser_slow: 'browser is very slow or freezing',
      zoom_issue: 'Zoom not working cannot join meeting',
      teams_issue: 'Microsoft Teams not working crashing',
+     // ── New entries for FINAL Phase 1 category menus ────────────────────
+     camera_issue: 'camera not working black screen',
+     external_monitor: 'external monitor not detected HDMI issue',
+     printer_issue: 'printer not working offline',
+     scanner_issue: 'scanner not working not detected',
+     vpn_issue: 'vpn issue — WIOM does not use VPN',
+     dns_issue: 'DNS error internet not working',
+     network_drive: 'network drive not accessible shared folder',
+     outlook_sync: 'Outlook email sync issue',
+     edge_issue: 'Edge browser not opening',
+     browser_slow: 'browser slow laggy',
+     pdf_issue: 'PDF file not opening',
+     outlook_email: 'outlook email issue — WIOM uses Gmail',
+     slack_issue: 'Slack not working notification issue',
+     vpn_access: 'VPN access — WIOM does not use VPN',
+     email_access: 'email Gmail access needed',
+     new_monitor: 'new monitor request',
+     new_headphone: 'headphone request',
    };
 
    const categoryLabels = {
