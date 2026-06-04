@@ -410,137 +410,264 @@ app.listen(PORT, async () => {
  }
  };
 
- // ── Category definitions ──────────────────────────────────────────────
- const CATEGORIES = [
- {
- key: 'laptop', label: 'Laptop & Display',
- emoji: '🔵', color: 'primary',
- desc: 'Slow, Screen, Keyboard, Audio, Camera, USB, Bluetooth',
- rows: [
- [
- { text:'Laptop Slow', value:'My laptop is very slow what should I do', id:'home_quick_1' },
- { text:'Won\'t Turn On', value:'My laptop is not turning on at all', id:'home_quick_2' },
- { text:'Blue Screen', value:'Getting blue screen of death BSOD error', id:'home_quick_3' },
- { text:'️ Overheating', value:'My laptop is overheating getting very hot', id:'home_quick_4' },
- { text:'Battery Issue', value:'Laptop battery drains quickly or not charging at all', id:'home_quick_5' }
- ],
- [
- { text:'️ Screen Black', value:'Laptop screen is black cannot see anything', id:'home_quick_6' },
- { text:'Keyboard Issue', value:'Laptop keyboard not working some keys not responding', id:'home_quick_7' },
- { text:'️ Touchpad Issue', value:'Mouse or touchpad is not working not responding', id:'home_quick_8' },
- { text:'Freezing / Hanging', value:'Laptop is hanging freezing not responding at all', id:'home_quick_21' },
- { text:'Sudden Shutdown', value:'Laptop shuts down suddenly without any warning', id:'home_quick_30' }
- ],
- [
- { text:'No Sound', value:'No sound coming from laptop speakers audio not working', id:'home_quick_9' },
- { text:'Mic Not Working', value:'Microphone not working voice not going in Teams or calls', id:'home_quick_16' },
- { text:'Camera Issue', value:'Laptop camera not working in Teams Zoom or Meet', id:'home_quick_20' },
- { text:'Headphone Issue', value:'Headphone or earphone not connecting or no sound', id:'home_quick_46' },
- { text:'️ External Monitor', value:'External monitor not detected screen not showing on it', id:'home_quick_17' }
- ],
- [
- { text:'Screen Flickering', value:'Laptop screen is flickering blinking or flashing', id:'home_quick_39' },
- { text:'Bluetooth Issue', value:'Laptop bluetooth not working cannot connect any device', id:'home_quick_40' },
- { text:'USB Not Working', value:'USB port not working pendrive or device not detected', id:'home_quick_63' },
- { text:'Sleep / Wake Issue', value:'Laptop not waking up from sleep screen stays black', id:'home_quick_64' },
- { text:'Fan Noise', value:'Laptop fan is making very loud noise constantly', id:'home_quick_38' }
- ],
- [
- { text:'Liquid Damage', value:'Liquid or water spilled on laptop needs immediate attention', id:'home_quick_70' },
- { text:'Stuck Restarting', value:'Laptop is stuck in restart loop keeps restarting again and again', id:'home_quick_33' },
- { text:'Boot Error', value:'Laptop not starting getting boot error Windows not loading', id:'home_quick_65' },
- { text:'Caps Lock Stuck', value:'Caps Lock always stays on or keyboard keys are stuck', id:'home_quick_72' },
- { text:'Slow After Update', value:'Laptop became very slow after a Windows update', id:'home_quick_71' }
- ]
- ]
- },
- {
- key: 'network', label: 'Network & Internet',
- emoji: '🟢', color: 'primary',
- desc: 'WiFi, Internet slow, Website blocked, Disconnecting',
- rows: [
- [
- { text:'WiFi Not Working', value:'WiFi not working no internet connection', id:'home_quick_11' },
- { text:'Internet Very Slow', value:'Internet speed is very slow browsing not working properly', id:'home_quick_29' },
- { text:'WiFi Password', value:'Need WiFi password or forgot WiFi password', id:'home_quick_32' },
- { text:'Website Not Opening', value:'Website not opening showing blocked or access denied', id:'home_quick_43' },
- { text:'WiFi Disconnecting', value:'WiFi keeps disconnecting again and again dropping connection', id:'home_quick_44' }
- ]
- ]
- },
- {
- key: 'software', label: 'Software, Apps & Account',
- emoji: '🟡', color: 'primary',
- desc: 'Teams, Zoom, Outlook, Password reset, Virus, OneDrive',
- rows: [
- [
- { text:'Teams Issue', value:'Microsoft Teams not working call dropping or not opening', id:'home_quick_13' },
- { text:'️ Zoom Issue', value:'Zoom not working cannot join meeting or Zoom crashing', id:'home_quick_27' },
- { text:'Gmail Issue', value:'Gmail not opening or cannot send receive emails in Chrome', id:'home_quick_50' },
- { text:'Browser Issue', value:'Browser is slow crashing or freezing Chrome Firefox Edge', id:'home_quick_31' },
- { text:'Word / Excel Issue', value:'Microsoft Word or Excel not opening showing error', id:'home_quick_23' }
- ],
- [
- { text:'OneDrive Sync Issue', value:'OneDrive not syncing files not going to cloud', id:'home_quick_51' },
- { text:'Windows Update Issue', value:'Windows update not installing stuck or causing issues', id:'home_quick_24' },
- { text:'PDF Not Opening', value:'PDF file not opening PDF reader not working', id:'home_quick_52' },
- { text:'App Crashing', value:'Application keeps crashing or closing suddenly', id:'home_quick_53' },
- { text:'Copy Paste Issue', value:'Copy paste not working Ctrl+C Ctrl+V not responding', id:'home_quick_34' }
- ],
- [
- { text:'Password Reset', value:'Forgot password need to reset it', id:'home_quick_14' },
- { text:'Email Password', value:'Forgot email account password need to reset it', id:'home_quick_59' },
- { text:'Storage Full', value:'Laptop storage full C drive is full cannot save files', id:'home_quick_18' },
- { text:'Virus Suspected', value:'Laptop may have virus showing ads or behaving strangely', id:'home_quick_19' },
- { text:'Account Locked', value:'Account is locked cannot login to Windows or any account', id:'home_quick_55' }
- ],
- [
- { text:'2FA / OTP Issue', value:'Two factor authentication OTP not coming cannot login', id:'home_quick_56' },
- { text:'️ Antivirus Alert', value:'Antivirus showing alert or has blocked something', id:'home_quick_57' },
- { text:'OneDrive Full', value:'OneDrive storage is full files not syncing', id:'home_quick_58' },
- { text:'Wrong Date / Time', value:'Laptop showing wrong date or time needs to be corrected', id:'home_quick_35' }
- ]
- ]
- },
- {
- key: 'replacement', label: 'Replacement / Upgrade',
- emoji: '📦', color: 'primary',
- desc: 'Hardware/Software request, Upgrade, New setup',
- rows: [
- [
- { text:'Laptop Replacement', value:'Laptop needs replacement old one is damaged or not working', id:'home_quick_37' },
- { text:'Mouse Replacement', value:'Mouse is damaged need a replacement', id:'home_quick_60' },
- { text:'Keyboard Replacement', value:'Keyboard is damaged need a replacement', id:'home_quick_61' },
- { text:'New Monitor Request', value:'Need a new monitor or monitor replacement', id:'home_quick_62' }
- ]
- ]
- },
- {
- key: 'access', label: 'Access & Permissions',
- emoji: '🔒', color: 'primary',
- desc: 'System access, App access, Account Locked',
- rows: [
- [
- { text:'🔑 Access Request', value:'Need access to a system software or application', id:'home_quick_74' },
- { text:'Account Locked', value:'Account is locked cannot login to Windows or any account', id:'home_quick_55b' }
- ]
- ]
- },
- {
- key: 'printer', label: 'Printer & Peripheral',
- emoji: '🖨️', color: 'primary',
- desc: 'Printer, Mouse, Keyboard, USB, External devices',
- rows: [
- [
- { text:'Mouse Issue', value:'Mouse not working cursor not moving properly', id:'home_quick_77' },
- { text:'Keyboard Issue', value:'Laptop keyboard not working some keys not responding', id:'home_quick_7b' },
- { text:'USB Not Working', value:'USB port not working pendrive or device not detected', id:'home_quick_63b' }
- ]
- ]
- }
- ];
+ // ── Category definitions (Home Tab — 8 professional categories) ───────────────────
+         const CATEGORIES = [
+         {
+         key: 'laptop_hw', label: 'Laptop & Hardware',
+         emoji: '💻', color: 'primary',
+         desc: 'Slow, Won\'t Turn On, Blue Screen, Overheating, Battery, Keyboard, Camera, Audio, Screen',
+         rows: [
+         [
+         { text:'Laptop Slow', value:'My laptop is very slow what should I do', id:'home_quick_1' },
+         { text:'Won\'t Turn On', value:'My laptop is not turning on at all', id:'home_quick_2' },
+         { text:'Blue Screen', value:'Getting blue screen of death BSOD error', id:'home_quick_3' },
+         { text:'Overheating', value:'My laptop is overheating getting very hot', id:'home_quick_4' },
+         { text:'Battery Issue', value:'Laptop battery drains quickly or not charging at all', id:'home_quick_5' }
+         ],
+         [
+         { text:'Screen Black', value:'Laptop screen is black cannot see anything', id:'home_quick_6' },
+         { text:'Keyboard Issue', value:'Laptop keyboard not working some keys not responding', id:'home_quick_7' },
+         { text:'Touchpad Issue', value:'Mouse or touchpad is not working not responding', id:'home_quick_8' },
+         { text:'Camera Issue', value:'Laptop camera not working in Teams Zoom or Meet', id:'home_quick_20' },
+         { text:'Audio / Sound', value:'No sound coming from laptop speakers audio not working', id:'home_quick_9' }
+         ],
+         [
+         { text:'Screen Issue', value:'Laptop screen is flickering blinking or flashing', id:'home_quick_39' },
+         { text:'Charger Issue', value:'Laptop charger not working or not charging properly', id:'home_quick_10' },
+         { text:'Fan Noise', value:'Laptop fan is making very loud noise constantly', id:'home_quick_38' },
+         { text:'Sleep / Wake', value:'Laptop not waking up from sleep screen stays black', id:'home_quick_64' },
+         { text:'Freezing / Hang', value:'Laptop is hanging freezing not responding at all', id:'home_quick_21' }
+         ]
+         ]
+         },
+         {
+         key: 'network', label: 'Network & Internet',
+         emoji: '🌐', color: 'primary',
+         desc: 'WiFi Not Working, Slow Internet, LAN Issue, Network Drive, Website Blocked',
+         rows: [
+         [
+         { text:'WiFi Not Working', value:'WiFi not working no internet connection', id:'home_quick_11' },
+         { text:'Slow Internet', value:'Internet speed is very slow browsing not working properly', id:'home_quick_29' },
+         { text:'LAN Issue', value:'Wired LAN ethernet not working no network connection', id:'home_new_01' },
+         { text:'Network Drive', value:'Network shared drive not accessible cannot connect', id:'home_new_02' },
+         { text:'Website Blocked', value:'Website not opening showing blocked or access denied', id:'home_quick_43' }
+         ]
+         ]
+         },
+         {
+         key: 'ms_office', label: 'Microsoft Office',
+         emoji: '📊', color: 'primary',
+         desc: 'Excel Issue, Word Issue, PowerPoint Issue, Office Activation, File Corrupted',
+         rows: [
+         [
+         { text:'Excel Issue', value:'Microsoft Excel not opening or showing error', id:'home_quick_23' },
+         { text:'Word Issue', value:'Microsoft Word not opening or showing error', id:'home_new_03' },
+         { text:'PowerPoint Issue', value:'Microsoft PowerPoint not opening or showing error', id:'home_new_04' },
+         { text:'Office Activation', value:'Microsoft Office activation error or license expired', id:'home_new_05' },
+         { text:'File Corrupted', value:'Office file is corrupted cannot open document', id:'home_new_06' }
+         ]
+         ]
+         },
+         {
+         key: 'browser_apps', label: 'Browser & Apps',
+         emoji: '🌍', color: 'primary',
+         desc: 'Chrome Not Opening, Browser Slow, Website Not Loading, Teams Issue, Zoom Issue',
+         rows: [
+         [
+         { text:'Chrome Not Opening', value:'Chrome browser not opening or crashing', id:'home_quick_31' },
+         { text:'Browser Slow', value:'Browser is very slow or freezing Chrome Firefox Edge', id:'home_new_07' },
+         { text:'Website Not Loading', value:'Website not loading or showing error in browser', id:'home_new_08' },
+         { text:'Teams Issue', value:'Microsoft Teams not working call dropping or not opening', id:'home_quick_13' },
+         { text:'Zoom Issue', value:'Zoom not working cannot join meeting or Zoom crashing', id:'home_quick_27' }
+         ]
+         ]
+         },
+         {
+         key: 'email_comm', label: 'Email & Communication',
+         emoji: '📧', color: 'primary',
+         desc: 'Gmail Issue, Email Password, Calendar Sync, Email Not Sending',
+         rows: [
+         [
+         { text:'Gmail Issue', value:'Gmail not opening or cannot send receive emails in Chrome', id:'home_quick_50' },
+         { text:'Email Password', value:'Forgot email account password need to reset it', id:'home_quick_59' },
+         { text:'Calendar Sync', value:'Google Calendar not syncing or showing wrong events', id:'home_new_09' },
+         { text:'Email Not Sending', value:'Email not sending or stuck in outbox cannot send mail', id:'home_new_10' }
+         ]
+         ]
+         },
+         {
+         key: 'printer', label: 'Printer & Peripherals',
+         emoji: '🖨️', color: 'primary',
+         desc: 'Printer Offline, Print Not Working, External Monitor, Scanner Issue',
+         rows: [
+         [
+         { text:'Printer Offline', value:'Printer showing offline cannot print', id:'home_quick_54' },
+         { text:'Print Not Working', value:'Printer connected but printing not working', id:'home_new_11' },
+         { text:'External Monitor', value:'External monitor not detected screen not showing on it', id:'home_quick_17' },
+         { text:'Scanner Issue', value:'Scanner not working or not detected by computer', id:'home_new_12' }
+         ]
+         ]
+         },
+         {
+         key: 'access', label: 'Access & Password',
+         emoji: '🔐', color: 'primary',
+         desc: 'Password Reset, Account Locked, Shared Folder Access, Software Access',
+         rows: [
+         [
+         { text:'Password Reset', value:'Forgot password need to reset it', id:'home_quick_55b' },
+         { text:'Account Locked', value:'Account is locked cannot login to Windows or any account', id:'home_quick_55' },
+         { text:'Shared Folder Access', value:'Need access to shared folder or network drive', id:'home_new_13' },
+         { text:'Software Access', value:'Need access to a software or application', id:'home_quick_74' }
+         ]
+         ]
+         },
+         {
+         key: 'asset_req', label: 'Asset Requests',
+         emoji: '📦', color: 'primary',
+         desc: 'New Laptop, New Charger, New Mouse, New Keyboard, Headphone Request',
+         rows: [
+         [
+         { text:'New Laptop', value:'Need a new laptop request for replacement or new joiner', id:'home_quick_75' },
+         { text:'New Charger', value:'Need a new charger for laptop charger damaged or lost', id:'home_new_14' },
+         { text:'New Mouse', value:'Need a new mouse old one damaged or not working', id:'home_quick_60' },
+         { text:'New Keyboard', value:'Need a new keyboard old one damaged or not working', id:'home_quick_61' },
+         { text:'Headphone Request', value:'Need headphones for work calls and meetings', id:'home_new_15' }
+         ]
+         ]
+         }
+         ];
 
- // ── Auto-Fix mapping: which buttons can be auto-fixed on laptop ──────
+         // ── Legacy categories kept for dm_cat_* action handlers (backward compat) ──────────────────
+         const LEGACY_CATEGORIES = [
+         {
+         key: 'laptop', label: 'Laptop & Display',
+         emoji: '🔵', color: 'primary',
+         desc: 'Slow, Screen, Keyboard, Audio, Camera, USB, Bluetooth',
+         rows: [
+         [
+         { text:'Laptop Slow', value:'My laptop is very slow what should I do', id:'home_quick_1' },
+         { text:'Won\'t Turn On', value:'My laptop is not turning on at all', id:'home_quick_2' },
+         { text:'Blue Screen', value:'Getting blue screen of death BSOD error', id:'home_quick_3' },
+         { text:'Overheating', value:'My laptop is overheating getting very hot', id:'home_quick_4' },
+         { text:'Battery Issue', value:'Laptop battery drains quickly or not charging at all', id:'home_quick_5' }
+         ],
+         [
+         { text:'Screen Black', value:'Laptop screen is black cannot see anything', id:'home_quick_6' },
+         { text:'Keyboard Issue', value:'Laptop keyboard not working some keys not responding', id:'home_quick_7' },
+         { text:'Touchpad Issue', value:'Mouse or touchpad is not working not responding', id:'home_quick_8' },
+         { text:'Freezing / Hanging', value:'Laptop is hanging freezing not responding at all', id:'home_quick_21' },
+         { text:'Sudden Shutdown', value:'Laptop shuts down suddenly without any warning', id:'home_quick_30' }
+         ],
+         [
+         { text:'No Sound', value:'No sound coming from laptop speakers audio not working', id:'home_quick_9' },
+         { text:'Mic Not Working', value:'Microphone not working voice not going in Teams or calls', id:'home_quick_16' },
+         { text:'Camera Issue', value:'Laptop camera not working in Teams Zoom or Meet', id:'home_quick_20' },
+         { text:'Headphone Issue', value:'Headphone or earphone not connecting or no sound', id:'home_quick_46' },
+         { text:'External Monitor', value:'External monitor not detected screen not showing on it', id:'home_quick_17' }
+         ],
+         [
+         { text:'Screen Flickering', value:'Laptop screen is flickering blinking or flashing', id:'home_quick_39' },
+         { text:'Bluetooth Issue', value:'Laptop bluetooth not working cannot connect any device', id:'home_quick_40' },
+         { text:'USB Not Working', value:'USB port not working pendrive or device not detected', id:'home_quick_63' },
+         { text:'Sleep / Wake Issue', value:'Laptop not waking up from sleep screen stays black', id:'home_quick_64' },
+         { text:'Fan Noise', value:'Laptop fan is making very loud noise constantly', id:'home_quick_38' }
+         ],
+         [
+         { text:'Liquid Damage', value:'Liquid or water spilled on laptop needs immediate attention', id:'home_quick_70' },
+         { text:'Stuck Restarting', value:'Laptop is stuck in restart loop keeps restarting again and again', id:'home_quick_33' },
+         { text:'Boot Error', value:'Laptop not starting getting boot error Windows not loading', id:'home_quick_65' },
+         { text:'Caps Lock Stuck', value:'Caps Lock always stays on or keyboard keys are stuck', id:'home_quick_72' },
+         { text:'Slow After Update', value:'Laptop became very slow after a Windows update', id:'home_quick_71' }
+         ]
+         ]
+         },
+         {
+         key: 'network_legacy', label: 'Network & Internet',
+         emoji: '🟢', color: 'primary',
+         desc: 'WiFi, Internet slow, Website blocked, Disconnecting',
+         rows: [
+         [
+         { text:'WiFi Not Working', value:'WiFi not working no internet connection', id:'home_quick_11' },
+         { text:'Internet Very Slow', value:'Internet speed is very slow browsing not working properly', id:'home_quick_29' },
+         { text:'WiFi Password', value:'Need WiFi password or forgot WiFi password', id:'home_quick_32' },
+         { text:'Website Not Opening', value:'Website not opening showing blocked or access denied', id:'home_quick_43' },
+         { text:'WiFi Disconnecting', value:'WiFi keeps disconnecting again and again dropping connection', id:'home_quick_44' }
+         ]
+         ]
+         },
+         {
+         key: 'software', label: 'Software, Apps & Account',
+         emoji: '🟡', color: 'primary',
+         desc: 'Teams, Zoom, Outlook, Password reset, Virus, OneDrive',
+         rows: [
+         [
+         { text:'Teams Issue', value:'Microsoft Teams not working call dropping or not opening', id:'home_quick_13' },
+         { text:'Zoom Issue', value:'Zoom not working cannot join meeting or Zoom crashing', id:'home_quick_27' },
+         { text:'Gmail Issue', value:'Gmail not opening or cannot send receive emails in Chrome', id:'home_quick_50' },
+         { text:'Browser Issue', value:'Browser is slow crashing or freezing Chrome Firefox Edge', id:'home_quick_31' },
+         { text:'Word / Excel Issue', value:'Microsoft Word or Excel not opening showing error', id:'home_quick_23' }
+         ],
+         [
+         { text:'OneDrive Sync Issue', value:'OneDrive not syncing files not going to cloud', id:'home_quick_51' },
+         { text:'Windows Update Issue', value:'Windows update not installing stuck or causing issues', id:'home_quick_24' },
+         { text:'PDF Not Opening', value:'PDF file not opening PDF reader not working', id:'home_quick_52' },
+         { text:'App Crashing', value:'Application keeps crashing or closing suddenly', id:'home_quick_53' },
+         { text:'Copy Paste Issue', value:'Copy paste not working Ctrl+C Ctrl+V not responding', id:'home_quick_34' }
+         ],
+         [
+         { text:'Password Reset', value:'Forgot password need to reset it', id:'home_quick_14' },
+         { text:'Email Password', value:'Forgot email account password need to reset it', id:'home_quick_59' },
+         { text:'Storage Full', value:'Laptop storage full C drive is full cannot save files', id:'home_quick_18' },
+         { text:'Virus Suspected', value:'Laptop may have virus showing ads or behaving strangely', id:'home_quick_19' },
+         { text:'Account Locked', value:'Account is locked cannot login to Windows or any account', id:'home_quick_55' }
+         ],
+         [
+         { text:'2FA / OTP Issue', value:'Two factor authentication OTP not coming cannot login', id:'home_quick_56' },
+         { text:'Antivirus Alert', value:'Antivirus showing alert or has blocked something', id:'home_quick_57' },
+         { text:'OneDrive Full', value:'OneDrive storage is full files not syncing', id:'home_quick_58' },
+         { text:'Wrong Date / Time', value:'Laptop showing wrong date or time needs to be corrected', id:'home_quick_35' }
+         ]
+         ]
+         },
+         {
+         key: 'replacement', label: 'Replacement / Upgrade',
+         emoji: '📦', color: 'primary',
+         desc: 'Hardware/Software request, Upgrade, New setup',
+         rows: [
+         [
+         { text:'Laptop Replacement', value:'Laptop needs replacement old one is damaged or not working', id:'home_quick_37' },
+         { text:'Mouse Replacement', value:'Mouse is damaged need a replacement', id:'home_quick_60' },
+         { text:'Keyboard Replacement', value:'Keyboard is damaged need a replacement', id:'home_quick_61' },
+         { text:'New Monitor Request', value:'Need a new monitor or monitor replacement', id:'home_quick_62' }
+         ]
+         ]
+         },
+         {
+         key: 'access_legacy', label: 'Access & Permissions',
+         emoji: '🔒', color: 'primary',
+         desc: 'System access, App access, Account Locked',
+         rows: [
+         [
+         { text:'🔑 Access Request', value:'Need access to a system software or application', id:'home_quick_74' },
+         { text:'Account Locked', value:'Account is locked cannot login to Windows or any account', id:'home_quick_55b' }
+         ]
+         ]
+         },
+         {
+         key: 'printer_legacy', label: 'Printer & Peripheral',
+         emoji: '🖨️', color: 'primary',
+         desc: 'Printer, Mouse, Keyboard, USB, External devices',
+         rows: [
+         [
+         { text:'Mouse Issue', value:'Mouse not working cursor not moving properly', id:'home_quick_77' },
+         { text:'Keyboard Issue', value:'Laptop keyboard not working some keys not responding', id:'home_quick_7b' },
+         { text:'USB Not Working', value:'USB port not working pendrive or device not detected', id:'home_quick_63b' }
+         ]
+         ]
+         }
+         ];
+
+         // ── Auto-Fix mapping: which buttons can be auto-fixed on laptop ──────
  const AUTO_FIX_MAP = {
  // ── Performance ────────────────────────────────────────────────────────
  'home_quick_1' : { fixType: ['kill_heavy', 'clean_temp'], label: 'Laptop Speed Fix' },
@@ -1009,101 +1136,105 @@ app.listen(PORT, async () => {
    printer:     { icon: '🩵 🖨️', label: 'Printer & Peripheral',    desc: 'Mouse · Keyboard · USB devices' },
  };
 
- // ── Build flat Home Tab blocks — ALL categories visible, no expand needed ──
- const buildHomeBlocks = (emp, myTickets, expandedSet) => {
- const name = (emp?.empName || emp?.name || 'there').split(' ')[0];
- const laptop = emp?.laptop || null;
- const laptopSN = emp?.laptopSN || null;
- const dept = emp?.dept || emp?.department || null;
- const openCnt = myTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length;
+ // ── Build Home Tab blocks — new 8-category professional layout ────────────────
+         const buildHomeBlocks = (emp, myTickets, expandedSet) => {
+         const name = (emp?.empName || emp?.name || 'there').split(' ')[0];
+         const laptop = emp?.laptop || null;
+         const laptopSN = emp?.laptopSN || null;
+         const dept = emp?.dept || emp?.department || null;
+         const openCnt = myTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length;
 
- const statEmoji = { 'Open':'🔴', 'In Progress':'🟡', 'Resolved':'✅', 'Closed':'⚫' };
- const priEmoji2 = { 'Critical':'🔴', 'High':'🟠', 'Medium':'🟡', 'Low':'🟢' };
+         const statEmoji = { 'Open':'\u{1f534}', 'In Progress':'\u{1f7e1}', 'Resolved':'\u2705', 'Closed':'\u26ab' };
+         const priEmoji2 = { 'Critical':'\u{1f534}', 'High':'\u{1f7e0}', 'Medium':'\u{1f7e1}', 'Low':'\u{1f7e2}' };
 
- const blocks = [];
+         const blocks = [];
 
- // ── HEADER ──────────────────────────────────────────────────────────────
- // IT availability (Mon-Fri 9AM-7PM IST)
- const nowIST = new Date(Date.now() + 5.5 * 3600000);
- const istDay = nowIST.getUTCDay(); // 0=Sun, 1=Mon...5=Fri, 6=Sat
- const istHour = nowIST.getUTCHours();
- const isWeekday = istDay >= 1 && istDay <= 5;
- const isWorkHour = istHour >= 9 && istHour < 19;
- const adminAvail = isWeekday && isWorkHour;
- const adminStatus = adminAvail ? '🟢 *IT Available*' : '🔴 *IT Unavailable*';
+         // ── HEADER ─────────────────────────────────────────────────────────────
+         const nowIST = new Date(Date.now() + 5.5 * 3600000);
+         const istDay = nowIST.getUTCDay();
+         const istHour = nowIST.getUTCHours();
+         const isWeekday = istDay >= 1 && istDay <= 5;
+         const isWorkHour = istHour >= 9 && istHour < 19;
+         const adminAvail = isWeekday && isWorkHour;
+         const adminStatus = adminAvail ? '\u{1f7e2} *IT Available*' : '\u{1f534} *IT Unavailable*';
 
- blocks.push({
-   type: 'section',
-   text: { type: 'mrkdwn', text: `👋 *Hello ${name}!* Welcome to *WIOM IT Helpdesk*\n🤖 *Zivon is Online* — 24/7   |   ${adminStatus}` },
-   accessory: { type: 'image', image_url: 'https://wiom-helpdesk-production.up.railway.app/wiom-logo.webp', alt_text: 'WIOM Logo' }
- });
+         blocks.push({
+           type: 'section',
+           text: { type: 'mrkdwn', text: '\u{1f44b} *Hello ' + name + '!* Welcome to *WIOM IT Helpdesk*\n\u{1f916} *Zivon is Online* \u2014 24/7   |   ' + adminStatus },
+           accessory: { type: 'image', image_url: 'https://wiom-helpdesk-production.up.railway.app/wiom-logo.webp', alt_text: 'WIOM Logo' }
+         });
 
- // ── QUICK ACTIONS — Top 3 most used ─────────────────────────────────
- blocks.push({ type: 'divider' });
- blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '⚡ *Quick Actions*' } });
- blocks.push({
-   type: 'actions',
-   elements: [
-     { type: 'button', text: { type: 'plain_text', text: '📶 WiFi Password', emoji: true }, value: 'wifi password kya hai', action_id: 'home_quick_wifi_pwd_quick', style: 'primary' },
-     { type: 'button', text: { type: 'plain_text', text: '🔑 Password Reset', emoji: true }, value: 'Windows ya Gmail ka password bhool gaya', action_id: 'home_quick_55b' },
-     { type: 'button', text: { type: 'plain_text', text: '🎫 Raise Ticket', emoji: true }, value: 'create ticket', action_id: 'vague_pick_create_ticket', style: 'danger' }
-   ]
- });
+         // ── QUICK ACTIONS ──────────────────────────────────────────────────────
+         blocks.push({ type: 'divider' });
+         blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '\u26a1 *Quick Actions*' } });
+         blocks.push({
+           type: 'actions',
+           elements: [
+             { type: 'button', text: { type: 'plain_text', text: '\u{1f4f6} WiFi Password', emoji: true }, value: 'wifi password kya hai', action_id: 'home_quick_wifi_pwd_quick', style: 'primary' },
+             { type: 'button', text: { type: 'plain_text', text: '\u{1f511} Password Reset', emoji: true }, value: 'Windows ya Gmail ka password bhool gaya', action_id: 'home_quick_55b' },
+             { type: 'button', text: { type: 'plain_text', text: '\u{1f3ab} Raise Ticket', emoji: true }, value: 'create ticket', action_id: 'vague_pick_create_ticket', style: 'danger' }
+           ]
+         });
+         blocks.push({
+           type: 'actions',
+           elements: [
+             { type: 'button', text: { type: 'plain_text', text: '\u{1f4bb} New Laptop Request', emoji: true }, value: 'Need a new laptop request for replacement or new joiner', action_id: 'home_quick_75' },
+             { type: 'button', text: { type: 'plain_text', text: '\u{1f4e6} Asset Request', emoji: true }, value: 'I need a new hardware asset or equipment', action_id: 'home_quick_74' }
+           ]
+         });
+         blocks.push({ type: 'divider' });
 
- // ── MY TICKETS — prominently shown ──────────────────────────────────
- blocks.push({ type: 'divider' });
- if (myTickets.length > 0) {
-   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `🎫 *My Recent Tickets* ${openCnt > 0 ? `— 🔴 *${openCnt} Open*` : '— ✅ All Resolved'}` } });
-   for (const t of myTickets.slice(0, 3)) {
-     const hrs = Math.floor((Date.now() - new Date(t.createdAt)) / 3600000);
-     const timeStr = hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs/24)}d ago`;
-     blocks.push({
-       type: 'section',
-       text: { type: 'mrkdwn', text: `${statEmoji[t.status]||'🔵'} \`${t.ticketId}\` — *${t.status}* ${priEmoji2[t.priority]||'🟡'} ${t.priority}\n_${(t.description||'').substring(0,60)}${(t.description||'').length>60?'...':''}_\n📅 ${timeStr} · ${t.category||'Other'}` }
-     });
-   }
- } else {
-   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '🎫 *My Tickets* — ✅ No tickets yet!' } });
- }
+         // ── MY TICKETS ─────────────────────────────────────────────────────────
+         if (myTickets.length > 0) {
+           const ticketHeader = openCnt > 0 ? '\u2014 \u{1f534} *' + openCnt + ' Open*' : '\u2014 \u2705 All Resolved';
+           blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '\u{1f3ab} *My Recent Tickets* ' + ticketHeader } });
+           for (const t of myTickets.slice(0, 3)) {
+             const hrs = Math.floor((Date.now() - new Date(t.createdAt)) / 3600000);
+             const timeStr = hrs < 24 ? hrs + 'h ago' : Math.floor(hrs/24) + 'd ago';
+             const desc = (t.description||'').substring(0,60) + ((t.description||'').length>60?'...':'');
+             blocks.push({
+               type: 'section',
+               text: { type: 'mrkdwn', text: (statEmoji[t.status]||'\u{1f535}') + ' `' + t.ticketId + '` \u2014 *' + t.status + '* ' + (priEmoji2[t.priority]||'\u{1f7e1}') + ' ' + t.priority + '\n_' + desc + '_\n\u{1f4c5} ' + timeStr + ' \u00b7 ' + (t.category||'Other') }
+             });
+           }
+         } else {
+           blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '\u{1f3ab} *My Tickets* \u2014 \u2705 No tickets yet!' } });
+         }
 
- blocks.push({ type: 'divider' });
- blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '📂  *Select a Category*\n_Apni problem select karo — Zivon help karega!_ 👇' } });
+         blocks.push({ type: 'divider' });
+         blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '\u{1f4c2}  *Select a Category*\n_Apni problem select karo \u2014 Zivon help karega!_ \u{1f447}' } });
 
- // ── ALL CATEGORIES — flat, all sub-issues visible ────────────────────
- for (const cat of CATEGORIES) {
-   const cfg = CAT_COLORS[cat.key] || { icon: '⚪ 📁', label: cat.label, desc: cat.desc };
-   // Category colored header
-   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `${cfg.icon}  *${cfg.label}*\n_${cfg.desc}_` } });
-   // All sub-issue rows for this category
-   for (const row of cat.rows) {
-     blocks.push({
-       type: 'actions',
-       elements: row.map(btn => ({
-         type: 'button',
-         text: { type: 'plain_text', text: btn.text, emoji: true },
-         value: btn.value,
-         action_id: btn.id
-       }))
-     });
-   }
-   blocks.push({ type: 'divider' });
- }
+         // ── ALL 8 CATEGORIES ──────────────────────────────────────────────────
+         for (const cat of CATEGORIES) {
+           blocks.push({ type: 'section', text: { type: 'mrkdwn', text: cat.emoji + '  *' + cat.label + '*\n_' + cat.desc + '_' } });
+           for (const row of cat.rows) {
+             blocks.push({
+               type: 'actions',
+               elements: row.map(btn => ({
+                 type: 'button',
+                 text: { type: 'plain_text', text: btn.text, emoji: true },
+                 value: btn.value,
+                 action_id: btn.id
+               }))
+             });
+           }
+           blocks.push({ type: 'divider' });
+         }
 
- // My Tickets moved to top section above categories
+         // ── EMPLOYEE FOOTER ────────────────────────────────────────────────────
+         if (emp?.empId) {
+           const openStr = openCnt > 0 ? '\u{1f514} ' + openCnt + ' open ticket(s)' : '\u2705 No open tickets';
+           blocks.push({
+             type: 'context',
+             elements: [{ type: 'mrkdwn', text: '\u{1f464} *' + (emp.empName||emp.empId) + '* \u00b7 \u{1f3e2} ' + (dept||'\u2014') + ' \u00b7 \u{1f4bb} ' + (laptop||'\u2014') + ' \u00b7 \u{1f3f7}\ufe0f `' + (laptopSN||'\u2014') + '` \u00b7 ' + openStr }]
+           });
+         }
+         blocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: '_Made with \u2764\ufe0f by WIOM IT Team  |  Powered by Zivon AI_' }] });
 
- // ── EMPLOYEE FOOTER ───────────────────────────────────────────────────────
- if (emp?.empId) {
-   blocks.push({
-     type: 'context',
-     elements: [{ type: 'mrkdwn', text: `👤 *${emp.empName||emp.empId}* · 🏢 ${dept||'—'} · 💻 ${laptop||'—'} · 🏷️ \`${laptopSN||'—'}\` · ${openCnt > 0 ? `🔔 ${openCnt} open ticket(s)` : '✅ No open tickets'}` }]
-   });
- }
- blocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: '_Made with ❤️ by WIOM IT Team  |  Powered by Zivon AI_' }] });
+         return blocks;
+         };
 
- return blocks;
- };
-
- // ── FEATURE 5: Office hours check (IST = UTC+5:30) ────────────────────
+         // ── FEATURE 5: Office hours check (IST = UTC+5:30) ────────────────────
  const isOfficeHours = () => {
  const now = new Date();
  const istMins = now.getUTCHours() * 60 + now.getUTCMinutes() + 330;
@@ -1991,7 +2122,7 @@ app.listen(PORT, async () => {
  });
 
  // ── Category toggle handlers (Home Tab accordion) ─────────────────────
- CATEGORIES.forEach(cat => {
+ LEGACY_CATEGORIES.forEach(cat => {
  slackApp.action(`cat_toggle_${cat.key}`, async ({ body, ack, client }) => {
  await ack();
  const userId = body.user.id;
@@ -2189,7 +2320,7 @@ app.listen(PORT, async () => {
  });
 
  // ── DM category expand handlers — UPDATE message (no duplicate) ──────
- CATEGORIES.forEach(cat => {
+ LEGACY_CATEGORIES.forEach(cat => {
  slackApp.action(`dm_cat_${cat.key}`, async ({ body, ack, client }) => {
  await ack();
  const userId = body.user.id;
@@ -2305,7 +2436,7 @@ app.listen(PORT, async () => {
  };
 
  // ── Quick Action buttons from Home tab ────────────────────────────────
- const homeQuickActions = ['home_quick_wifi_pwd_quick','home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_7b','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_quick_38','home_quick_39','home_quick_40','home_quick_41','home_quick_42','home_quick_43','home_quick_44','home_quick_45','home_quick_46','home_quick_47','home_quick_48','home_quick_49','home_quick_50','home_quick_51','home_quick_52','home_quick_53','home_quick_54','home_quick_55','home_quick_55b','home_quick_56','home_quick_57','home_quick_58','home_quick_59','home_quick_60','home_quick_61','home_quick_62','home_quick_63','home_quick_63b','home_quick_64','home_quick_65','home_quick_66','home_quick_67','home_quick_68','home_quick_69','home_quick_70','home_quick_71','home_quick_72','home_quick_73','home_quick_74','home_quick_75','home_quick_76','home_quick_77','home_sos'];
+ const homeQuickActions = ['home_quick_wifi_pwd_quick','home_quick_1','home_quick_2','home_quick_3','home_quick_4','home_quick_5','home_quick_6','home_quick_7','home_quick_7b','home_quick_8','home_quick_9','home_quick_10','home_quick_11','home_quick_12','home_quick_13','home_quick_14','home_quick_15','home_quick_16','home_quick_17','home_quick_18','home_quick_19','home_quick_20','home_quick_21','home_quick_22','home_quick_23','home_quick_24','home_quick_25','home_quick_26','home_quick_27','home_quick_28','home_quick_29','home_quick_30','home_quick_31','home_quick_32','home_quick_33','home_quick_34','home_quick_35','home_quick_36','home_quick_37','home_quick_38','home_quick_39','home_quick_40','home_quick_41','home_quick_42','home_quick_43','home_quick_44','home_quick_45','home_quick_46','home_quick_47','home_quick_48','home_quick_49','home_quick_50','home_quick_51','home_quick_52','home_quick_53','home_quick_54','home_quick_55','home_quick_55b','home_quick_56','home_quick_57','home_quick_58','home_quick_59','home_quick_60','home_quick_61','home_quick_62','home_quick_63','home_quick_63b','home_quick_64','home_quick_65','home_quick_66','home_quick_67','home_quick_68','home_quick_69','home_quick_70','home_quick_71','home_quick_72','home_quick_73','home_quick_74','home_quick_75','home_quick_76','home_quick_77','home_sos','home_new_01','home_new_02','home_new_03','home_new_04','home_new_05','home_new_06','home_new_07','home_new_08','home_new_09','home_new_10','home_new_11','home_new_12','home_new_13','home_new_14','home_new_15'];
  homeQuickActions.forEach(actionId => {
  slackApp.action(actionId, async ({ body, ack, client }) => {
  await ack();
@@ -2533,12 +2664,12 @@ app.listen(PORT, async () => {
  if (scriptConfig) {
  const scriptUrl = `${PORTAL}/scripts/${scriptConfig.file}`;
  modalBlocks.push({ type: 'divider' });
- modalBlocks.push({ type: 'section', text: { type: 'mrkdwn', text: '*⚡ One-Click Auto Fix:*\n_Download, double-click, and it runs automatically!_' }});
+ modalBlocks.push({ type: 'section', text: { type: 'mrkdwn', text: '*⚡ Auto-Fix Available:*\n_This script will: Clear temp files, reset network adapter, and restart relevant services._\n\n⚠️ Safe to run — no data will be deleted.' }});
  modalBlocks.push({
  type: 'actions',
  elements: [{
  type: 'button',
- text: { type: 'plain_text', text: `⬇️ ${scriptConfig.label} - Auto Script`, emoji: true },
+ text: { type: 'plain_text', text: `⚡ Run Auto-Fix: ${scriptConfig.label}`, emoji: true },
  style: 'primary',
  url: scriptUrl,
  action_id: `dl_${actionId}`
@@ -2569,10 +2700,41 @@ app.listen(PORT, async () => {
  }
  }
 
- modalBlocks.push({ type: 'divider' });
- modalBlocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: '_Still not working? Type your problem in DM — AI will follow up and help you further._' }]});
+          modalBlocks.push({ type: 'divider' });
+         // ── 3-Button Guided Troubleshooting Pattern ────────────────────────────────────
+         modalBlocks.push({
+           type: 'actions',
+           elements: [
+             {
+               type: 'button',
+               text: { type: 'plain_text', text: '✅ Problem Solved', emoji: true },
+               action_id: 'resolved_yes_btn',
+               style: 'primary',
+               value: 'Medium'
+             },
+             {
+               type: 'button',
+               text: { type: 'plain_text', text: '🔄 Need More Help', emoji: true },
+               action_id: 'not_resolved_btn',
+               value: (problem || '').substring(0, 100)
+             },
+             {
+               type: 'button',
+               text: { type: 'plain_text', text: '🎫 Raise Ticket', emoji: true },
+               action_id: 'quick_ticket_btn',
+               style: 'danger',
+               value: 'Medium',
+               confirm: {
+                 title: { type: 'plain_text', text: 'Ticket Create Karein?' },
+                 text: { type: 'mrkdwn', text: '_IT team ko alert bheja jayega — woh directly fix karegi._' },
+                 confirm: { type: 'plain_text', text: '✅ Ha, Banao!' },
+                 deny: { type: 'plain_text', text: 'Ruko' }
+               }
+             }
+           ]
+         });
 
- // ── Update modal with actual response ───────────────────────────
+         // ── Update modal with actual response ───────────────────────────
  await client.views.update({
  view_id: loadingView.view.id,
  view: {
