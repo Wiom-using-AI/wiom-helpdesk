@@ -2213,10 +2213,7 @@ app.listen(PORT, async () => {
    return;
  }
 
- try {
- const emp = await lookupEmployee(userId, client);
-
- // ── LOADING MODAL — push immediately before any async work (trigger_id expires in 3s) ──
+ // ── STEP 1: LOADING MODAL FIRST — before ANY DB/API calls ───────────────────
  const isFromModal = !!body.view;
  const triggerId = body.trigger_id;
  let loadingViewId = null;
@@ -2229,19 +2226,21 @@ app.listen(PORT, async () => {
          type: 'modal',
          title: { type: 'plain_text', text: '🛠 IT Help', emoji: true },
          close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true },
-         blocks: [{ type: 'section', text: { type: 'mrkdwn', text: '_⏳ Loading solution..._' }}]
+         blocks: [{ type: 'section', text: { type: 'mrkdwn', text: '⏳ _Loading..._' }}]
        }
      });
      loadingViewId = loadingResp?.view?.id;
-   } catch(e) { /* trigger_id expired or already 3 modals stacked */ }
+   } catch(e) { /* trigger_id expired */ }
  }
 
- // ── KB FIRST — check knowledge base before calling AI ────────────────────
+ try {
+ // ── STEP 2: KB CHECK — instant, no API call for known issues ────────────
  let reply = claudeSvc.getKBAnswer ? claudeSvc.getKBAnswer(problem) : null;
  let shouldCreateTicket = reply ? /type\s*karo[:\s]*\*?ha/i.test(reply) : false;
 
  if (!reply) {
-   // KB miss → call AI
+   // KB miss → call AI (only for unknown issues)
+   const emp = await lookupEmployee(userId, client);
    const conv = await getSlackSession(userId, emp);
    conv.messages.push({ role: 'user', content: problem });
    if (conv.messages.length > 30) conv.messages = conv.messages.slice(-30);
@@ -2252,6 +2251,7 @@ app.listen(PORT, async () => {
    conv.messages.push({ role: 'assistant', content: reply });
    conv.save().catch(() => {});
  }
+ const emp = await lookupEmployee(userId, client).catch(() => ({ empId: userId, empName: 'User' }));
 
  const formattedReply = formatForSlack(reply);
  const blocks = [{ type: 'section', text: { type: 'mrkdwn', text: formattedReply }}];
