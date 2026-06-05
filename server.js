@@ -1750,7 +1750,7 @@ app.listen(PORT, async () => {
        title: { type: 'plain_text', text: '💥 Charger Damaged', emoji: true },
        close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true },
        blocks: [
-         { type: 'section', text: { type: 'mrkdwn', text: '💥 *Charger physically damage/toota hai*\n\nIT team replacement arrange karegi.\nType karo *ha* — IT ticket raise karta hoon 🎫' }},
+         { type: 'section', text: { type: 'mrkdwn', text: '💥 *Charger physically damage/toota hai*\n\nIT team replacement arrange karegi. Neeche ticket raise karo:' }},
          { type: 'divider' },
          { type: 'actions', elements: [
            { type: 'button', text: { type: 'plain_text', text: '🎫 IT Ticket Banao', emoji: true }, action_id: 'quick_ticket_btn', style: 'danger', value: 'Charger physically damaged - replacement needed' },
@@ -1793,12 +1793,6 @@ app.listen(PORT, async () => {
        : [];
      const blocks = buildHomeBlocks(emp, myTickets, new Set());
      await client.views.publish({ user_id: userId, view: { type: 'home', blocks } });
-     const channelId = body.channel?.id || body.container?.channel_id || userId;
-     await client.chat.postMessage({
-       channel: channelId,
-       text: '🏠 Home pe wapas aa gaye!',
-       blocks: [{ type: 'section', text: { type: 'mrkdwn', text: '🏠 *Home pe wapas aa gaye!*\nKoi aur IT problem ho toh Home tab pe jaao.' } }]
-     });
    } catch (err) { console.error('go_home_btn error:', err.message); }
  });
 
@@ -1897,9 +1891,13 @@ app.listen(PORT, async () => {
    const channelId = body.channel?.id || body.container?.channel_id || userId;
    await client.chat.postMessage({
      channel: channelId,
-     text: '✅ Laptop issue resolve ho gaya!',
+     text: '✅ Issue Resolved!',
      blocks: [
-       { type: 'section', text: { type: 'mrkdwn', text: `🎉 *Bahut accha! Laptop ab sahi chal raha hai.*\n\nAge se laptop slow na ho iske liye:\n• Unnecessary apps band rakhein\n• Regular restart karein\n• Chrome mein zyada tabs mat kholine\n\nKoi aur IT problem ho toh Home tab pe jaayein.` }},
+       { type: 'section', text: { type: 'mrkdwn', text:
+         `✅ *Bahut accha! Issue resolve ho gaya!* 🎉\n\n` +
+         `IT Helpdesk happy hai ki aapki problem solve ho gayi.\n\n` +
+         `_Koi aur IT problem ho toh Home tab pe jaao aur category select karo._`
+       }},
        { type: 'actions', elements: [
          { type: 'button', text: { type: 'plain_text', text: '🏠 Home', emoji: true }, action_id: 'go_home_btn', value: 'home', style: 'primary' }
        ]}
@@ -3144,7 +3142,7 @@ app.listen(PORT, async () => {
 Analyze the screenshot carefully and:
 1. Identify exactly what error/issue is visible
 2. Give 2-3 simple steps to fix it (non-technical employee, no CMD, no Device Manager)
-3. If it needs IT help → say "Type karo *ha* — IT ticket raise karta hoon 🎫"
+3. If it needs IT help → suggest clicking the IT Ticket button below
 
 Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue" opener.`;
 
@@ -3189,7 +3187,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
    const formatted = formatForSlack(diagnosis);
    await say({ text: diagnosis, blocks: [
      { type: 'section', text: { type: 'mrkdwn', text: `📸 *Screenshot Analysis:*\n\n${formatted}` }},
-     { type: 'context', elements: [{ type: 'mrkdwn', text: '_Zivon Vision — Kaam nahi hua? Type karo *ha* — IT ticket raise karta hoon_' }]}
+     { type: 'context', elements: [{ type: 'mrkdwn', text: '_Zivon Vision — Kaam nahi hua? Neeche IT Ticket button click karo._' }]}
    ]});
  } else {
    await say({ text: '📸 Screenshot received. Error message text mein type karo — main dekh ke help karunga.' });
@@ -3878,7 +3876,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
        await say({
          text: 'IT Support ticket raise kar raha hoon',
          blocks: [
-           { type: 'section', text: { type: 'mrkdwn', text: `⚡ *2 attempts ke baad bhi identify nahi ho paya.*\n\nIT team directly handle karegi.\nType karo *ha* — IT ticket raise karta hoon 🎫` }},
+           { type: 'section', text: { type: 'mrkdwn', text: `⚡ *2 attempts ke baad bhi identify nahi ho paya.*\n\nIT team directly handle karegi. Neeche ticket raise karo:` }},
            { type: 'actions', elements: [
              { type: 'button', text: { type: 'plain_text', text: '🎫 IT Ticket Raise Karo', emoji: true },
                style: 'danger', action_id: 'quick_ticket_btn', value: text }
@@ -3986,18 +3984,15 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
    failedAttempts.delete(userId); // reset failure count
    pendingTickets.delete(userId); // no ticket needed
 
-   const replies = [
-     `✅ Glad it is resolved. Feel free to reach out if anything else comes up.`,
-     `✅ *Issue resolve ho gaya!*\n\nKoi aur IT problem ho toh bata dena — main hoon. 👍`,
-     `*Nice!* Lagta hai issue solve ho gayi 😊\n\nAur kuch chahiye? Batao!`
-   ];
-   const msg = replies[Math.floor(Math.random() * replies.length)];
-
    await client.chat.postMessage({
      channel: channelId,
-     text: '✅ Problem solve ho gayi!',
+     text: '✅ Issue Resolved!',
      blocks: [
-       { type: 'section', text: { type: 'mrkdwn', text: '🎉 *Great! Issue resolved.*\n\nKoi aur problem ho toh Home tab pe jaao.' } },
+       { type: 'section', text: { type: 'mrkdwn', text:
+         `✅ *Bahut accha! Issue resolve ho gaya!* 🎉\n\n` +
+         `IT Helpdesk happy hai ki aapki problem solve ho gayi.\n\n` +
+         `_Koi aur IT problem ho toh Home tab pe jaao aur category select karo._`
+       }},
        { type: 'actions', elements: [
          { type: 'button', text: { type: 'plain_text', text: '🏠 Home', emoji: true }, action_id: 'go_home_btn', value: 'home', style: 'primary' }
        ]}
@@ -4021,7 +4016,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
        channel: channelId,
        text: 'Samajh gaya — main theek kar raha hoon.',
        blocks: [{ type: 'section', text: { type: 'mrkdwn', text:
-         `🔧 *Samajh gaya — main theek kar raha hoon.*\n\nAbhi IT ticket chahiye? Type karo *ha* — IT ticket raise karta hoon 🎫`
+         `🔧 *Samajh gaya — main theek kar raha hoon.*\n\nAbhi IT ticket chahiye? Neeche IT Ticket button click karo:`
        }}]
      });
 
@@ -4163,9 +4158,9 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
      failedAttempts.delete(userId);
      await client.chat.postMessage({
        channel: channelId,
-       text: '⚠️ Auto Fix could not resolve the issue.',
+       text: '⚠️ Steps se solve nahi hua — IT team ko bhejte hain.',
        blocks: [
-         { type: 'section', text: { type: 'mrkdwn', text: '⚠️ *Auto Fix could not resolve the issue.*\n\nIT team personally fix karegi — ticket raise karo.' } },
+         { type: 'section', text: { type: 'mrkdwn', text: '⚠️ *Steps se solve nahi hua — IT team ko bhejte hain.*\n\nIT team personally aayegi aur fix karegi.' } },
          { type: 'actions', elements: [
            { type: 'button', text: { type: 'plain_text', text: '🎫 Create Ticket', emoji: true }, action_id: 'quick_ticket_btn', style: 'danger', value: 'Medium',
              confirm: { title: { type: 'plain_text', text: 'Ticket Create Karein?' }, text: { type: 'mrkdwn', text: '_IT team ko alert bheja jayega — woh directly fix karegi._' }, confirm: { type: 'plain_text', text: '✅ Ha, Banao!' }, deny: { type: 'plain_text', text: 'Ruko' } }
@@ -4295,14 +4290,20 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
          text: `⚠️ ${result.message}` });
      } else if (result) {
        pendingTickets.delete(userId);
-       const priEmoji2 = { Critical:'🔴', High:'🟠', Medium:'🟡', Low:'🟢' };
        await client.chat.postMessage({
          channel: channelId,
-         text: `✅ Ticket Created: ${result.ticketId}`,
+         text: `🎫 Ticket Created: ${result.ticketId}`,
          blocks: [
-           { type:'section', text:{ type:'mrkdwn',
-             text:`✅ *Ticket Created!* \`${result.ticketId}\`\n${priEmoji2[result.priority]||'🟡'} Priority: *${result.priority}* | Category: *${result.category}*\n_IT team jald aapke paas aayegi!_ 🚀` }},
-           { type:'context', elements:[{ type:'mrkdwn', text:`_${(result.description||'').substring(0,80)}_` }]}
+           { type: 'section', text: { type: 'mrkdwn', text:
+             `🎫 *IT Ticket Create Ho Gaya!*\n\n` +
+             `*Ticket ID:* \`${result.ticketId}\`\n` +
+             `*Priority:* ${result.priority}\n` +
+             `*Category:* ${result.category}\n\n` +
+             `IT team jald se jald aapki madad karegi. Ticket status ke liye admin se contact karein.`
+           }},
+           { type: 'actions', elements: [
+             { type: 'button', text: { type: 'plain_text', text: '🏠 Home', emoji: true }, action_id: 'go_home_btn', value: 'home', style: 'primary' }
+           ]}
          ]
        });
        await notifyAdmin(client, result, emp);
