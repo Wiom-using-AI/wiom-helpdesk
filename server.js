@@ -2170,6 +2170,71 @@ app.listen(PORT, async () => {
  const formattedReply = formatForSlack(reply);
  const blocks = [{ type: 'section', text: { type: 'mrkdwn', text: formattedReply }}];
 
+ // ── PHASE 3: Auto-Fix button based on vague_pick issue ───────────────────
+ const VAGUE_AUTOFIX = {
+   laptop_slow: { file: 'fix-slow-laptop.bat', label: '⚡ Auto-Fix: Laptop Speed' },
+   laptop_other: { file: 'fix-slow-laptop.bat', label: '⚡ Auto-Fix: Laptop' },
+   overheat: { file: 'fix-overheating.bat', label: '🌡️ Auto-Fix: Overheating' },
+   blue_screen: { file: 'fix-bluescreen.bat', label: '💙 Auto-Fix: Blue Screen' },
+   freezing: { file: 'fix-freezing.bat', label: '❄️ Auto-Fix: Freezing' },
+   battery_issue: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' },
+   battery_not_charging: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Charging' },
+   battery_drain: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery Drain' },
+   keys_not_working: { file: 'fix-keyboard.bat', label: '⌨️ Auto-Fix: Keyboard' },
+   touchpad_issue: { file: 'fix-touchpad.bat', label: '🖱️ Auto-Fix: Touchpad' },
+   camera_issue: { file: 'fix-camera.bat', label: '📷 Auto-Fix: Camera' },
+   mic_issue: { file: 'fix-mic.bat', label: '🎤 Auto-Fix: Microphone' },
+   sound_none: { file: 'fix-sound.bat', label: '🔊 Auto-Fix: Sound' },
+   sound_headphone: { file: 'fix-headphone.bat', label: '🎧 Auto-Fix: Headphone' },
+   screen_black: { file: 'fix-black-screen.bat', label: '🖥️ Auto-Fix: Screen' },
+   screen_flicker: { file: 'fix-screen-flicker.bat', label: '🖥️ Auto-Fix: Screen Flicker' },
+   screen_color: { file: 'fix-screen-flicker.bat', label: '🖥️ Auto-Fix: Screen Color' },
+   wifi_not_connect: { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' },
+   internet_slow: { file: 'fix-wifi.bat', label: '📶 Auto-Fix: Internet Speed' },
+   wifi_drop: { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi Disconnect' },
+   teams_issue: { file: 'fix-teams.bat', label: '📹 Auto-Fix: Teams' },
+   zoom_issue: { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' },
+   outlook_issue: { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser/Gmail' },
+   app_crash: { file: 'fix-app-crash.bat', label: '💥 Auto-Fix: App Crash' },
+   software_other: { file: 'fix-app-crash.bat', label: '⚙️ Auto-Fix: Software' },
+   windows_update: { file: 'fix-windows-update.bat', label: '🔄 Auto-Fix: Windows Update' },
+   onedrive_sync: { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' },
+   excel_issue: { file: 'fix-word-excel.bat', label: '📊 Auto-Fix: Excel/Word' },
+   word_issue: { file: 'fix-word-excel.bat', label: '📝 Auto-Fix: Word' },
+   ppt_issue: { file: 'fix-word-excel.bat', label: '📊 Auto-Fix: PowerPoint' },
+   browser_slow: { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser Speed' },
+   chrome_issue: { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Chrome' },
+   bluetooth_issue: { file: 'fix-bluetooth.bat', label: '🔵 Auto-Fix: Bluetooth' },
+   usb_issue: { file: 'fix-usb.bat', label: '🔌 Auto-Fix: USB' },
+   virus_detected: { file: 'fix-virus-scan.bat', label: '🦠 Auto-Fix: Virus Scan' },
+ };
+
+ // Get actionId to check for autofix
+ const vagueProblemKey = body?.actions?.[0]?.value || actionId?.replace('vague_pick_', '') || '';
+ const autoFixConfig = VAGUE_AUTOFIX[vagueProblemKey];
+ const PORTAL = process.env.API_BASE_URL || 'https://wiom-helpdesk-production.up.railway.app';
+
+ if (autoFixConfig) {
+   const scriptUrl = `${PORTAL}/scripts/${autoFixConfig.file}`;
+   blocks.push({ type: 'divider' });
+   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `*⚡ Auto-Fix Available*\n_Download karke double-click karo — automatically fix ho jaayega!_\n⚠️ Safe hai — koi data delete nahi hoga.` }});
+   blocks.push({ type: 'actions', elements: [{
+     type: 'button',
+     text: { type: 'plain_text', text: `⬇️ ${autoFixConfig.label}`, emoji: true },
+     style: 'primary',
+     url: scriptUrl,
+     action_id: `dl_vague_${vagueProblemKey}`
+   }]});
+ }
+
+ // Resolution buttons
+ blocks.push({ type: 'divider' });
+ blocks.push({ type: 'actions', elements: [
+   { type: 'button', text: { type: 'plain_text', text: '✅ Yes, Fixed!', emoji: true }, action_id: 'resolved_yes_btn', style: 'primary', value: 'Medium' },
+   { type: 'button', text: { type: 'plain_text', text: '❌ Still Not Working', emoji: true }, action_id: 'not_resolved_btn', style: 'danger', value: problem },
+   { type: 'button', text: { type: 'plain_text', text: '🎫 Create Ticket', emoji: true }, action_id: 'quick_ticket_btn', value: 'Medium' },
+ ]});
+
  if (shouldCreateTicket) {
  const allUserText = conv.messages.filter(m=>m.role==='user').map(m=>m.content).join(' ').toLowerCase();
  let autoCategory = 'Other';
