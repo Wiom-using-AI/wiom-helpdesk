@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -845,286 +845,10 @@ app.listen(PORT, async () => {
    return { intent: 'incident', confidence: 70 };
  };
 
- // ── DM Script detector: maps free-text issue → script file + label ────
- // IMPORTANT: Auto-Fix only shown for 'incident' intent — never for requests/info
- // REFACTORED: 4-step intent-first pipeline (replaces fragile keyword matching)
- const getScriptForText = (text) => {
-   if (!text) return null;
-   const t = text.toLowerCase();
+ // ── DM Script detector: Auto-Fix disabled ────────────────────────────
+ const getScriptForText = (text) => null; // Auto-Fix disabled
 
-   // ── STEP 1: INTENT GATE — hard block on non-incident intents ──────────
-   const { intent, confidence } = classifyIntent(t);
-   const SCRIPT_BLOCKED_INTENTS = ['request', 'information', 'access', 'asset', 'security', 'unknown'];
-   if (SCRIPT_BLOCKED_INTENTS.includes(intent)) return null;
-   if (confidence < 60) return null;
-
-   // ── STEP 2: PHYSICAL / EMERGENCY GUARD ────────────────────────────────
-   // Physical damage, liquid damage, theft → script can't fix broken hardware
-   if (/damage|toot|crack|chori|stolen|water|liquid|paani/.test(t)) return null;
-
-   // ── STEP 3: REQUEST / HOW-TO GUARDS ───────────────────────────────────
-
-   // GUARD: Equipment requests — never show script
-   const EQUIPMENT_WORDS = ['headphone', 'mouse', 'keyboard', 'monitor', 'charger', 'cable', 'webcam', 'hub', 'pendrive', 'printer', 'laptop', 'screen'];
-   const REQUEST_WORDS = ['chahiye', 'need', 'ki need', 'mangwana', 'lena hai', 'request', 'buy', 'kharidna', 'naya', 'replace', 'upgrade', 'wapas'];
-   const isEquipmentRequest = EQUIPMENT_WORDS.some(e => t.includes(e)) && REQUEST_WORDS.some(r => t.includes(r));
-   if (isEquipmentRequest) return null;
-
-   // GUARD: Information queries — never show script
-   const INFO_WORDS = ['kaise', 'kise', 'kese', 'how to', 'how do', 'steps', 'guide', 'batao', 'bataiye', 'kya hai', 'what is'];
-   const isInfoQuery = INFO_WORDS.some(w => t.includes(w));
-   if (isInfoQuery) return null;
-
-   // GUARD: Access requests — never show script
-   const isAccessRequest = /\b\w+\s+(access|permission)\s*(chahiye|de|do|milega|nahi|nahi\s*hai)\b/i.test(t);
-   if (isAccessRequest) return null;
-
-   // GUARD: Non-laptop devices / out-of-scope → NO Auto-Fix ever
-   const isPhone    = /\b(phone|mobile|samsung|iphone|android|mobile\s*charg)\b/.test(t);
-   const isOfficeEq = /\b(conference\s*room|meeting\s*room|projector\s*room|reception|hall)\b/.test(t) &&
-                      !/\b(laptop|my\s*laptop|mera\s*laptop)\b/.test(t);
-   if (isPhone || isOfficeEq) return null;
-
-   // ── STEP 4: SCRIPT TABLE — clean, specific, ordered ───────────────────
-   const SCRIPT_TABLE = [
-     // Fan noise — laptop/pc fan or "fan ki awaaz" (IT device context)
-     {
-       match: t => /\bfan\b/.test(t) && (/\b(laptop|pc|computer)\b/.test(t) || /\b(awaaz|noise|nahi\s*band)\b/.test(t)),
-       script: { file: 'fix-fan-noise.bat', label: '🌬️ Auto-Fix: Fan Noise' }
-     },
-     // Blue screen / BSOD
-     {
-       match: t => /\b(blue\s*screen|bsod|bluescreen)\b/.test(t),
-       script: { file: 'fix-bluescreen.bat', label: '💙 Auto-Fix: Blue Screen' }
-     },
-     // Black screen / no display
-     {
-       match: t => /\b(black\s*screen|no\s*display|blank\s*screen)\b/.test(t),
-       script: { file: 'fix-black-screen.bat', label: '🖥️ Auto-Fix: Black Screen' }
-     },
-     // Screen flicker
-     {
-       match: t => /\b(screen|display)\b/.test(t) && /\b(flicker|blink|jhal|kaamp)\b/.test(t),
-       script: { file: 'fix-screen-flicker.bat', label: '🖥️ Auto-Fix: Screen Flicker' }
-     },
-     // Overheating
-     {
-       match: t => /\b(overheat|garam|hot\b|heat)\b/.test(t) && /\b(laptop|pc|computer)\b/.test(t),
-       script: { file: 'fix-overheating.bat', label: '🌡️ Auto-Fix: Overheating' }
-     },
-     // Camera (issue only, not phone camera)
-     {
-       match: t => /\b(camera|webcam|camra)\b/.test(t) &&
-                   /\b(nahi\s*chal|not\s*work|issue|black\s*screen|detect\s*nahi|kaam\s*nahi)\b/.test(t) &&
-                   !/\b(phone|mobile)\b/.test(t),
-       script: { file: 'fix-camera.bat', label: '📷 Auto-Fix: Camera' }
-     },
-     // Microphone
-     {
-       match: t => /\b(mic|microphone|microfone|microphne)\b/.test(t) &&
-                   /\b(nahi\s*chal|not\s*work|issue|kaam\s*nahi|pick\s*up\s*nahi)\b/.test(t),
-       script: { file: 'fix-mic.bat', label: '🎤 Auto-Fix: Microphone' }
-     },
-     // Headphone (issue only, not request)
-     {
-       match: t => /\b(headphone|earphone|earbuds)\b/.test(t) &&
-                   /\b(nahi\s*chal|not\s*work|issue|connect\s*nahi|sound\s*nahi)\b/.test(t),
-       script: { file: 'fix-headphone.bat', label: '🎧 Auto-Fix: Headphone' }
-     },
-     // Projector — laptop-to-projector connection issues only
-     {
-       match: t => /\bprojector\b/.test(t) &&
-                   /\b(connect|nahi\s*dikh|screen\s*share|laptop)\b/.test(t),
-       script: { file: 'fix-projector.bat', label: '📽️ Auto-Fix: Projector' }
-     },
-     // HDMI / External monitor
-     {
-       match: t => /\b(hdmi|external\s*monitor|external\s*screen)\b/.test(t),
-       script: { file: 'fix-hdmi.bat', label: '🖥️ Auto-Fix: HDMI/Monitor' }
-     },
-     // Resolution
-     {
-       match: t => /\b(resolution|display\s*sett)\b/.test(t),
-       script: { file: 'fix-resolution.bat', label: '🖥️ Auto-Fix: Resolution' }
-     },
-     // Sound / Speaker (laptop only, not phone/conference room)
-     {
-       match: t => /\b(sound|audio|speaker|awaaz|speakr|speeker)\b/.test(t) &&
-                   /\b(nahi\s*aa|not\s*work|issue|band|kaam\s*nahi)\b/.test(t) &&
-                   !/\b(phone|mobile|room|conference|meeting|hall|reception)\b/.test(t) &&
-                   !/\bfan\b/.test(t),
-       script: { file: 'fix-sound.bat', label: '🔊 Auto-Fix: Sound' }
-     },
-     // Keyboard (issue, not request)
-     {
-       match: t => /\b(keyboard|keybord|keyborad|keybrd)\b/.test(t) &&
-                   /\b(nahi\s*chal|not\s*work|issue|kaam\s*nahi|stuck|type\s*nahi)\b/.test(t),
-       script: { file: 'fix-keyboard.bat', label: '⌨️ Auto-Fix: Keyboard' }
-     },
-     // Touchpad / Mouse (issue, not request)
-     {
-       match: t => /\b(touchpad|trackpad|mouse)\b/.test(t) &&
-                   /\b(nahi\s*chal|not\s*work|stuck|cursor|issue|kaam\s*nahi)\b/.test(t),
-       script: { file: 'fix-touchpad.bat', label: '🖱️ Auto-Fix: Touchpad' }
-     },
-     // Touchscreen
-     {
-       match: t => /\btouchscreen\b/.test(t) &&
-                   /\b(nahi\s*chal|not\s*work|issue|kaam\s*nahi)\b/.test(t),
-       script: { file: 'fix-touchscreen.bat', label: '🖱️ Auto-Fix: Touchscreen' }
-     },
-     // Bluetooth (issue)
-     {
-       match: t => /\b(bluetooth|bluetoth|bluethooth|\bbt\b)\b/.test(t) &&
-                   /\b(nahi\s*chal|not\s*work|connect\s*nahi|issue|pair\s*nahi)\b/.test(t),
-       script: { file: 'fix-bluetooth.bat', label: '🔵 Auto-Fix: Bluetooth' }
-     },
-     // USB / Pendrive (issue)
-     {
-       match: t => /\b(usb|pendrive|pen\s*drive|flash\s*drive)\b/.test(t) &&
-                   /\b(nahi\s*chal|not\s*detect|issue|kaam\s*nahi)\b/.test(t),
-       script: { file: 'fix-usb.bat', label: '🔌 Auto-Fix: USB' }
-     },
-     // SD Card
-     {
-       match: t => /\b(sd\s*card|sdcard|memory\s*card)\b/.test(t),
-       script: { file: 'fix-sdcard.bat', label: '💳 Auto-Fix: SD Card' }
-     },
-     // Fingerprint
-     {
-       match: t => /\b(fingerprint|finger\s*print)\b/.test(t),
-       script: { file: 'fix-fingerprint.bat', label: '👆 Auto-Fix: Fingerprint' }
-     },
-     // Battery / Charging — laptop only, not phone charging
-     {
-       match: t => /\b(batter[yi]?|battry|battey|batr|charging)\b/.test(t) &&
-                   /\b(nahi\s*ho\s*rhi|not\s*charg|issue|drain|low|khatam|stuck)\b/.test(t) &&
-                   !/\b(phone|mobile)\b/.test(t),
-       script: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' }
-     },
-     // Charging (with laptop context)
-     {
-       match: t => /\bcharg\b/.test(t) && /\b(laptop|pc|computer|plug)\b/.test(t) && !/\b(phone|mobile)\b/.test(t),
-       script: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' }
-     },
-     // Sleep / Wake
-     {
-       match: t => /\b(sleep|wake|hibernate|suspend)\b/.test(t),
-       script: { file: 'fix-sleep-wake.bat', label: '💤 Auto-Fix: Sleep/Wake' }
-     },
-     // Sudden shutdown
-     {
-       match: t => /\b(sudden\s*shutdown|shut\s*down|band\s*ho\s*jata)\b/.test(t),
-       script: { file: 'fix-sudden-shutdown.bat', label: '⚡ Auto-Fix: Sudden Shutdown' }
-     },
-     // Teams (issue, not request)
-     {
-       match: t => /\bteams\b/.test(t) && /\b(nahi\s*chal|not\s*work|crash|issue|open\s*nahi|dropping)\b/.test(t),
-       script: { file: 'fix-teams.bat', label: '📹 Auto-Fix: Teams' }
-     },
-     // Zoom (issue, not request)
-     {
-       match: t => /\bzoom\b/.test(t) && /\b(nahi\s*chal|not\s*work|crash|issue|open\s*nahi|join\s*nahi)\b/.test(t),
-       script: { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' }
-     },
-     // Outlook (redirect to browser fix — WIOM uses Gmail)
-     {
-       match: t => /\boutlook\b/.test(t) && /\b(nahi\s*chal|crash|issue|not\s*work)\b/.test(t),
-       script: { file: 'fix-browser.bat', label: '📧 Auto-Fix: Gmail (Browser)' }
-     },
-     // WiFi / Network (issue, not password query)
-     {
-       match: t => /\b(wifi|wi-fi|internet|wired|ethernet|lan|\bnet\b|hotspot|broadband|ping)\b/.test(t) &&
-                   /\b(nahi\s*chal|not\s*work|issue|problem|connect\s*nahi|disconnect|slow)\b/.test(t) &&
-                   !/\b(password|pass|pwd)\b/.test(t),
-       script: { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' }
-     },
-     // OneDrive sync issue
-     {
-       match: t => /\b(onedrive|one\s*drive)\b/.test(t) &&
-                   /\b(sync\s*nahi|not\s*sync|issue|stuck|full)\b/.test(t),
-       script: { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' }
-     },
-     // PDF (open issue, not conversion)
-     {
-       match: t => /\bpdf\b/.test(t) &&
-                   /\b(nahi\s*khul|not\s*open|issue)\b/.test(t) &&
-                   !/\b(to\s*word|to\s*excel|convert|kaise|karu|banana|change\s*karna)\b/.test(t),
-       script: { file: 'fix-pdf.bat', label: '📄 Auto-Fix: PDF' }
-     },
-     // Word / Excel / Office (crash/open issue, not fresh install)
-     {
-       match: t => /\b(word|excel|powerpoint|ppt|ms\s*office|microsoft\s*office|office\s*365|office365|xlsx|xls|docx|pptx|ms\s*word|ms\s*excel)\b/.test(t) &&
-                   /\b(nahi\s*khul|crash|issue|not\s*open|hang|ha+g|freeze|freez|kaam\s*nahi|open\s*nahi|start\s*nahi|loading|stuck|atak)\b/.test(t) &&
-                   !/\b(install|insatl|insatal|instat|instll|intsall)\b/.test(t),
-       script: { file: 'fix-word-excel.bat', label: '📄 Auto-Fix: MS Office' }
-     },
-     // Chrome / Browser (issue)
-     {
-       match: t => /\b(chrome|browser|firefox|edge|safari|chrmo|chorme|crome)\b/.test(t) &&
-                   /\b(nahi\s*khul|not\s*open|crash|slow|issue|not\s*work)\b/.test(t),
-       script: { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser' }
-     },
-     // Printer (issue only, not request)
-     {
-       match: t => /\bprinter\b/.test(t) &&
-                   /\b(nahi\s*chal|offline|not\s*work|issue|stuck|print\s*nahi)\b/.test(t),
-       script: { file: 'fix-printer.bat', label: '🖨️ Auto-Fix: Printer' }
-     },
-     // Windows Update (stuck/failing)
-     {
-       match: t => /\b(windows\s*update|win\s*update)\b/.test(t) &&
-                   /\b(stuck|atak|fail|nahi\s*ho|issue)\b/.test(t),
-       script: { file: 'fix-windows-update.bat', label: '🔄 Auto-Fix: Windows Update' }
-     },
-     // Copy-Paste / Clipboard
-     {
-       match: t => /\b(copy\s*paste|ctrl\s*c|ctrl\s*v|clipboard)\b/.test(t) &&
-                   /\b(nahi\s*ho|not\s*work|issue|kaam\s*nahi)\b/.test(t),
-       script: { file: 'fix-clipboard.bat', label: '📋 Auto-Fix: Copy-Paste' }
-     },
-     // Date / Time
-     {
-       match: t => /\b(date|time|clock|galat\s*time|wrong\s*time)\b/.test(t) &&
-                   /\b(galat|wrong|issue|nahi|set)\b/.test(t),
-       script: { file: 'fix-datetime.bat', label: '🕐 Auto-Fix: Date/Time' }
-     },
-     // Caps Lock stuck
-     {
-       match: t => /\b(caps\s*lock|capslock)\b/.test(t),
-       script: { file: 'fix-capslock.bat', label: '🔡 Auto-Fix: Caps Lock' }
-     },
-     // Website blocked
-     {
-       match: t => /\b(website\s*block|site\s*block|open\s*nahi\s*ho\s*raha)\b/.test(t),
-       script: { file: 'fix-website-blocked.bat', label: '🌐 Auto-Fix: Website' }
-     },
-     // Virus scan (incident — allowed by intent gate for 'incident')
-     {
-       match: t => /\b(virus|malware)\b/.test(t) && /\b(scan|check|remove|aa\s*gaya)\b/.test(t),
-       script: { file: 'fix-virus-scan.bat', label: '🦠 Auto-Fix: Virus Scan' }
-     },
-     // Storage full / Disk cleanup
-     {
-       match: t => /\b(storage|disk|space|jagah)\b/.test(t) &&
-                   /\b(full|khatam|kam|low|nahi\s*hai|jagah\s*nahi)\b/.test(t),
-       script: { file: 'fix-storage.bat', label: '💾 Auto-Fix: Storage Cleanup' }
-     },
-     // Laptop slow / performance — LAST (most generic)
-     {
-       match: t => /\b(laptop|pc|computer)\b/.test(t) &&
-                   /\b(slow|dheema|hang|freeze|lagg|atak|speed)\b/.test(t) &&
-                   !/\b(change|upgrade|naya|replace|badal|chahiye|need|request)\b/.test(t),
-       script: { file: 'fix-slow-laptop.bat', label: '⚡ Auto-Fix: Slow Laptop' }
-     },
-   ];
-
-   // Execute against table — first match wins
-   for (const entry of SCRIPT_TABLE) {
-     if (entry.match(t)) return entry.script;
-   }
-   return null;
- };
+ // ── DEAD CODE BLOCK REMOVED ── (was: 4-step intent-first pipeline)
 
  // ── Category color config ─────────────────────────────────────────────
  const CAT_COLORS = {
@@ -2127,41 +1851,13 @@ app.listen(PORT, async () => {
  });
 
  // ── Vague pick button handler (quick problem selection from DM) ─────
- // ── Build response blocks helper ────────────────────────────────────────────
- const buildResponseBlocks = (reply, problemKey) => {
-   const formattedReply = formatForSlack(reply);
-   const blocks = [{ type: 'section', text: { type: 'mrkdwn', text: formattedReply }}];
-   const PORTAL = process.env.API_BASE_URL || 'https://wiom-helpdesk-production.up.railway.app';
-   const VAGUE_AUTOFIX_LOCAL = {
-     laptop_slow: 'fix-slow-laptop.bat', overheat: 'fix-overheating.bat', blue_screen: 'fix-bluescreen.bat',
-     freezing: 'fix-freezing.bat', battery_issue: 'fix-battery.bat', battery_not_charging: 'fix-battery.bat',
-     keys_not_working: 'fix-keyboard.bat', touchpad_issue: 'fix-touchpad.bat', camera_issue: 'fix-camera.bat',
-     mic_issue: 'fix-mic.bat', sound_none: 'fix-sound.bat', screen_black: 'fix-black-screen.bat',
-     wifi_not_connect: 'fix-wifi.bat', internet_slow: 'fix-wifi.bat', teams_issue: 'fix-teams.bat',
-     zoom_issue: 'fix-zoom.bat', excel_issue: 'fix-word-excel.bat', word_issue: 'fix-word-excel.bat',
-     chrome_issue: 'fix-browser.bat', app_crash: 'fix-app-crash.bat',
-   };
-   const scriptFile = VAGUE_AUTOFIX_LOCAL[problemKey];
-   if (scriptFile) {
-     blocks.push({ type: 'divider' });
-     blocks.push({ type: 'section', text: { type: 'mrkdwn', text: '*⚡ Auto-Fix Available* — Download karke double-click karo' }});
-     blocks.push({ type: 'actions', elements: [{ type: 'button', text: { type: 'plain_text', text: '⬇️ Download Auto-Fix', emoji: true }, style: 'primary', url: `${PORTAL}/scripts/${scriptFile}`, action_id: `dl_vague_${problemKey}` }]});
-   }
-   blocks.push({ type: 'divider' });
-   blocks.push({ type: 'actions', elements: [
-     { type: 'button', text: { type: 'plain_text', text: '✅ Yes, Fixed!', emoji: true }, action_id: 'resolved_yes_btn', style: 'primary', value: 'Medium' },
-     { type: 'button', text: { type: 'plain_text', text: '❌ Still Not Working', emoji: true }, action_id: 'not_resolved_btn', style: 'danger', value: problemKey },
-     { type: 'button', text: { type: 'plain_text', text: '🎫 Create Ticket', emoji: true }, action_id: 'quick_ticket_btn', value: 'Medium' },
-   ]});
-   return blocks;
- };
 
  slackApp.action(/^vague_pick_/, async ({ body, ack, client, say }) => {
  await ack();
  const userId = body.user.id;
  const actionId = body.actions[0].action_id;
- const rawKey = body.actions[0].value; // e.g. "laptop_slow" (raw key from category button)
- // Convert raw key to natural language for KB lookup
+ const rawKey = body.actions[0].value;
+
  const KEY_TO_PROBLEM = {
    laptop_slow: 'laptop bahut slow hai hang ho rha hai', blue_screen: 'blue screen bsod error aa rha hai',
    overheat: 'laptop overheating bahut garam ho rha hai', battery_issue: 'battery issue charging problem',
@@ -2188,43 +1884,6 @@ app.listen(PORT, async () => {
    new_keyboard: 'keyboard chahiye new', new_headphone: 'headphone chahiye',
    new_monitor: 'monitor chahiye new', new_charger: 'charger chahiye',
  };
- const problem = KEY_TO_PROBLEM[rawKey] || rawKey;
-
- // ── Special case: "Won't Turn On" → no script possible, raise HIGH ticket directly ──
- if (actionId === 'vague_pick_wont_turn_on') {
-   try {
-     const emp = await lookupEmployee(userId, client).catch(() => ({ empId: userId, empName: 'User' }));
-     const channelId = body.channel?.id || userId;
-     pendingTickets.set(userId, {
-       empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
-       empDept: emp.dept, empFloor: emp.floor,
-       laptop: emp.laptop, laptopSN: emp.laptopSN,
-       category: 'Hardware', priority: 'High',
-       description: "Laptop won't turn on at all",
-       source: 'slack', slackUserId: userId, createdAt: Date.now()
-     });
-     await client.chat.postMessage({
-       channel: channelId,
-       text: "Laptop won't turn on — IT team ko bhejte hain",
-       blocks: [
-         { type: 'section', text: { type: 'mrkdwn', text:
-           `⚠️ *Laptop won't turn on — kuch manual steps try karo:*\n\n` +
-           `1. *Power adapter check karo* — cable properly plugged in hai?\n` +
-           `2. *Adapter LED check karo* — light aa rahi hai?\n` +
-           `3. *Power button 10 seconds hold karo* — force restart\n` +
-           `4. *Power adapter dono taraf properly laga hai?* — laptop side + socket dono check karo\n` +
-           `5. *Different power socket try karo*\n\n` +
-           `Agar yeh sab try karne ke baad bhi on nahi hua — IT team ko aana hoga. Type karo *ha* for HIGH priority ticket 🎫`
-         }},
-         { type: 'actions', elements: [
-           { type: 'button', text: { type: 'plain_text', text: '🎫 IT Ticket Raise Karo', emoji: true },
-             style: 'danger', action_id: 'quick_ticket_btn', value: "Laptop won't turn on at all" }
-         ]}
-       ]
-     });
-   } catch (err) { console.error('vague_pick_wont_turn_on error:', err.message); }
-   return;
- }
 
  // ── Special case: "Create Ticket" button → open /ticket modal directly ─
  if (actionId === 'vague_pick_create_ticket') {
@@ -2272,141 +1931,51 @@ app.listen(PORT, async () => {
 
  const isFromModal = !!body.view;
  const triggerId = body.trigger_id;
+ let loadingViewId = null;
 
- try {
- // ── KB CHECK — instant for known issues ──────────────────────────────────
- let reply = claudeSvc.getKBAnswer ? claudeSvc.getKBAnswer(problem) : null;
-
- if (!reply) {
-   // Unknown issue → show loading first, then AI
-   let loadingViewId = null;
-   if (isFromModal && triggerId) {
-     try {
-       const lr = await client.views.push({ trigger_id: triggerId, view: { type: 'modal', title: { type: 'plain_text', text: '🛠 IT Help', emoji: true }, close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true }, blocks: [{ type: 'section', text: { type: 'mrkdwn', text: '⏳ _Finding solution..._' }}] }});
-       loadingViewId = lr?.view?.id;
-     } catch(e) {}
-   }
-   const emp = await lookupEmployee(userId, client);
-   const conv = await getSlackSession(userId, emp);
-   conv.messages.push({ role: 'user', content: problem });
-   if (conv.messages.length > 30) conv.messages = conv.messages.slice(-30);
-   const aiResult = await claudeSvc.chat(conv.messages, { empId: emp.empId, empName: emp.empName, source: 'slack' });
-   reply = aiResult.reply;
-   conv.messages.push({ role: 'assistant', content: reply });
-   conv.save().catch(() => {});
-   // Update loading modal
-   if (loadingViewId) {
-     const finalBlocks = buildResponseBlocks(reply, vagueProblemKey);
-     try { await client.views.update({ view_id: loadingViewId, view: { type: 'modal', title: { type: 'plain_text', text: '🛠 IT Help', emoji: true }, close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true }, blocks: finalBlocks }}); } catch(e) {}
-     return;
-   }
- }
-
- const formattedReply = formatForSlack(reply);
- const blocks = [{ type: 'section', text: { type: 'mrkdwn', text: formattedReply }}];
-
- // ── PHASE 3: Auto-Fix button based on vague_pick issue ───────────────────
- const VAGUE_AUTOFIX = {
-   laptop_slow: { file: 'fix-slow-laptop.bat', label: '⚡ Auto-Fix: Laptop Speed' },
-   laptop_other: { file: 'fix-slow-laptop.bat', label: '⚡ Auto-Fix: Laptop' },
-   overheat: { file: 'fix-overheating.bat', label: '🌡️ Auto-Fix: Overheating' },
-   blue_screen: { file: 'fix-bluescreen.bat', label: '💙 Auto-Fix: Blue Screen' },
-   freezing: { file: 'fix-freezing.bat', label: '❄️ Auto-Fix: Freezing' },
-   battery_issue: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery' },
-   battery_not_charging: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Charging' },
-   battery_drain: { file: 'fix-battery.bat', label: '🔋 Auto-Fix: Battery Drain' },
-   keys_not_working: { file: 'fix-keyboard.bat', label: '⌨️ Auto-Fix: Keyboard' },
-   touchpad_issue: { file: 'fix-touchpad.bat', label: '🖱️ Auto-Fix: Touchpad' },
-   camera_issue: { file: 'fix-camera.bat', label: '📷 Auto-Fix: Camera' },
-   mic_issue: { file: 'fix-mic.bat', label: '🎤 Auto-Fix: Microphone' },
-   sound_none: { file: 'fix-sound.bat', label: '🔊 Auto-Fix: Sound' },
-   sound_headphone: { file: 'fix-headphone.bat', label: '🎧 Auto-Fix: Headphone' },
-   screen_black: { file: 'fix-black-screen.bat', label: '🖥️ Auto-Fix: Screen' },
-   screen_flicker: { file: 'fix-screen-flicker.bat', label: '🖥️ Auto-Fix: Screen Flicker' },
-   screen_color: { file: 'fix-screen-flicker.bat', label: '🖥️ Auto-Fix: Screen Color' },
-   wifi_not_connect: { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi' },
-   internet_slow: { file: 'fix-wifi.bat', label: '📶 Auto-Fix: Internet Speed' },
-   wifi_drop: { file: 'fix-wifi.bat', label: '📶 Auto-Fix: WiFi Disconnect' },
-   teams_issue: { file: 'fix-teams.bat', label: '📹 Auto-Fix: Teams' },
-   zoom_issue: { file: 'fix-zoom.bat', label: '🎥 Auto-Fix: Zoom' },
-   outlook_issue: { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser/Gmail' },
-   app_crash: { file: 'fix-app-crash.bat', label: '💥 Auto-Fix: App Crash' },
-   software_other: { file: 'fix-app-crash.bat', label: '⚙️ Auto-Fix: Software' },
-   windows_update: { file: 'fix-windows-update.bat', label: '🔄 Auto-Fix: Windows Update' },
-   onedrive_sync: { file: 'fix-onedrive.bat', label: '☁️ Auto-Fix: OneDrive' },
-   excel_issue: { file: 'fix-word-excel.bat', label: '📊 Auto-Fix: Excel/Word' },
-   word_issue: { file: 'fix-word-excel.bat', label: '📝 Auto-Fix: Word' },
-   ppt_issue: { file: 'fix-word-excel.bat', label: '📊 Auto-Fix: PowerPoint' },
-   browser_slow: { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Browser Speed' },
-   chrome_issue: { file: 'fix-browser.bat', label: '🌐 Auto-Fix: Chrome' },
-   bluetooth_issue: { file: 'fix-bluetooth.bat', label: '🔵 Auto-Fix: Bluetooth' },
-   usb_issue: { file: 'fix-usb.bat', label: '🔌 Auto-Fix: USB' },
-   virus_detected: { file: 'fix-virus-scan.bat', label: '🦠 Auto-Fix: Virus Scan' },
- };
-
- // Get actionId to check for autofix
- const vagueProblemKey = rawKey || actionId?.replace('vague_pick_', '') || '';
- const autoFixConfig = VAGUE_AUTOFIX[vagueProblemKey];
- const PORTAL = process.env.API_BASE_URL || 'https://wiom-helpdesk-production.up.railway.app';
-
- if (autoFixConfig) {
-   const scriptUrl = `${PORTAL}/scripts/${autoFixConfig.file}`;
-   blocks.push({ type: 'divider' });
-   blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `*⚡ Auto-Fix Available*\n_Download karke double-click karo — automatically fix ho jaayega!_\n⚠️ Safe hai — koi data delete nahi hoga.` }});
-   blocks.push({ type: 'actions', elements: [{
-     type: 'button',
-     text: { type: 'plain_text', text: `⬇️ ${autoFixConfig.label}`, emoji: true },
-     style: 'primary',
-     url: scriptUrl,
-     action_id: `dl_vague_${vagueProblemKey}`
-   }]});
- }
-
- // Resolution buttons
- blocks.push({ type: 'divider' });
- blocks.push({ type: 'actions', elements: [
-   { type: 'button', text: { type: 'plain_text', text: '✅ Yes, Fixed!', emoji: true }, action_id: 'resolved_yes_btn', style: 'primary', value: 'Medium' },
-   { type: 'button', text: { type: 'plain_text', text: '❌ Still Not Working', emoji: true }, action_id: 'not_resolved_btn', style: 'danger', value: problem },
-   { type: 'button', text: { type: 'plain_text', text: '🎫 Create Ticket', emoji: true }, action_id: 'quick_ticket_btn', value: 'Medium' },
- ]});
-
- if (shouldCreateTicket) {
- const allUserText = conv.messages.filter(m=>m.role==='user').map(m=>m.content).join(' ').toLowerCase();
- let autoCategory = 'Other';
- if (/wifi|internet|network/i.test(allUserText)) autoCategory = 'Network';
- else if (/teams|zoom|outlook|browser|app|software|windows/i.test(allUserText)) autoCategory = 'Software';
- else if (/laptop|screen|keyboard|battery|hardware|slow|hang|freeze|blue screen/i.test(allUserText)) autoCategory = 'Hardware';
- else if (/password|account|locked|login/i.test(allUserText)) autoCategory = 'Account';
- pendingTickets.set(userId, {
- empId: emp.empId, empName: emp.empName, empEmail: emp.email || 'unknown@wiom.in',
- empDept: emp.dept, empFloor: emp.floor,
- laptop: emp.laptop, laptopSN: emp.laptopSN,
- category: autoCategory, priority: 'Medium',
- description: problem, source: 'slack', slackUserId: userId,
- createdAt: Date.now()
- });
- blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? *"ha"* ya *"nahi"* type karo_` }]});
- }
-
- // ── SHOW RESPONSE — direct push (KB hits are instant) ────────────────────
+ // Show loading immediately
  if (isFromModal && triggerId) {
    try {
-     await client.views.push({ trigger_id: triggerId, view: { type: 'modal', title: { type: 'plain_text', text: '🛠 IT Help', emoji: true }, close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true }, blocks }});
-   } catch(e) {
+     const lr = await client.views.push({
+       trigger_id: triggerId,
+       view: { type: 'modal', title: { type: 'plain_text', text: '🛠 IT Help', emoji: true }, close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true }, blocks: [{ type: 'section', text: { type: 'mrkdwn', text: '⏳ _Checking..._' }}] }
+     });
+     loadingViewId = lr?.view?.id;
+   } catch(e) {}
+ }
+
+ try {
+   const naturalProblem = KEY_TO_PROBLEM[rawKey] || rawKey;
+
+   // Get AI response
+   const emp = await lookupEmployee(userId, client).catch(() => ({ empId: userId, empName: 'User' }));
+   const messages = [{ role: 'user', content: naturalProblem }];
+   const { reply } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack' });
+
+   const formattedReply = formatForSlack(reply);
+   const blocks = [
+     { type: 'section', text: { type: 'mrkdwn', text: formattedReply }},
+     { type: 'divider' },
+     { type: 'actions', elements: [
+       { type: 'button', text: { type: 'plain_text', text: '✅ Yes, Fixed!', emoji: true }, action_id: 'resolved_yes_btn', style: 'primary', value: 'Medium' },
+       { type: 'button', text: { type: 'plain_text', text: '🎫 Create Ticket', emoji: true }, action_id: 'quick_ticket_btn', style: 'danger', value: naturalProblem },
+     ]}
+   ];
+
+   const modalView = { type: 'modal', title: { type: 'plain_text', text: '🛠 IT Help', emoji: true }, close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true }, blocks };
+
+   if (loadingViewId) {
+     try { await client.views.update({ view_id: loadingViewId, view: modalView }); } catch(e) {}
+   } else if (isFromModal && triggerId) {
+     try { await client.views.push({ trigger_id: triggerId, view: modalView }); } catch(e) {}
+   } else {
      await client.chat.postMessage({ channel: userId, text: reply, blocks });
    }
- } else {
-   await client.chat.postMessage({ channel: userId, text: reply, blocks });
- }
- } catch (err) {
- console.error('vague_pick action error:', err.message);
- try {
-   if (body.trigger_id) {
-     await client.views.open({ trigger_id: body.trigger_id, view: { type: 'modal', title: { type: 'plain_text', text: 'IT Help' }, close: { type: 'plain_text', text: 'Close' }, blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Kuch error aa gaya. Thodi der baad try karo.' }}]}});
-   } else {
-     await client.chat.postMessage({ channel: userId, text: '❌ Kuch error aa gaya. Thodi der baad try karo.' });
+ } catch(err) {
+   console.error('vague_pick error:', err.message);
+   if (loadingViewId) {
+     try { await client.views.update({ view_id: loadingViewId, view: { type: 'modal', title: { type: 'plain_text', text: 'Error' }, close: { type: 'plain_text', text: 'Close' }, blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Kuch error aa gaya. Dobara try karo.' }}] }}); } catch(e) {}
    }
- } catch(e) {}
  }
  });
 
