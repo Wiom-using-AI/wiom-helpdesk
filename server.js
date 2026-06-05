@@ -3982,7 +3982,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
  slackApp.action('resolved_yes_btn', async ({ body, ack, client }) => {
    await ack();
    const userId = body.user.id;
-   const channelId = body.channel?.id || body.container?.channel_id;
+   const channelId = body.channel?.id || body.container?.channel_id || userId;
    failedAttempts.delete(userId); // reset failure count
    pendingTickets.delete(userId); // no ticket needed
 
@@ -4146,7 +4146,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
  slackApp.action('not_resolved_btn', async ({ body, ack, client }) => {
    await ack();
    const userId = body.user.id;
-   const channelId = body.channel?.id || body.container?.channel_id;
+   const channelId = body.channel?.id || body.container?.channel_id || userId;
 
    // Track failure count
    const prev = failedAttempts.get(userId) || { count: 0, lastTime: 0 };
@@ -4261,7 +4261,7 @@ Reply in Hinglish. Be specific about what you see. Max 5 lines. No "common issue
  slackApp.action('quick_ticket_btn', async ({ body, ack, client }) => {
    await ack();
    const userId = body.user.id;
-   const channelId = body.channel?.id || body.container?.channel_id;
+   const channelId = body.channel?.id || body.container?.channel_id || userId;
    try {
      const emp = await lookupEmployee(userId, client);
 
