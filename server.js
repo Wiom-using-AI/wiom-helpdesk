@@ -2251,7 +2251,6 @@ app.listen(PORT, async () => {
    conv.messages.push({ role: 'assistant', content: reply });
    conv.save().catch(() => {});
  }
- const emp = await lookupEmployee(userId, client).catch(() => ({ empId: userId, empName: 'User' }));
 
  const formattedReply = formatForSlack(reply);
  const blocks = [{ type: 'section', text: { type: 'mrkdwn', text: formattedReply }}];
