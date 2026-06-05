@@ -2440,6 +2440,70 @@ const getKBAnswer = (problem) => {
     return `🎙️ *Mic Teams/Zoom mein nahi chal rha?* — yeh try karo:\n\n1. *Privacy check karo* → Settings → Privacy & Security → Microphone → Teams/Zoom ke liye ON karo\n2. *App settings check karo* → Teams/Zoom → Settings → Devices → correct mic select karo\n3. *Test karo* → Teams → Settings → Devices → "Make a test call" → check karo sunai deta hai ya nahi\n\nAgar phir bhi nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
+  // ── ❌ APPLICATION / SOFTWARE NAHI KHUL RHA (generic) ────────────────────
+  // "application nahi khul rha", "software nahi chal rha", "app nahi khul rha"
+  // Excludes specific apps handled above (Teams, Zoom, Chrome, Excel, Word, Slack, Gmail, Edge)
+  if (/\b(application|app|software)\b/i.test(pn) &&
+      /\b(nahi\s*khul|not\s*open|open\s*nahi|crash|nahi\s*chal|kaam\s*nahi|work\s*nahi|start\s*nahi)\b/i.test(pn) &&
+      !/\b(teams|zoom|chrome|excel|word|office|slack|gmail|edge|outlook|powerpoint|pdf)\b/i.test(pn)) {
+    return `❌ *Application nahi khul rhi* — yeh try karo:\n\n1. *Force close* → Ctrl+Shift+Esc → Task Manager → app dhundho → End Task → dobara open karo\n2. *Restart karo* → Laptop restart karo → dobara try karo\n\nAgar phir bhi nahi khuli → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🔑 APPLICATION / SOFTWARE ACCESS CHAHIYE ─────────────────────────────
+  // "application access chahiye", "software access chahiye", "app access chahiye"
+  if (/\b(application|app|software|program)\b/i.test(pn) &&
+      /\b(access\s*chahiye|access\s*de|access\s*do|access\s*nahi|chahiye.*access|permission\s*chahiye)\b/i.test(pn)) {
+    return `🔑 *Application/Software access chahiye?*\n\nSoftware access ke liye manager approval + IT ticket chahiye.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🌐 WEBSITE NAHI KHUL RHA (generic, not blocked) ─────────────────────
+  // "website nahi khul rha", "site open nahi ho rha", "webpage nahi aa rha"
+  if (/\b(website|site|webpage|web\s*page)\b/i.test(pn) &&
+      /\b(nahi\s*khul|not\s*open|open\s*nahi|nahi\s*aa\s*rha|nahi\s*chal|nahi\s*ho\s*rha|load\s*nahi)\b/i.test(pn)) {
+    return `🌐 *Website nahi khul rhi?* — yeh try karo:\n\n1. *Internet check karo* → WiFi connected hai? Dusri site try karo\n2. *Browser refresh karo* → Ctrl+R dabao → dobara try karo\n3. *Incognito mein try karo* → Chrome → Ctrl+Shift+N → site kholo\n\nAgar phir bhi nahi khuli → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📧 GMAIL NAHI CHAL RHA (specific "nahi chal" pattern) ────────────────
+  // "gmail nahi chal rha" — the general gmail handler catches "nahi khul" but not "nahi chal"
+  if (/\b(gmail|email)\b/i.test(pn) &&
+      /\b(nahi\s*chal|chal\s*nahi|kaam\s*nahi|work\s*nahi|issue|problem)\b/i.test(pn) &&
+      !/\b(password|login|send|receive|bhej|aa\s*rha|aa\s*rhi|sync|storage|full)\b/i.test(pn)) {
+    return `📧 *Gmail/Email issue hai?* — yeh try karo:\n\n1. *Incognito test* → Chrome → Ctrl+Shift+N → gmail.com → dekho khulta hai ya nahi\n2. *Cache clear karo* → Ctrl+Shift+Del → All time → Cookies + Cache → Clear\n3. *Alag browser try karo* → Edge mein gmail.com kholo\n\nAgar theek nahi hua → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🖨️ SCANNER ISSUE ──────────────────────────────────────────────────────
+  // "scanner kaam nahi kar rha", "scan nahi ho rha", "scanner nahi chal rha"
+  if (/\b(scanner|scan\s*karna|scan\s*nahi)\b/i.test(pn) && !/\b(virus|antivirus)\b/i.test(pn)) {
+    return `🖨️ *Scanner Issue* — yeh try karo:\n\n1. *Scanner restart karo* → band karo → 30 sec → on karo\n2. *USB cable check karo* → scanner ka USB properly laga hai?\n3. *Laptop restart karo* → restart ke baad scanner dhundho\n\nAgar phir bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📊 EXCEL SLOW HAI ─────────────────────────────────────────────────────
+  // "excel slow hai", "excel bahut slow chal rha hai"
+  if (/\b(excel)\b.*(slow|dheema|lagg|hang|response\s*nahi|bahut\s*slow)\b/i.test(pn) ||
+      /\b(slow|dheema|lagg)\b.*(excel)\b/i.test(pn)) {
+    return `📊 *Excel slow hai?* — yeh try karo:\n\n1. *Extra sheets/tabs band karo* → jo Excel workbooks/files zaruri nahi unhe close karo\n2. *Task Manager check karo* → Ctrl+Shift+Esc → CPU/Memory column → heavy apps End Task karo\n3. *Restart karo* → Laptop restart karo → phir Excel open karo\n\nAgar phir bhi slow hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── ℹ️ OUTLOOK SYNC ISSUE — WIOM uses Gmail ──────────────────────────────
+  // "outlook sync nahi ho rha", "outlook email sync nahi"
+  if (/\boutlook\b/i.test(pn) && /\b(sync|sync\s*nahi|email.*nahi\s*aa|not\s*sync|syncing)\b/i.test(pn)) {
+    return `ℹ️ *WIOM mein Outlook nahi, Gmail use hoti hai.*\n\nGmail sync issue hai? Gmail mein refresh karo (F5).\nAgar Gmail mein problem hai → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 📧 EMAIL ACCESS CHAHIYE ───────────────────────────────────────────────
+  // "email access chahiye", "gmail access chahiye", "company email chahiye"
+  if (/\b(email|gmail|mail)\b.*(access\s*chahiye|access\s*de|access\s*do|access\s*milega|access\s*nahi|chahiye.*access)\b/i.test(pn) ||
+      (/\b(email|gmail)\b/i.test(pn) && /\b(access\s*chahiye|access\s*do|access\s*nahi\s*hai)\b/i.test(pn))) {
+    return `📧 *Email/Gmail access chahiye?*\n\nCompany Gmail access IT team deti hai — HR/manager approval ke baad.\n\nType karo *ha* — IT ticket raise karta hoon 🎫`;
+  }
+
+  // ── 🖵 EXTERNAL MONITOR NAHI DIKH RHA ────────────────────────────────────
+  // "external monitor nahi dikh rha", "bahar wala screen connect nahi"
+  // (Note: hdmi/projector handler above covers most cases, this catches bare "monitor nahi" patterns)
+  if (/\b(external\s*monitor|bahar\s*wala\s*(monitor|screen|display)|second\s*monitor|monitor\s*connect\s*nahi|monitor\s*nahi\s*dikh|monitor\s*detect\s*nahi)\b/i.test(pn)) {
+    return `🖥️ *External Monitor nahi dikh rha?* — yeh try karo:\n\n1. *HDMI cable check karo* → dono sides properly laga hai?\n2. *Win+P dabao* → keyboard pe Win+P → "Extend" ya "Duplicate" select karo\n3. *Restart karo* → cable laga ke laptop restart karo\n\nAgar phir bhi nahi dikh rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
+  }
+
   // ── UNKNOWN QUERY LOG — track KB misses for weekly review ───────────────
   if (problem && problem.trim().length > 3) {
     console.log(`📋 KB_MISS: "${problem.substring(0, 100)}" → AI`);
