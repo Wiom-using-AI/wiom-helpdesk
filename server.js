@@ -2160,7 +2160,35 @@ app.listen(PORT, async () => {
  await ack();
  const userId = body.user.id;
  const actionId = body.actions[0].action_id;
- const problem = body.actions[0].value; // e.g. "laptop very slow"
+ const rawKey = body.actions[0].value; // e.g. "laptop_slow" (raw key from category button)
+ // Convert raw key to natural language for KB lookup
+ const KEY_TO_PROBLEM = {
+   laptop_slow: 'laptop bahut slow hai hang ho rha hai', blue_screen: 'blue screen bsod error aa rha hai',
+   overheat: 'laptop overheating bahut garam ho rha hai', battery_issue: 'battery issue charging problem',
+   battery_not_charging: 'battery charge nahi ho rhi charger nahi chal rha',
+   keys_not_working: 'keyboard kaam nahi kar rha', touchpad_issue: 'touchpad kaam nahi kar rha cursor stuck',
+   camera_issue: 'camera kaam nahi kar rha black screen', mic_issue: 'microphone kaam nahi kar rha',
+   sound_none: 'speaker nahi chal rha awaaz nahi aa rhi', screen_black: 'screen black ho gyi kuch nahi dikh rha',
+   external_monitor: 'external monitor detect nahi ho rha hdmi issue', scanner_issue: 'scanner kaam nahi kar rha',
+   wifi_not_connect: 'wifi nahi chal rha connect nahi ho rha', internet_slow: 'internet bahut slow hai',
+   lan_issue: 'lan cable nahi chal rha ethernet issue', network_drive: 'network drive nahi dikh rha',
+   excel_issue: 'excel open nahi ho rha crash ho rha', word_issue: 'word open nahi ho rha crash',
+   ppt_issue: 'powerpoint open nahi ho rha', office_activation: 'ms office activation issue',
+   file_corrupted: 'file nahi khul rhi corrupt ho gayi', chrome_issue: 'chrome nahi khul rha',
+   edge_issue: 'edge browser nahi khul rha', browser_slow: 'browser slow hai',
+   website_blocked: 'website nahi khul rhi blocked hai', teams_issue: 'teams nahi chal rha',
+   zoom_issue: 'zoom nahi chal rha', pdf_issue: 'pdf nahi khul rha',
+   app_crash: 'application crash ho rha hai nahi khul rha', gmail_issue: 'gmail nahi chal rha',
+   outlook_email: 'gmail email issue', slack_issue: 'slack nahi chal rha',
+   email_not_sending: 'email nahi bhej pa rha', email_not_receiving: 'email nahi aa rhi',
+   calendar_sync: 'calendar sync nahi ho rha', password_reset: 'password bhool gaya reset karna hai',
+   account_locked: 'account locked ho gaya login nahi ho rha', shared_folder: 'shared folder access nahi mil rha',
+   email_access: 'email access chahiye', software_access: 'software application access chahiye',
+   new_laptop: 'new laptop request chahiye', new_mouse: 'mouse chahiye new',
+   new_keyboard: 'keyboard chahiye new', new_headphone: 'headphone chahiye',
+   new_monitor: 'monitor chahiye new', new_charger: 'charger chahiye',
+ };
+ const problem = KEY_TO_PROBLEM[rawKey] || rawKey;
 
  // ── Special case: "Won't Turn On" → no script possible, raise HIGH ticket directly ──
  if (actionId === 'vague_pick_wont_turn_on') {
@@ -2317,7 +2345,7 @@ app.listen(PORT, async () => {
  };
 
  // Get actionId to check for autofix
- const vagueProblemKey = body?.actions?.[0]?.value || actionId?.replace('vague_pick_', '') || '';
+ const vagueProblemKey = rawKey || actionId?.replace('vague_pick_', '') || '';
  const autoFixConfig = VAGUE_AUTOFIX[vagueProblemKey];
  const PORTAL = process.env.API_BASE_URL || 'https://wiom-helpdesk-production.up.railway.app';
 
