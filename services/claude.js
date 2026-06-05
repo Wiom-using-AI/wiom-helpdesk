@@ -1931,7 +1931,8 @@ const getKBAnswer = (problem) => {
   }
 
   // ── 🎙️ MIC NOT WORKING ────────────────────────────────────────────────────
-  if (/\b(mic|microphone)\b.*(kaam\s*nahi|nahi\s*chal|work\s*nahi|band|nahi\s*sun|detect\s*nahi|nahi\s*ho\s*rha|nahi\s*pick)/i.test(pn)) {
+  if (/\b(mic|microphone)\b.*(kaam\s*nahi|nahi\s*chal|work\s*nahi|not\s*work|not\s*detect|not\s*pick|band|nahi\s*sun|detect\s*nahi|nahi\s*ho\s*rha|nahi\s*pick|issue|problem)/i.test(pn) ||
+      /\b(mic|microphone)\b\s*(nahi|not|issue|problem|kharab)/.test(pn)) {
     return `🎙️ *Mic kaam nahi kar rha?* — yeh try karo:\n\n1. *Privacy check karo* → Settings → Privacy & Security → Microphone → ON karo → app ke liye bhi ON karo\n2. *Input device check karo* → Sound settings → Input → correct mic select karo\n3. *App check karo* → Teams/Zoom mein Settings → Devices → mic test karo\n\nAgar phir bhi nahi chal rha → type karo *ha*, IT ticket raise karta hoon 🎫`;
   }
 
