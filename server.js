@@ -2092,10 +2092,12 @@ app.listen(PORT, async () => {
 
  try {
    const naturalProblem = KEY_TO_PROBLEM[rawKey] || rawKey;
+   // Tell AI: user already selected this issue — give DIRECT steps, no questions
+   const aiPrompt = `Employee ne IT Helpdesk se yeh issue select kiya: "${naturalProblem}"\n\nSeedha troubleshooting steps do. Koi sawaal mat poochho. 3-4 simple steps max jo non-technical employee 30 seconds mein kar sake. End karo with: "Agar theek nahi hua → *Create Ticket* button dabao."`;
 
    // Get AI response
    const emp = await lookupEmployee(userId, client).catch(() => ({ empId: userId, empName: 'User' }));
-   const messages = [{ role: 'user', content: naturalProblem }];
+   const messages = [{ role: 'user', content: aiPrompt }];
    let { reply } = await claudeSvc.chat(messages, { empId: emp.empId, empName: emp.empName, source: 'slack' });
 
    // Strip any residual "type karo ha" instructions — Messages Tab is disabled, users can only click buttons
