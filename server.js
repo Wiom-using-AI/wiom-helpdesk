@@ -1852,6 +1852,61 @@ app.listen(PORT, async () => {
 
  // ── Vague pick button handler (quick problem selection from DM) ─────
 
+ // ── LAPTOP SLOW — Special handler with exact steps + Auto-Fix ───────────────
+ slackApp.action('vague_pick_laptop_slow', async ({ body, ack, client }) => {
+   await ack();
+   const userId = body.user.id;
+   const isFromModal = !!body.view;
+   const triggerId = body.trigger_id;
+   const PORTAL = process.env.API_BASE_URL || 'https://wiom-helpdesk-production.up.railway.app';
+
+   const blocks = [
+     { type: 'section', text: { type: 'mrkdwn', text:
+       `🐢 *Laptop Slow/Hang* — yeh try karo:\n\n` +
+       `1. *Task Manager* → Ctrl+Shift+Esc → CPU column → jo zyada use kar raha ho End Task karo\n` +
+       `2. *Browser tabs* → unnecessary Chrome/Edge tabs band karo\n` +
+       `3. *Restart* → Laptop properly shut down karo (restart, sleep nahi)\n\n` +
+       `Agar in teeno se theek nahi hua, ticket par click karo (RAM ya SSD check hogi)`
+     }},
+     { type: 'divider' },
+     { type: 'section', text: { type: 'mrkdwn', text: `*⚡ Auto-Fix Available*\nYeh script automatically: temp files delete karega, heavy background apps band karega, memory free karega.\n⚠️ Safe hai — koi data delete nahi hoga.` }},
+     { type: 'actions', elements: [
+       { type: 'button', text: { type: 'plain_text', text: '⬇️ Auto-Fix: Laptop Speed Download', emoji: true }, style: 'primary', url: `${PORTAL}/scripts/fix-slow-laptop.bat`, action_id: 'dl_slow_laptop' }
+     ]},
+     { type: 'divider' },
+     { type: 'actions', elements: [
+       { type: 'button', text: { type: 'plain_text', text: '✅ Yes, Fixed!', emoji: true }, action_id: 'laptop_slow_fixed', style: 'primary', value: 'laptop_slow' },
+       { type: 'button', text: { type: 'plain_text', text: '🎫 Create Ticket', emoji: true }, action_id: 'quick_ticket_btn', style: 'danger', value: 'Laptop slow hai — RAM ya SSD check karni hai' },
+     ]}
+   ];
+
+   const modalView = { type: 'modal', title: { type: 'plain_text', text: '🐢 Laptop Slow', emoji: true }, close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true }, blocks };
+
+   if (isFromModal && triggerId) {
+     try { await client.views.push({ trigger_id: triggerId, view: modalView }); }
+     catch(e) { await client.chat.postMessage({ channel: userId, text: 'Laptop Slow fix steps', blocks }); }
+   } else {
+     await client.chat.postMessage({ channel: userId, text: 'Laptop Slow fix steps', blocks });
+   }
+ });
+
+ // ── Laptop Slow Fixed → success message ──────────────────────────────────────
+ slackApp.action('laptop_slow_fixed', async ({ body, ack, client }) => {
+   await ack();
+   const userId = body.user.id;
+   const channelId = body.channel?.id || body.container?.channel_id || userId;
+   await client.chat.postMessage({
+     channel: channelId,
+     text: '✅ Laptop issue resolve ho gaya!',
+     blocks: [
+       { type: 'section', text: { type: 'mrkdwn', text: `🎉 *Bahut accha! Laptop ab sahi chal raha hai.*\n\nAge se laptop slow na ho iske liye:\n• Unnecessary apps band rakhein\n• Regular restart karein\n• Chrome mein zyada tabs mat kholine\n\nKoi aur IT problem ho toh Home tab pe jaayein.` }},
+       { type: 'actions', elements: [
+         { type: 'button', text: { type: 'plain_text', text: '🏠 Home', emoji: true }, action_id: 'go_home_btn', value: 'home', style: 'primary' }
+       ]}
+     ]
+   });
+ });
+
  slackApp.action(/^vague_pick_/, async ({ body, ack, client, say }) => {
  await ack();
  const userId = body.user.id;
