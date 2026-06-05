@@ -813,16 +813,7 @@ const chat = async (messages, { empId, empName, source, laptop, laptopSN, dept, 
     .replace(/^[\s,!]+/, '')
     .trim();
 
-  // ── LOW CONFIDENCE FALLBACK: if KB missed AND reply is generic ──────────────
-  const isGenericFallback = /thoda\s*aur\s*batao|kya\s*problem\s*ho\s*rahi|describe\s*your\s*issue|more\s*detail/i.test(reply);
-  const { intent: qIntent, confidence: qConf } = (typeof detectQueryIntent === 'function')
-    ? detectQueryIntent(lastMsg)
-    : { intent: 'unknown', confidence: 70 };
-
-  if (isGenericFallback || qConf < 60) {
-    const betterFallback = getFallbackResponse(lastMsg, qIntent, '');
-    reply = betterFallback;
-  }
+  // KB removed — no fallback replacement needed, trust AI response
 
   // Strip robotic title lines before "Step 1:" (keep emoji openers)
   const stepIdx = reply.indexOf('Step 1:');
