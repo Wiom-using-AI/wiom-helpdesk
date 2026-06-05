@@ -2216,6 +2216,26 @@ app.listen(PORT, async () => {
  try {
  const emp = await lookupEmployee(userId, client);
 
+ // ── LOADING MODAL — push immediately before any async work (trigger_id expires in 3s) ──
+ const isFromModal = !!body.view;
+ const triggerId = body.trigger_id;
+ let loadingViewId = null;
+
+ if (isFromModal && triggerId) {
+   try {
+     const loadingResp = await client.views.push({
+       trigger_id: triggerId,
+       view: {
+         type: 'modal',
+         title: { type: 'plain_text', text: '🛠 IT Help', emoji: true },
+         close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true },
+         blocks: [{ type: 'section', text: { type: 'mrkdwn', text: '_⏳ Loading solution..._' }}]
+       }
+     });
+     loadingViewId = loadingResp?.view?.id;
+   } catch(e) { /* trigger_id expired or already 3 modals stacked */ }
+ }
+
  // ── KB FIRST — check knowledge base before calling AI ────────────────────
  let reply = claudeSvc.getKBAnswer ? claudeSvc.getKBAnswer(problem) : null;
  let shouldCreateTicket = reply ? /type\s*karo[:\s]*\*?ha/i.test(reply) : false;
@@ -2319,32 +2339,32 @@ app.listen(PORT, async () => {
  blocks.push({ type:'context', elements:[{ type:'mrkdwn', text:`_Ticket banana hai? *"ha"* ya *"nahi"* type karo_` }]});
  }
 
- // ── If triggered from a modal (category menu) → update/push modal ───────
- const isFromModal = !!body.view;
- const triggerId = body.trigger_id;
+ // ── UPDATE loading modal OR post to DM ───────────────────────────────────
+ const modalView = {
+   type: 'modal',
+   title: { type: 'plain_text', text: '🛠 IT Help', emoji: true },
+   close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true },
+   blocks
+ };
 
- if (isFromModal && triggerId) {
-   // Push a new modal on top with the response
+ if (loadingViewId) {
+   // Update the loading modal with actual content
    try {
-     await client.views.push({
-       trigger_id: triggerId,
-       view: {
-         type: 'modal',
-         title: { type: 'plain_text', text: '🛠 IT Help', emoji: true },
-         close: { type: 'plain_text', text: '⬅ Previous Menu', emoji: true },
-         blocks
-       }
-     });
-   } catch(modalErr) {
-     // Fallback: open new modal
-     try {
-       await client.views.open({ trigger_id: triggerId, view: { type: 'modal', title: { type: 'plain_text', text: 'IT Help', emoji: true }, close: { type: 'plain_text', text: '⬅ Back', emoji: true }, blocks }});
-     } catch(e2) {
+     await client.views.update({ view_id: loadingViewId, view: modalView });
+   } catch(e) {
+     await client.chat.postMessage({ channel: userId, text: reply, blocks });
+   }
+ } else if (isFromModal && triggerId) {
+   // Loading modal failed — try push/open
+   try {
+     await client.views.push({ trigger_id: triggerId, view: modalView });
+   } catch(e) {
+     try { await client.views.open({ trigger_id: triggerId, view: modalView }); } catch(e2) {
        await client.chat.postMessage({ channel: userId, text: reply, blocks });
      }
    }
  } else {
-   // Not from modal — post to DM as before
+   // Not from modal — post to DM
    await client.chat.postMessage({ channel: userId, text: reply, blocks });
  }
  } catch (err) {
